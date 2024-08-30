@@ -4,10 +4,15 @@ from roles.models import Role
 
 
 class CustomUser(AbstractUser):
+    """
+        
+    """
+
+
     phone = models.CharField(max_length=20)
     roles = models.ManyToManyField(Role)
 
-    # Needed to avoid errors on changing user fields
+    # Necesario para evitar errores django
     groups = models.ManyToManyField(
         Group,
         related_name="customuser_set",  # Add related_name to avoid clash
@@ -24,6 +29,17 @@ class CustomUser(AbstractUser):
     )
 
     def tiene_permisos(self, permisos: list[str]) -> bool:
+        """
+        Chequea si el usuario tiene permisos
+
+        Args:
+            permisos (list[str]): lista de permisos a chequear
+
+        Returns:
+            bool: Retorna True si el usuario tiene todos los permisos, False en caso contrario
+        """
+
+
         con_permiso = True
 
         for permiso in permisos:

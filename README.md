@@ -52,5 +52,5 @@ python manage.py runserver
 
 ### Documentación
 ```
-python pydoc.py -p 1234
+python django_pydoc.py -p 1234
 ```# ls2-cms-py

@@ -56,7 +56,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "cmd_py.urls"
+ROOT_URLCONF = "cms_py.urls"
 
 TEMPLATES = [
     {
@@ -74,7 +74,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "cmd_py.wsgi.application"
+WSGI_APPLICATION = "cms_py.wsgi.application"
 
 
 # Database
