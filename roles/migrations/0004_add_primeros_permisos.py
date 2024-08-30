@@ -49,7 +49,7 @@ def add_default_roles(apps, schema_editor):
     )
 
     Permission.objects.create(
-        name=PermissionEnum.MODERAR_ARTICULOS,
+        name=PermissionEnum.EVALUAR_ARTICULOS,
         description="Moderar comentarios en articulos",
     )
 
@@ -67,7 +67,6 @@ def add_default_roles(apps, schema_editor):
         Permission.objects.get(
             name=PermissionEnum.EDITAR_ARTICULOS,
         ),
-        Permission.objects.get(name=PermissionEnum.MODERAR_ARTICULOS),
         Permission.objects.get(name=PermissionEnum.PUBLICAR_COMENTARIOS),
         Permission.objects.get(name=PermissionEnum.LEER_COMENTARIOS),
         Permission.objects.get(name=PermissionEnum.MODERAR_ARTICULOS),
@@ -109,7 +108,7 @@ def add_default_roles(apps, schema_editor):
         ),
         Permission.objects.get(name=PermissionEnum.PUBLICAR_COMENTARIOS),
         Permission.objects.get(name=PermissionEnum.LEER_COMENTARIOS),
-        Permission.objects.get(name="evaluar_articulos"),
+        Permission.objects.get(name=PermissionEnum.EVALUAR_ARTICULOS),
         Permission.objects.get(name=PermissionEnum.MODERAR_ARTICULOS),
     )
 
