@@ -2,24 +2,32 @@
 
 from django.db import migrations, models
 
-class Migration(migrations.Migration):
 
+class Migration(migrations.Migration):
     dependencies = [
-        ('roles', '0002_add_default_roles'),
+        ("roles", "0002_add_default_roles"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Permission',
+            name="Permission",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
-                ('description', models.TextField()),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                ("description", models.TextField()),
             ],
         ),
         migrations.AddField(
-            model_name='role',
-            name='permissions',
-            field=models.ManyToManyField(related_name='roles', to='roles.permission'),
+            model_name="role",
+            name="permissions",
+            field=models.ManyToManyField(related_name="roles", to="roles.permission"),
         ),
     ]

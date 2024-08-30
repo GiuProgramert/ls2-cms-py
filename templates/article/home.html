@@ -1,18 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CMD PY</title>
-  </head>
-  <body>
-    <nav>
-      <div>CMS PY</div>
-      <ul>
-        <li><a href="/login">Iniciar sesión</a></li>
-        <li><a href="/logout">Cerrar sesión</a></li>
-        <li><a href="/article/create">Crear articulo</a></li>
-      </ul>
-    </nav>
-  </body>
-</html>
+{% extends "base.html" %}
+
+{% block content %}
+  {% for permiso in permisos %}
+    <p>{{permiso}}</p>
+  {% endfor %}
+{% endblock content %}

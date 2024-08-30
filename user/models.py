@@ -10,15 +10,24 @@ class CustomUser(AbstractUser):
     # Needed to avoid errors on changing user fields
     groups = models.ManyToManyField(
         Group,
-        related_name='customuser_set',  # Add related_name to avoid clash
+        related_name="customuser_set",  # Add related_name to avoid clash
         blank=True,
-        help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
-        related_query_name='customuser',
+        help_text="The groups this user belongs to. A user will get all permissions granted to each of their groups.",
+        related_query_name="customuser",
     )
     user_permissions = models.ManyToManyField(
         Permission,
-        related_name='customuser_set',  # Add related_name to avoid clash
+        related_name="customuser_set",  # Add related_name to avoid clash
         blank=True,
-        help_text='Specific permissions for this user.',
-        related_query_name='customuser',
+        help_text="Specific permissions for this user.",
+        related_query_name="customuser",
     )
+
+    def tiene_permisos(self, permisos: list[str]) -> bool:
+        con_permiso = True
+
+        for permiso in permisos:
+            if not self.roles.filter(permissions__name=permiso).exists():
+                con_permiso = False
+
+        return con_permiso
