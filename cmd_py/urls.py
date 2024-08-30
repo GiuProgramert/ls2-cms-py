@@ -27,4 +27,5 @@ urlpatterns = [
     path("login/", user.views.login_view, name="login"),
     path("logout/", user.views.logout_view, name="logout"),
     path("article/create", article.views.create_article, name="create_article"),
+    path("forbidden", article.views.forbidden, name="forbidden"),
 ]

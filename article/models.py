@@ -4,16 +4,18 @@ from enum import Enum
 
 User = get_user_model()
 
+
 class ArticleType(Enum):
-    FREE = 'free'
-    PAY = 'pay'
-    SUSCRIPTION = 'suscription'
+    FREE = "free"
+    PAY = "pay"
+    SUSCRIPTION = "suscription"
+
 
 class Category(models.Model):
     type_choices = [
-        (ArticleType.FREE.value, 'Free'),
-        (ArticleType.SUSCRIPTION.value, 'Suscripción'),
-        (ArticleType.PAY.value, 'Pago'),
+        (ArticleType.FREE.value, "Free"),
+        (ArticleType.SUSCRIPTION.value, "Suscripción"),
+        (ArticleType.PAY.value, "Pago"),
     ]
 
     name = models.CharField(max_length=100)
@@ -25,6 +27,7 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+
 class Article(models.Model):
     title = models.CharField(max_length=100)
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -34,4 +37,3 @@ class Article(models.Model):
     likes_number = models.IntegerField(default=0)
     dislikes_number = models.IntegerField(default=0)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-
