@@ -1,5 +1,9 @@
 {% extends 'base.html' %}
+{% block headblock %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/roles.css' %}">
 
+{% endblock headblock %}
 {% block content %}
   <h2>Asignar Roles a {{ object.username }}</h2>
   <form method="post">
