@@ -1,7 +1,18 @@
-{% extends "base.html" %}
+{% extends "base.html" %} 
+
+{% block headblock %}
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+
+{% endblock headblock %}
 
 {% block content %}
+
+<div class="container">
   {% for permiso in permisos %}
-    <p>{{permiso}}</p>
+  <p>{{permiso}}</p>
   {% endfor %}
+</div>
+
 {% endblock content %}

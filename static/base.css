@@ -1,0 +1,88 @@
+* {
+  padding: 0px;
+  margin: 0px;
+
+  --primary-color: #4caf50;
+  --primary-color-dark: #388e3c;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+}
+
+.button {
+  background-color: var(--primary-color);
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 12px;
+}
+
+.input {
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+.navbar {
+  overflow: hidden;
+  background-color: var(--primary-color);
+  margin: 0px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  margin-bottom: 10px;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navbar-title {
+  color: white;
+  font-size: 15px;
+  margin-right: 20px;
+  font-weight: bold;
+}
+
+.navbar-item-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  height: 100%;
+
+}
+
+.navbar-item {
+  color: white;
+  list-style: none;
+  text-decoration: none;
+}
+
+.navbar-item a {
+  color: white;
+  text-decoration: none;
+  height: 100%;
+}
+
+.navbar-user span {
+  color: white;
+}
+
+.navbar-user i {
+  background-color: white;
+  border: 1px solid black;
+  border-radius: 50%;
+  padding: 10px;
+}

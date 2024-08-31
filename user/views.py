@@ -16,7 +16,7 @@ def login_view(request):
                 "home"
             )  # Cambia 'home' por la URL a la que quieras redirigir después del login
         else:
-            messages.error(request, "Username or password incorrect")
+            messages.error(request, "Nombre de usuario o contraseña incorrecta")
 
     return render(request, "user/login.html")
 
