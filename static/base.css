@@ -10,6 +10,15 @@ body {
   font-family: "Inter", sans-serif;
 }
 
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
 .button {
   background-color: var(--primary-color);
   border: none;
@@ -49,10 +58,14 @@ body {
 }
 
 .navbar-title {
-  color: white;
   font-size: 15px;
   margin-right: 20px;
   font-weight: bold;
+}
+
+.navbar-title a {
+  text-decoration: none;
+  color: white;
 }
 
 .navbar-item-container {
@@ -61,7 +74,6 @@ body {
   gap: 10px;
   align-items: center;
   height: 100%;
-
 }
 
 .navbar-item {

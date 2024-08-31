@@ -44,6 +44,11 @@ def add_default_roles(apps, schema_editor):
     )
 
     Permission.objects.create(
+        name=PermissionEnum.MANEJAR_CATEGORIAS,
+        description="Manejar categorias",
+    )
+
+    Permission.objects.create(
         name=PermissionEnum.LEER_COMENTARIOS,
         description="Leer comentarios en articulos",
     )
@@ -59,6 +64,7 @@ def add_default_roles(apps, schema_editor):
 
     Role.objects.get(name="Administrador").permissions.add(
         Permission.objects.get(name=PermissionEnum.VER_INICIO),
+        Permission.objects.get(name=PermissionEnum.MANEJAR_CATEGORIAS),
         Permission.objects.get(name=PermissionEnum.VER_CATEGORIAS_SUSCRIPTOR),
         Permission.objects.get(
             name=PermissionEnum.VER_CATEGORIAS_PAGO,
