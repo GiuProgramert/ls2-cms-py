@@ -32,13 +32,19 @@
         <span class="navbar-title">CMS PY</span>
         <ul class="navbar-item-container">
           <li class="navbar-item">
-            <a href="/article/create">Crear articulo</a>
+            <a href="/article/create">Crear artículo</a>
           </li>
 
-          {% if not user.is_authenticated %}
-          <li class="navbar-item"><a href="/login">Iniciar sesión</a></li>
+          {% if user.is_authenticated %}
+            <!-- Aquí añadimos el enlace a la asignación de roles -->
+            <li class="navbar-item">
+              <a href="{% url 'user-list' %}">Asignar Roles</a>
+            </li>
+            <li class="navbar-item">
+              <a href="/logout">Cerrar sesión</a>
+            </li>
           {% else %}
-          <li class="navbar-item"><a href="/logout">Cerrar sesión</a></li>
+            <li class="navbar-item"><a href="/login">Iniciar sesión</a></li>
           {% endif %}
         </ul>
       </div>

@@ -17,6 +17,7 @@ Including another URLconf
 
 import article.views
 import user.views
+import roles.views
 
 from django.contrib import admin
 from django.urls import path
@@ -28,4 +29,7 @@ urlpatterns = [
     path("logout/", user.views.logout_view, name="logout"),
     path("article/create", article.views.create_article, name="create_article"),
     path("forbidden", article.views.forbidden, name="forbidden"),
+    path('roles/', user.views.UserListView.as_view(), name='user-list'), #te lleva a la vista
+    path('roles/<int:pk>/asignar', roles.views.RoleAssignmentView.as_view(), name='assign_roles'),#te lleva al usuario despues de hacer click
+    path('users/', user.views.UserListView.as_view(), name='user-list'),  # Ruta para la lista de usuarios
 ]
