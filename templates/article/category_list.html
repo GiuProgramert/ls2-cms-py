@@ -1,0 +1,20 @@
+{% extends "base.html" %} 
+
+{% block headblock %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/category_list.css' %}">
+
+{% endblock headblock %}
+
+{% block content %}
+<h2>Categorías</h2>
+
+<div class="list-container">
+    {% for category in categories %}
+        <a href="{% url 'category-detail' category.id %}" class="category">{{ category.name }}</a>
+    {% endfor %}
+
+    <a href="{% url 'category-create' %}" class="button">Crear nueva categoría</a>
+</div>   
+
+{% endblock content %}

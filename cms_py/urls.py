@@ -28,4 +28,10 @@ urlpatterns = [
     path("logout/", user.views.logout_view, name="logout"),
     path("article/create", article.views.create_article, name="create_article"),
     path("forbidden", article.views.forbidden, name="forbidden"),
+
+    path('categories/', article.views.category_list, name='category-list'),
+    path('categories/<int:pk>/', article.views.category_detail, name='category-detail'),
+    path('categories/create/', article.views.category_create, name='category-create'),
+    path('categories/<int:pk>/update/', article.views.category_update, name='category-update'),
+    path('categories/<int:pk>/delete/', article.views.category_delete, name='category-delete'),
 ]
