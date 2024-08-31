@@ -17,6 +17,7 @@ Including another URLconf
 
 import article.views
 import user.views
+import roles.views
 
 from django.contrib import admin
 from django.urls import path
@@ -34,4 +35,9 @@ urlpatterns = [
     path('categories/create/', article.views.category_create, name='category-create'),
     path('categories/<int:pk>/update/', article.views.category_update, name='category-update'),
     path('categories/<int:pk>/delete/', article.views.category_delete, name='category-delete'),
+    
+    path('roles/', user.views.UserListView.as_view(), name='user-list'), #te lleva a la vista
+    path('roles/<int:pk>/asignar', roles.views.RoleAssignmentView.as_view(), name='assign_roles'),#te lleva al usuario despues de hacer click
+    
+    path('users/', user.views.UserListView.as_view(), name='user-list'),  # Ruta para la lista de usuarios
 ]

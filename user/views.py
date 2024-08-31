@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-
+from django.views.generic import ListView
+from .models import CustomUser, Role
 
 def login_view(request):
     if request.method == "POST":
@@ -24,3 +25,13 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect("login")
+
+class UserListView(ListView):
+    model = CustomUser
+    template_name = 'user/user_list.html'  # La plantilla que vamos a crear
+    context_object_name = 'users'  # El nombre del contexto en la plantilla
+    
+    def get_queryset(self):
+        # Filtrar usuarios que no sean administradores
+        administradores = Role.objects.filter(name='Administrador')
+        return CustomUser.objects.exclude(roles__in=administradores)
