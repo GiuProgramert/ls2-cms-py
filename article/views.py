@@ -28,6 +28,10 @@ def forbidden(request):
 
 
 def create_article(request):
+    """
+    Vista que permite crear un artículo.
+    """
+
     if not request.user.is_authenticated:
         return redirect("login")
 
@@ -49,6 +53,7 @@ def category_list(request):
         return redirect("forbidden")
 
     categories = Category.objects.all()
+    
     return render(request, "article/category_list.html", {"categories": categories})
 
 

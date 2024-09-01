@@ -5,7 +5,7 @@ from enum import Enum
 User = get_user_model()
 
 
-class ArticleType(Enum):
+class CategoryType(Enum):
     FREE = "free"
     PAY = "pay"
     SUSCRIPTION = "suscription"
@@ -13,14 +13,14 @@ class ArticleType(Enum):
 
 class Category(models.Model):
     type_choices = [
-        (ArticleType.FREE.value, "Free"),
-        (ArticleType.SUSCRIPTION.value, "Suscripción"),
-        (ArticleType.PAY.value, "Pago"),
+        (CategoryType.FREE.value, "Free"),
+        (CategoryType.SUSCRIPTION.value, "Suscripción"),
+        (CategoryType.PAY.value, "Pago"),
     ]
 
     name = models.CharField(max_length=100)
     description = models.TextField()
-    type = models.CharField(choices=type_choices, default=ArticleType.FREE)
+    type = models.CharField(choices=type_choices, default=CategoryType.FREE)
     state = models.BooleanField(default=True)
     is_moderated = models.BooleanField(default=False)
 
