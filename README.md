@@ -10,7 +10,7 @@ Proyecto realizado en la matería Ingenieria de Software 2 permite subir conteni
 
 ### 1. Clonar el proyecto
 ```
-git clone https://github.com/GiuProgramert/cms_py
+git clone https://github.com/GiuProgramert/ls2-cms-py.git
 ```
 
 ### 2. Entorno virtual
