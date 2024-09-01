@@ -1,5 +1,9 @@
 {% extends "base.html" %} 
+{% block headblock %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/category_list.css' %}">
 
+{% endblock headblock %}
 {% block content %}
 
 <h2>¿Estás seguro de que deseas eliminar "{{ category.name }}"?</h2>

@@ -1,5 +1,8 @@
 {% extends "base.html" %} 
-
+{% block headblock %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/category_form.css' %}">
+{% endblock headblock %}
 {% block content %}
 <h2>
     {% if form.instance.pk %}

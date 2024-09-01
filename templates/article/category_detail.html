@@ -1,9 +1,13 @@
 {% extends "base.html" %} 
-
+{% block headblock %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/category_detail.css' %}">
+{% endblock headblock %}
 {% block content %}
+<div class="category-details-container">
 
 <h2>{{ category.name }}</h2>
-<p>{{ category.description }}</p>
+<p>Descripcion: {{ category.description }}</p>
 
 <p>Tipo: {{ category.get_type_display }}</p>
 <p>Estado: {{ category.state|yesno:"Activo,Inactivo" }}</p>
@@ -12,5 +16,5 @@
 <a href="{% url 'category-update' category.id %}">Editar</a>
 <a href="{% url 'category-delete' category.id %}">Eliminar</a>
 <a href="{% url 'category-list' %}">Volver a la lista</a>
-
+</div>
 {% endblock content %}

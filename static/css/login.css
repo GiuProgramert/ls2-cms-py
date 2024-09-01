@@ -1,39 +1,98 @@
 body {
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background-image: url('{% static "images/login.jpg" %}');
+  background-size: cover; /* Escala la imagen para cubrir toda el área del body */
+  background-repeat: no-repeat; /* Evita que la imagen se repita */
+  background-position: center; /* Centra la imagen */
+  background-attachment: fixed; /* Fija la imagen para que no se mueva con el scroll */
+}
+/* Extensiones y modificaciones para el formulario extendido */
+
+/* Ajuste del contenedor del formulario para diferentes resoluciones */
+@media (min-width: 768px) {
+  form {
+    max-width: 700px; /* Aumentar el ancho máximo para pantallas más grandes */
+  }
 }
 
+/* Estilos generales para el contenedor de inicio de sesión */
 .login-container {
-  width: 450px;
-  padding: 20px 20px 20px 20px;
-  border: 2px solid #ccc;
-  border-radius: 12px;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  max-width: 400px; /* Ancho máximo del contenedor */
+  margin: 100px auto; /* Centrado vertical y horizontal */
+  padding: 2rem; /* Espaciado interno */
+  background-color: #f7fafc; /* Fondo claro */
+  border-radius: 8px; /* Bordes redondeados */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra suave */
+  text-align: center; /* Centrar el texto */
 }
 
-.login-form {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  gap: 20px;
+/* Estilo para el título de inicio de sesión */
+.login-container h2 {
+  color: #2d3748; /* Color de texto oscuro (similar a Tailwind's gray-800) */
+  margin-bottom: 1.5rem; /* Margen inferior */
+  font-size: 1.75rem; /* Tamaño de fuente */
+  font-weight: 700; /* Texto en negrita */
 }
 
+/* Estilo para los mensajes de error */
+ul {
+  list-style: none; /* Quitar viñetas */
+  padding: 0; /* Quitar padding */
+  margin-bottom: 1rem; /* Margen inferior */
+  color: #e53e3e; /* Color de texto rojo (similar a Tailwind's red-600) */
+}
+
+ul li {
+  background-color: #fed7d7; /* Fondo rojo claro */
+  padding: 0.5rem; /* Espaciado interno */
+  border-radius: 4px; /* Bordes redondeados */
+  margin-bottom: 0.5rem; /* Espacio entre mensajes */
+}
+
+/* Estilos para los campos del formulario */
 .login-form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  margin-bottom: 1rem; /* Margen inferior */
+  text-align: left; /* Alineación de texto a la izquierda */
 }
 
-h2 {
-  margin-bottom: 0px;
+.login-form-field label {
+  display: block; /* Mostrar como bloque */
+  font-weight: 600; /* Texto en negrita */
+  margin-bottom: 0.5rem; /* Margen inferior */
+  color: #4a5568; /* Color del texto (similar a Tailwind's gray-700) */
 }
 
-li {
-  list-style: none;
-  color: red;
+.input {
+  width: 100%; /* Ancho completo del campo */
+  padding: 0.75rem; /* Espaciado interno */
+  border: 1px solid #cbd5e0; /* Borde gris claro (similar a Tailwind's gray-300) */
+  border-radius: 4px; /* Bordes redondeados */
+  font-size: 1rem; /* Tamaño de fuente */
+  background-color: #fff; /* Fondo blanco */
+  color: #1a202c; /* Color del texto (similar a Tailwind's gray-900) */
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05); /* Sombra interior suave */
+  transition: border-color 0.3s ease; /* Transición suave para el color del borde */
 }
+
+.input:focus {
+  border-color: #3182ce; /* Cambiar color del borde al enfocar (similar a Tailwind's blue-600) */
+  outline: none; /* Eliminar el contorno predeterminado del enfoque */
+}
+
+/* Estilos para el botón de inicio de sesión */
+.button {
+  width: 100%; /* Ancho completo del botón */
+  padding: 0.75rem; /* Espaciado interno */
+  background-color: #3182ce; /* Fondo azul (similar a Tailwind's blue-600) */
+  color: #ffffff; /* Color de texto blanco */
+  border: none; /* Sin borde */
+  border-radius: 4px; /* Bordes redondeados */
+  font-size: 1rem; /* Tamaño de fuente */
+  font-weight: 600; /* Texto en negrita */
+  cursor: pointer; /* Cambiar el cursor al pasar sobre el botón */
+  transition: background-color 0.3s; /* Transición suave para el fondo */
+}
+
+.button:hover {
+  background-color: #2b6cb0; /* Cambiar fondo al pasar el mouse (similar a Tailwind's blue-700) */
+}
+
