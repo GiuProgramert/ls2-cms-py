@@ -3,6 +3,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.views.generic import ListView
 from .models import CustomUser, Role
+from .forms import CustomUserCreationForm
+
 
 def login_view(request):
     if request.method == "POST":
@@ -26,12 +28,27 @@ def logout_view(request):
     logout(request)
     return redirect("login")
 
+
 class UserListView(ListView):
     model = CustomUser
-    template_name = 'user/user_list.html'  # La plantilla que vamos a crear
-    context_object_name = 'users'  # El nombre del contexto en la plantilla
-    
+    template_name = "user/user_list.html"  # La plantilla que vamos a crear
+    context_object_name = "users"  # El nombre del contexto en la plantilla
+
     def get_queryset(self):
         # Filtrar usuarios que no sean administradores
-        administradores = Role.objects.filter(name='Administrador')
+        administradores = Role.objects.filter(name="Administrador")
         return CustomUser.objects.exclude(roles__in=administradores)
+
+#funciona que registra
+def register(request):
+    if request.method == "POST":
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect(
+                "home"
+            )  # te redirige a home una vez se completo correctamente el form
+    else:
+        form = CustomUserCreationForm()
+    return render(request, "user/register.html", {"form": form})

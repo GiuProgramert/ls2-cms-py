@@ -1,0 +1,22 @@
+<!-- templates/user/register.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'base.css' %}">
+</head>
+<body>
+    <main class="register-container">
+        <h2>Registrarse</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="button">Registrarse</button>
+        </form>
+    </main>
+</body>
+</html>
