@@ -4,10 +4,7 @@ from roles.models import Role
 
 
 class CustomUser(AbstractUser):
-    """
-        
-    """
-
+    """ """
 
     phone = models.CharField(max_length=20)
     roles = models.ManyToManyField(Role)
@@ -38,7 +35,6 @@ class CustomUser(AbstractUser):
         Returns:
             bool: Retorna True si el usuario tiene todos los permisos, False en caso contrario
         """
-
 
         con_permiso = True
 
