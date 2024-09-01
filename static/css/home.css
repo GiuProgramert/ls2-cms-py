@@ -1,8 +1,175 @@
 .container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 
-    padding-left: 20px;
-    padding-right: 20px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+/* General Styles */
+body {
+  background-image: url('{% static "images/menu.jpg" %}');
+  background-size: cover;
+  /* Escala la imagen para cubrir toda el área del body */
+  background-repeat: no-repeat;
+  /* Evita que la imagen se repita */
+  background-position: center;
+  /* Centra la imagen */
+  background-attachment: fixed;
+  /* Fija la imagen para que no se mueva con el scroll */
+  background-color: #f3f4f6;
+  /* Tailwind's gray-100 */
+  color: #1f2937;
+  /* Tailwind's gray-800 */
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 1024px;
+  /* Tailwind's max-w-3xl */
+  margin: 0 auto;
+  padding: 1.5rem;
+  /* Tailwind's p-6 */
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* Tailwind's shadow-md */
+  border-radius: 0.5rem;
+  /* Tailwind's rounded-lg */
+  margin-top: 1.5rem;
+  /* Tailwind's mt-6 */
+}
+
+/* Navbar Styles */
+.navbar {
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* Tailwind's shadow-md */
+  padding: 1rem 1.5rem;
+  /* Tailwind's py-4 px-6 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-title a {
+  font-size: 1.5rem;
+  /* Tailwind's text-2xl */
+  font-weight: bold;
+  /* Tailwind's font-bold */
+  color: #2563eb;
+  /* Tailwind's blue-600 */
+  text-decoration: none;
+}
+
+.navbar-title a:hover {
+  color: #1d4ed8;
+  /* Tailwind's blue-800 */
+}
+
+.navbar-item-container {
+  display: flex;
+  gap: 1rem;
+  /* Tailwind's space-x-4 */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-item a {
+  color: #374151;
+  /* Tailwind's gray-700 */
+  text-decoration: none;
+}
+
+.navbar-item a:hover {
+  color: #2563eb;
+  /* Tailwind's blue-600 */
+}
+
+.navbar-item a:last-child {
+  color: #dc2626;
+  /* Tailwind's red-600 */
+}
+
+.navbar-item a:last-child:hover {
+  color: #b91c1c;
+  /* Tailwind's red-800 */
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-user span {
+  color: #374151;
+  /* Tailwind's gray-700 */
+  margin-right: 0.5rem;
+}
+
+/* Text Items Styles */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* Tailwind's grid-cols-2 */
+  gap: 1rem;
+  /* Tailwind's gap-4 */
+}
+
+.grid p {
+  background-color: #ebf8ff;
+  /* Tailwind's blue-100 */
+  color: #1e40af;
+  /* Tailwind's blue-800 */
+  padding: 1rem;
+  /* Tailwind's p-4 */
+  border-radius: 0.375rem;
+  /* Tailwind's rounded */
+}
+
+/* Estilos generales para los párrafos de permisos */
+.permiso-parrafo {
+  background-color: #e2e8f0;
+  /* Color de fondo suave (Tailwind's gray-200) */
+  color: #1a202c;
+  /* Color de texto oscuro (Tailwind's gray-900) */
+  border-radius: 8px;
+  /* Bordes redondeados */
+  padding: 12px 16px;
+  /* Espaciado interno */
+  margin-bottom: 10px;
+  /* Espacio entre párrafos */
+  font-size: 16px;
+  /* Tamaño de fuente */
+  font-weight: 500;
+  /* Peso de la fuente */
+  display: flex;
+  /* Flex para alinear iconos y texto */
+  align-items: center;
+  /* Alinear verticalmente al centro */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* Sombra ligera */
+}
+
+/* Estilo para íconos opcionales */
+.permiso-parrafo i {
+  margin-right: 8px;
+  /* Espaciado entre icono y texto */
+  color: #3182ce;
+  /* Color de los íconos (Tailwind's blue-600) */
+}
+
+/* Hover effects */
+.permiso-parrafo:hover {
+  background-color: #cbd5e0;
+  /* Color de fondo al pasar el mouse (Tailwind's gray-300) */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  /* Sombra más intensa */
+  transform: translateY(-2px);
+  /* Levantar ligeramente el párrafo */
+  transition: all 0.3s ease;
+  /* Transición suave para efectos */
 }
