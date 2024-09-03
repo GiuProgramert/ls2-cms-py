@@ -1,3 +1,4 @@
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import UpdateView
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -25,15 +26,18 @@ class RoleAssignmentView(UserPassesTestMixin, UpdateView):
     model = CustomUser
     form_class = RoleAssignmentForm
     template_name = "roles/assign_roles.html"
-    success_url = reverse_lazy(
-        "user-list"
-    )  # Cambia 'user-list' por el nombre correcto de tu URL
+    success_url = reverse_lazy("user-list")
 
     def test_func(self):
         """
-        # Solo permite acceso a usuarios superadministradores o con permisos específicos
+        Solo permite acceso a usuarios superadministradores o con permisos específicos.
         """
-
         return self.request.user.is_superuser or self.request.user.has_perm(
             "roles.change_role"
         )
+
+    def handle_no_permission(self):
+        """
+        Redirige a la página de "forbidden" si no se tiene permiso.
+        """
+        return redirect("forbidden")

@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.views.generic import ListView
 from .models import CustomUser, Role
 from .forms import CustomUserCreationForm
+from django.contrib.auth.mixins import UserPassesTestMixin
 
 
 def login_view(request):
@@ -55,7 +56,7 @@ def logout_view(request):
     return redirect("login")
 
 
-class UserListView(ListView):
+class UserListView(UserPassesTestMixin, ListView):
     """
     Vista para listar usuarios que no son administradores.
 
@@ -71,8 +72,8 @@ class UserListView(ListView):
     """
 
     model = CustomUser
-    template_name = "user/user_list.html"  # La plantilla que vamos a crear
-    context_object_name = "users"  # El nombre del contexto en la plantilla
+    template_name = "user/user_list.html"
+    context_object_name = "users"
 
     def get_queryset(self):
         """
@@ -81,9 +82,22 @@ class UserListView(ListView):
         Returns:
             QuerySet: El conjunto de usuarios filtrado.
         """
-
         administradores = Role.objects.filter(name="Administrador")
         return CustomUser.objects.exclude(roles__in=administradores)
+
+    def test_func(self):
+        """
+        Solo permite acceso a usuarios superadministradores o con permisos específicos.
+        """
+        return self.request.user.is_superuser or self.request.user.has_perm(
+            "roles.view_user"
+        )
+
+    def handle_no_permission(self):
+        """
+        Redirige a la página de "forbidden" si no se tiene permiso.
+        """
+        return redirect("forbidden")
 
 
 def register(request):
