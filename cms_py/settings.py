@@ -41,9 +41,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
+    # Own apps
     "user",
     "article",
     "roles",
+
+    # Third party apps
+    "django_prose_editor",
 ]
 
 MIDDLEWARE = [
