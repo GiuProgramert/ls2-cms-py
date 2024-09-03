@@ -8,7 +8,7 @@ class CategoryForm(forms.ModelForm):
 
     Esta clase utiliza `forms.ModelForm` para generar un formulario basado en el modelo `Category`.
     Los campos incluidos en el formulario son: 'name', 'description', 'type', 'state', e 'is_moderated'.
-    
+
     Attributes:
         Meta (class): Clase interna que define las opciones del formulario.
             model (Model): Modelo en el que se basa el formulario.

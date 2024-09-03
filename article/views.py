@@ -8,8 +8,8 @@ def home(request):
     """
     Vista que muestra la página principal del artículo.
 
-    Si el usuario está autenticado, se recopilan los permisos que tiene 
-    y se envían al contexto de la plantilla. Si no está autenticado, 
+    Si el usuario está autenticado, se recopilan los permisos que tiene
+    y se envían al contexto de la plantilla. Si no está autenticado,
     se envía una lista vacía de permisos.
 
     Args:
@@ -18,7 +18,7 @@ def home(request):
     Returns:
         HttpResponse: Renderiza la plantilla 'article/home.html'.
     """
-    
+
     if not request.user.is_authenticated:
         tus_permisos = []
     else:
@@ -47,7 +47,7 @@ def forbidden(request):
     Returns:
         HttpResponse: Renderiza la plantilla 'article/forbidden.html'.
     """
-    
+
     return render(request, "article/forbidden.html")
 
 
@@ -55,8 +55,8 @@ def create_article(request):
     """
     Vista que permite la creación de un artículo.
 
-    Solo los usuarios autenticados y con el permiso `CREAR_ARTICULOS` pueden 
-    acceder a esta vista. Si no se cumplen las condiciones, se redirige al 
+    Solo los usuarios autenticados y con el permiso `CREAR_ARTICULOS` pueden
+    acceder a esta vista. Si no se cumplen las condiciones, se redirige al
     usuario a la página de login o a la página de acceso prohibido.
 
     Args:
@@ -79,8 +79,8 @@ def category_list(request):
     """
     Vista que muestra la lista de categorías.
 
-    Solo los usuarios autenticados y con el permiso `MANEJAR_CATEGORIAS` pueden 
-    acceder a esta vista. Si no se cumplen las condiciones, se redirige al 
+    Solo los usuarios autenticados y con el permiso `MANEJAR_CATEGORIAS` pueden
+    acceder a esta vista. Si no se cumplen las condiciones, se redirige al
     usuario a la página de login o a la página de acceso prohibido.
 
     Args:
@@ -97,7 +97,7 @@ def category_list(request):
         return redirect("forbidden")
 
     categories = Category.objects.all()
-    
+
     return render(request, "article/category_list.html", {"categories": categories})
 
 
@@ -105,8 +105,8 @@ def category_detail(request, pk):
     """
     Vista que muestra el detalle de una categoría específica.
 
-    Solo los usuarios autenticados y con el permiso `MANEJAR_CATEGORIAS` pueden 
-    acceder a esta vista. Si no se cumplen las condiciones, se redirige al 
+    Solo los usuarios autenticados y con el permiso `MANEJAR_CATEGORIAS` pueden
+    acceder a esta vista. Si no se cumplen las condiciones, se redirige al
     usuario a la página de login o a la página de acceso prohibido.
 
     Args:
@@ -131,8 +131,8 @@ def category_create(request):
     """
     Vista que permite la creación de una nueva categoría.
 
-    Solo los usuarios autenticados y con el permiso `MANEJAR_CATEGORIAS` pueden 
-    acceder a esta vista. Si no se cumplen las condiciones, se redirige al 
+    Solo los usuarios autenticados y con el permiso `MANEJAR_CATEGORIAS` pueden
+    acceder a esta vista. Si no se cumplen las condiciones, se redirige al
     usuario a la página de login o a la página de acceso prohibido.
 
     Args:
@@ -163,8 +163,8 @@ def category_update(request, pk):
     """
     Vista que permite actualizar una categoría existente.
 
-    Solo los usuarios autenticados y con el permiso `MANEJAR_CATEGORIAS` pueden 
-    acceder a esta vista. Si no se cumplen las condiciones, se redirige al 
+    Solo los usuarios autenticados y con el permiso `MANEJAR_CATEGORIAS` pueden
+    acceder a esta vista. Si no se cumplen las condiciones, se redirige al
     usuario a la página de login o a la página de acceso prohibido.
 
     Args:
@@ -197,8 +197,8 @@ def category_delete(request, pk):
     """
     Vista que permite eliminar una categoría existente.
 
-    Solo los usuarios autenticados y con el permiso `MANEJAR_CATEGORIAS` pueden 
-    acceder a esta vista. Si no se cumplen las condiciones, se redirige al 
+    Solo los usuarios autenticados y con el permiso `MANEJAR_CATEGORIAS` pueden
+    acceder a esta vista. Si no se cumplen las condiciones, se redirige al
     usuario a la página de login o a la página de acceso prohibido.
 
     Args:

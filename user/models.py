@@ -17,7 +17,6 @@ class CustomUser(AbstractUser):
         user_permissions (ManyToManyField): Permisos específicos del usuario, definidos por el modelo `Permission`.
     """
 
-
     phone = models.CharField(max_length=20)
     roles = models.ManyToManyField(Role)
 

@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from user.models import CustomUser
 from user.forms import RoleAssignmentForm
 
+
 class RoleAssignmentView(UserPassesTestMixin, UpdateView):
     """
     Vista para asignar roles a un usuario específico.

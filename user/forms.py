@@ -3,7 +3,6 @@ from .models import CustomUser, Role
 from django.contrib.auth.forms import UserCreationForm
 
 
-
 class RoleAssignmentForm(forms.ModelForm):
     """
     Formulario para asignar roles a un usuario.
@@ -12,12 +11,12 @@ class RoleAssignmentForm(forms.ModelForm):
 
     Attributes:
         roles (ModelMultipleChoiceField): Campo para seleccionar múltiples roles, representado como checkboxes.
-    
+
     Meta:
         model (CustomUser): El modelo `CustomUser` asociado con este formulario.
         fields (list): Los campos del modelo que se incluyen en el formulario (en este caso, solo 'roles').
     """
-    
+
     roles = forms.ModelMultipleChoiceField(
         queryset=Role.objects.all(), widget=forms.CheckboxSelectMultiple, required=True
     )
@@ -26,7 +25,8 @@ class RoleAssignmentForm(forms.ModelForm):
         model = CustomUser
         fields = ["roles"]
 
-#form que el usuario debe completar para poder registrarse
+
+# form que el usuario debe completar para poder registrarse
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
 

@@ -6,7 +6,6 @@ from .models import CustomUser, Role
 from .forms import CustomUserCreationForm
 
 
-
 def login_view(request):
     """
     Maneja la vista de inicio de sesión.
@@ -18,7 +17,7 @@ def login_view(request):
         request (HttpRequest): La solicitud HTTP recibida.
 
     Returns:
-        HttpResponse: Redirige al usuario a la página de inicio en caso de éxito, 
+        HttpResponse: Redirige al usuario a la página de inicio en caso de éxito,
         o renderiza la página de inicio de sesión con un mensaje de error.
     """
 
@@ -61,12 +60,12 @@ class UserListView(ListView):
     Vista para listar usuarios que no son administradores.
 
     Muestra una lista de usuarios, excluyendo aquellos que tienen el rol de 'Administrador'.
-    
+
     Attributes:
         model (Model): El modelo `CustomUser` que se va a listar.
         template_name (str): La plantilla que se renderiza para esta vista.
         context_object_name (str): El nombre de la variable de contexto que contendrá la lista de usuarios en la plantilla.
-    
+
     Methods:
         get_queryset(): Filtra los usuarios para excluir aquellos con el rol de 'Administrador'.
     """
@@ -83,8 +82,9 @@ class UserListView(ListView):
             QuerySet: El conjunto de usuarios filtrado.
         """
 
-        administradores = Role.objects.filter(name='Administrador')
+        administradores = Role.objects.filter(name="Administrador")
         return CustomUser.objects.exclude(roles__in=administradores)
+
 
 def register(request):
     if request.method == "POST":
