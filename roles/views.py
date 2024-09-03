@@ -4,6 +4,7 @@ from django.views.generic import UpdateView
 from django.contrib.auth.mixins import UserPassesTestMixin
 from user.models import CustomUser
 from user.forms import RoleAssignmentForm
+from roles.utils import PermissionEnum
 
 
 class RoleAssignmentView(UserPassesTestMixin, UpdateView):
@@ -30,11 +31,9 @@ class RoleAssignmentView(UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         """
-        Solo permite acceso a usuarios superadministradores o con permisos específicos.
+        Solo permite acceso a usuarios con permisos específicos.
         """
-        return self.request.user.is_superuser or self.request.user.has_perm(
-            "roles.change_role"
-        )
+        return self.request.user.tiene_permisos([PermissionEnum.MANEJO_ROLES])
 
     def handle_no_permission(self):
         """

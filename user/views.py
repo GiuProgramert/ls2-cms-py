@@ -5,6 +5,7 @@ from django.views.generic import ListView
 from .models import CustomUser, Role
 from .forms import CustomUserCreationForm
 from django.contrib.auth.mixins import UserPassesTestMixin
+from roles.utils import PermissionEnum
 
 
 def login_view(request):
@@ -87,11 +88,9 @@ class UserListView(UserPassesTestMixin, ListView):
 
     def test_func(self):
         """
-        Solo permite acceso a usuarios superadministradores o con permisos específicos.
+        Solo permite acceso a usuarios con permisos específicos.
         """
-        return self.request.user.is_superuser or self.request.user.has_perm(
-            "roles.view_user"
-        )
+        return self.request.user.tiene_permisos([PermissionEnum.MANEJO_ROLES])
 
     def handle_no_permission(self):
         """
