@@ -1,5 +1,6 @@
 from django import forms
-from article.models import Category
+from article.models import Category, Article
+from django_prose_editor.fields import ProseEditorFormField
 
 
 class CategoryForm(forms.ModelForm):
@@ -27,3 +28,19 @@ class CategoryForm(forms.ModelForm):
             "state": "Estado",
             "is_moderated": "Moderado",
         }
+
+class ArticleForm(forms.ModelForm):
+    body = ProseEditorFormField()
+
+    class Meta:
+        model = Article
+        fields = ["title", "description"]
+
+        labels = {
+            "title": "Titulo",
+            "description": "Descripción",
+            "body": "Cuerpo"
+        }
+
+    # def save(self, commit=True):
+    #     return super().save(commit=commit)

@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from roles.utils import PermissionEnum
 from article.models import Category
-from article.forms import CategoryForm
+from article.forms import CategoryForm, ArticleForm
 
 
 def home(request):
@@ -72,7 +72,9 @@ def create_article(request):
     if not request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS]):
         return redirect("forbidden")
 
-    return render(request, "article/create_article.html")
+    return render(request, "article/create_article.html", {
+        'form': ArticleForm
+    })
 
 
 def category_list(request):
