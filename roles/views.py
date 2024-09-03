@@ -23,9 +23,10 @@ class RoleAssignmentView(UserPassesTestMixin, UpdateView):
 
     model = CustomUser
     form_class = RoleAssignmentForm
-
     template_name = "roles/assign_roles.html"
-    success_url = reverse_lazy("user-list")
+    success_url = reverse_lazy(
+        "user-list"
+    )  # Cambia 'user-list' por el nombre correcto de tu URL
 
     def test_func(self):
         """

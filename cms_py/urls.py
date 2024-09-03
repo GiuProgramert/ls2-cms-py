@@ -26,6 +26,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", article.views.home, name="home"),
     path("login/", user.views.login_view, name="login"),
+    path("register/", user.views.register, name="register"),
     path("logout/", user.views.logout_view, name="logout"),
     path("article/create", article.views.create_article, name="create-article"),
     path("forbidden", article.views.forbidden, name="forbidden"),

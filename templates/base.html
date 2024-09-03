@@ -53,6 +53,7 @@
           {% endif %}
 
           {% if not user.is_authenticated %}
+          <li class="navbar-item"><a href="{% url 'register' %}">Registrarse</a></li> <!-- Nuevo enlace de registro -->
             <li class="navbar-item"><a href="/login">Iniciar sesión</a></li>
           {% else %}
             <li class="navbar-item"><a href="/logout">Cerrar sesión</a></li>

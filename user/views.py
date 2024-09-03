@@ -3,6 +3,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.views.generic import ListView
 from .models import CustomUser, Role
+from .forms import CustomUserCreationForm
+
 
 
 def login_view(request):
@@ -83,3 +85,16 @@ class UserListView(ListView):
 
         administradores = Role.objects.filter(name='Administrador')
         return CustomUser.objects.exclude(roles__in=administradores)
+
+def register(request):
+    if request.method == "POST":
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect(
+                "home"
+            )  # te redirige a home una vez se completo correctamente el form
+    else:
+        form = CustomUserCreationForm()
+    return render(request, "user/register.html", {"form": form})
