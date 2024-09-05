@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "user",
     "article",
     "roles",
+    "notification",
     # Third party apps
     "django_prose_editor",
 ]

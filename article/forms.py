@@ -29,6 +29,7 @@ class CategoryForm(forms.ModelForm):
             "is_moderated": "Moderado",
         }
 
+
 class ArticleForm(forms.ModelForm):
     body = ProseEditorFormField()
 
@@ -36,11 +37,7 @@ class ArticleForm(forms.ModelForm):
         model = Article
         fields = ["title", "description"]
 
-        labels = {
-            "title": "Titulo",
-            "description": "Descripción",
-            "body": "Cuerpo"
-        }
+        labels = {"title": "Titulo", "description": "Descripción", "body": "Cuerpo"}
 
     # def save(self, commit=True):
     #     return super().save(commit=commit)
