@@ -64,7 +64,9 @@
       <div class="navbar-user">
         {% if user.is_authenticated %}
         <span>{{ user.username }}</span>
-        <i class="fa-solid fa-user"></i>
+        <a href="{% url 'edit_profile' %}">
+          <i class="fa-solid fa-user"></i>
+        </a>
         {% endif %}
       </div>
     </nav>

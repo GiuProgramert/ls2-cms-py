@@ -6,6 +6,10 @@ from .models import CustomUser, Role
 from .forms import CustomUserCreationForm
 from django.contrib.auth.mixins import UserPassesTestMixin
 from roles.utils import PermissionEnum
+from django.contrib.auth.decorators import login_required
+from .forms import ProfileForm
+from django.contrib.auth import update_session_auth_hash
+from .forms import CustomPasswordChangeForm
 
 
 def login_view(request):
@@ -111,3 +115,47 @@ def register(request):
     else:
         form = CustomUserCreationForm()
     return render(request, "user/register.html", {"form": form})
+
+
+@login_required
+def edit_profile(request):
+    if request.method == "POST":
+        if "profile_submit" in request.POST:  # Profile form was submitted
+            profile_form = ProfileForm(request.POST, instance=request.user)
+            if profile_form.is_valid():
+                profile_form.save()
+                messages.success(
+                    request, "Perfil actualizado correctamente."
+                )  # Success message for profile
+            else:
+                messages.error(request, "Por favor corrija los errores en el perfil.")
+
+        elif "password_submit" in request.POST:  # Password form was submitted
+            password_form = CustomPasswordChangeForm(
+                user=request.user, data=request.POST
+            )
+            if password_form.is_valid():
+                password_form.save()
+                update_session_auth_hash(
+                    request, password_form.user
+                )  # Keep the user logged in after changing the password
+                messages.success(
+                    request, "Contraseña actualizada correctamente."
+                )  # Success message for password
+            else:
+                messages.error(
+                    request,
+                    "Por favor corrija los errores en el formulario de contraseña.",
+                )
+
+        return redirect("edit_profile")
+
+    else:
+        profile_form = ProfileForm(instance=request.user)
+        password_form = CustomPasswordChangeForm(user=request.user)
+
+    return render(
+        request,
+        "user/edit_profile.html",
+        {"profile_form": profile_form, "password_form": password_form},
+    )

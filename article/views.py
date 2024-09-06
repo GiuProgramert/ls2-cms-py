@@ -20,7 +20,7 @@ def home(request):
         HttpResponse: Renderiza la plantilla 'article/home.html'.
     """
 
-    send_email(None, None, None)
+    # send_email(None, None, None)
 
     if not request.user.is_authenticated:
         tus_permisos = []
