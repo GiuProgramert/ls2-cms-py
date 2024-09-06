@@ -72,9 +72,7 @@ def create_article(request):
     if not request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS]):
         return redirect("forbidden")
 
-    return render(request, "article/create_article.html", {
-        'form': ArticleForm
-    })
+    return render(request, "article/create_article.html", {"form": ArticleForm})
 
 
 def category_list(request):

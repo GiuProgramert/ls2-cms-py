@@ -33,6 +33,7 @@ urlpatterns = [
     path("categories/", article.views.category_list, name="category-list"),
     path("categories/<int:pk>/", article.views.category_detail, name="category-detail"),
     path("categories/create/", article.views.category_create, name="category-create"),
+    path("profile/edit/", user.views.edit_profile, name="edit_profile"),
     path(
         "categories/<int:pk>/update/",
         article.views.category_update,
