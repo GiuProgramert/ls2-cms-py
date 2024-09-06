@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from roles.utils import PermissionEnum
 from article.models import Category
 from article.forms import CategoryForm, ArticleForm
+from notification.utils import send_email
 
 
 def home(request):
@@ -18,6 +19,8 @@ def home(request):
     Returns:
         HttpResponse: Renderiza la plantilla 'article/home.html'.
     """
+
+    send_email(None, None, None)
 
     if not request.user.is_authenticated:
         tus_permisos = []
