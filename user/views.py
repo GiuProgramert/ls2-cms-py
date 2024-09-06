@@ -100,6 +100,22 @@ class UserListView(UserPassesTestMixin, ListView):
 
 
 def register(request):
+    """
+    Maneja el registro de nuevos usuarios.
+
+    Si la solicitud es un POST, procesa el formulario enviado para registrar un nuevo usuario.
+    Si el formulario es válido, guarda el nuevo usuario en la base de datos, inicia sesión con ese usuario
+    y redirige a la página de inicio ('home'). Si el formulario no es válido, o si la solicitud es un GET,
+    presenta el formulario de registro vacío.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP que se está procesando.
+
+    Returns:
+        HttpResponse: Renderiza la plantilla 'user/register.html' con el formulario de registro.
+                      Si el registro es exitoso, redirige a la página 'home'.
+    """
+
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
@@ -107,7 +123,7 @@ def register(request):
             login(request, user)
             return redirect(
                 "home"
-            )  # te redirige a home una vez se completo correctamente el form
+            )  # redirige a home una vez se completo correctamente el form
     else:
         form = CustomUserCreationForm()
     return render(request, "user/register.html", {"form": form})

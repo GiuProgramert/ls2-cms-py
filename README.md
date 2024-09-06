@@ -43,7 +43,10 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-#### modificar los valores de las variables de entorno
+#### modificar los valores de las variables de entorno y a continuación aplicar al entorno
+```bash
+source .env
+```
 
 ### 5. Ejecutar el código
 ```bash
