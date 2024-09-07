@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 from .forms import ProfileForm
 from django.contrib.auth import update_session_auth_hash
 from .forms import CustomPasswordChangeForm
-
+from django.utils.translation import gettext as _
 
 def login_view(request):
     """
@@ -108,12 +108,19 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
+            
+            # Assign the "Visitante" role
+            visitante_role = Role.objects.get(name="Visitante")  # Get the role with name 'Visitante'
+            user.roles.add(visitante_role)  # Add the role to the user's roles
+            
             login(request, user)
-            return redirect(
-                "home"
-            )  # te redirige a home una vez se completo correctamente el form
+            messages.success(request, _("Registro completado con éxito. Se le ha asignado el rol de Visitante."))
+            return redirect("home")  # Redirect to home page after registration
+        else:
+            messages.error(request, _("Por favor, corrija los errores del formulario."))
     else:
         form = CustomUserCreationForm()
+    
     return render(request, "user/register.html", {"form": form})
 
 
