@@ -12,7 +12,8 @@
     {{ form.errors }} {# Always makes sense #}
     {{ form.media }}  {# This is the important line! #}
     {{ form.as_div }}
-    <button type="submit">send</button>
+    <button type="submit">CREAR ARTICULO</button>
+    <a href="{% url 'home' %}">CANCELAR</a>
   </form>
 
 {% endblock content %}
