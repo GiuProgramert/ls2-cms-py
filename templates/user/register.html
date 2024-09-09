@@ -1,5 +1,9 @@
-<!-- templates/user/register.html -->
+{% block headblock %}
 
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/register.css' %}">
+
+{% endblock headblock %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,9 +18,13 @@
         <h2>Registrarse</h2>
         <form method="post">
             {% csrf_token %}
-            {{ form.as_p }}
+            <table class="form-table">
+                {{ form.as_table }}
+            </table>
+            </table>
             <button type="submit" class="button">Registrarse</button>
         </form>
     </main>
 </body>
 </html>
+

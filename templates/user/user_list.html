@@ -2,16 +2,45 @@
 {% block headblock %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/roles.css' %}">
-
 {% endblock headblock %}
+
 {% block content %}
   <h2>Lista de Usuarios</h2>
-  <ul>
-    {% for user in users %}
-      <li>
-        {{ user.username }} - {{ user.email }}
-        <a href="{% url 'assign_roles' user.pk %}">Asignar Roles</a>
-      </li>
-    {% endfor %}
-  </ul>
+
+  <table class="form-table">
+    <thead>
+      <tr>
+        <th>Nombre de Usuario</th>
+        <th>Email</th>
+        <th>Roles</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <td>{{ user.username }}</td>
+        <td>{{ user.email }}</td>
+        <td>
+          {% if user.roles.all %}
+            <ul>
+              {% for rol in user.roles.all %}
+                <li>{{ rol.name }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            Sin Roles
+          {% endif %}
+        </td>
+        <td>
+          <a href="{% url 'assign_roles' user.pk %}" class="btn">Asignar Roles</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4">No hay usuarios disponibles.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 {% endblock content %}
