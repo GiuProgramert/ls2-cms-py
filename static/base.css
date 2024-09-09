@@ -9,105 +9,119 @@
     max-width: 700px; /* Aumentar el ancho máximo para pantallas más grandes */
   }
 }
+/* Resetear márgenes y padding */
 * {
-  padding: 0px;
-  margin: 0px;
-
-  --primary-color: #4caf50;
-  --primary-color-dark: #388e3c;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
   font-family: 'Inter', sans-serif;
+  background-color: #f9fafb;
+  color: #333;
   margin: 0;
   padding: 0;
 }
 
 .container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-
-  padding-left: 20px;
-  padding-right: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-.button {
-  background-color: var(--primary-color);
-  border: none;
-  color: white;
-  padding: 10px 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 12px;
-}
-
-.input {
-  padding: 10px;
-  border-radius: 12px;
-  border: 1px solid #ccc;
-  font-size: 16px;
-}
-
+/* Estilo para la barra de navegación */
 .navbar {
-  overflow: hidden;
   background-color: var(--primary-color);
-  margin: 0px;
-
+  padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 15px;
-  margin-bottom: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .navbar-left {
   display: flex;
   align-items: center;
-  gap: 10px;
 }
 
 .navbar-title {
-  font-size: 15px;
-  margin-right: 20px;
-  font-weight: bold;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: white;
+  margin-right: 2rem;
 }
 
 .navbar-title a {
   text-decoration: none;
-  color: white;
+  color: inherit;
 }
 
 .navbar-item-container {
   display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  align-items: center;
-  height: 100%;
-}
-
-.navbar-item {
-  color: white;
-  list-style: none;
-  text-decoration: none;
+  gap: 1.5rem;
 }
 
 .navbar-item a {
   color: white;
   text-decoration: none;
-  height: 100%;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.navbar-item a:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
 }
 
 .navbar-user span {
   color: white;
+  margin-right: 10px;
+}
+
+.navbar-user a {
+  display: flex;
+  align-items: center;
+  color: white;
+  text-decoration: none;
 }
 
 .navbar-user i {
   background-color: white;
-  border: 1px solid black;
+  color: var(--primary-color);
+  padding: 0.5rem;
   border-radius: 50%;
-  padding: 10px;
+  margin-left: 10px;
+}
+
+/* Estilo para el pie de página */
+.footer {
+  background-color: var(--primary-color-dark);
+  color: white;
+  text-align: center;
+  padding: 1rem;
+  margin-top: auto;
+}
+
+/* Botones generales */
+.button, .btn {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover, .btn:hover {
+  background-color: var(--primary-color-dark);
+}
+
+/* Colores de tema */
+:root {
+  --primary-color: #4caf50;
+  --primary-color-dark: #388e3c;
 }

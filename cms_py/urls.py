@@ -26,18 +26,33 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", article.views.home, name="home"),
     path("login/", user.views.login_view, name="login"),
+    path("register/", user.views.register, name="register"),
     path("logout/", user.views.logout_view, name="logout"),
-    path("article/create", article.views.create_article, name="create_article"),
+    path("article/create", article.views.create_article, name="create-article"),
     path("forbidden", article.views.forbidden, name="forbidden"),
-
-    path('categories/', article.views.category_list, name='category-list'),
-    path('categories/<int:pk>/', article.views.category_detail, name='category-detail'),
-    path('categories/create/', article.views.category_create, name='category-create'),
-    path('categories/<int:pk>/update/', article.views.category_update, name='category-update'),
-    path('categories/<int:pk>/delete/', article.views.category_delete, name='category-delete'),
-    
-    path('roles/', user.views.UserListView.as_view(), name='user-list'), #te lleva a la vista
-    path('roles/<int:pk>/asignar', roles.views.RoleAssignmentView.as_view(), name='assign_roles'),#te lleva al usuario despues de hacer click
-    
-    path('users/', user.views.UserListView.as_view(), name='user-list'),  # Ruta para la lista de usuarios
+    path("categories/", article.views.category_list, name="category-list"),
+    path("categories/<int:pk>/", article.views.category_detail, name="category-detail"),
+    path("categories/create/", article.views.category_create, name="category-create"),
+    path("profile/edit/", user.views.edit_profile, name="edit_profile"),
+    path(
+        "categories/<int:pk>/update/",
+        article.views.category_update,
+        name="category-update",
+    ),
+    path(
+        "categories/<int:pk>/delete/",
+        article.views.category_delete,
+        name="category-delete",
+    ),
+    path(
+        "roles/", user.views.UserListView.as_view(), name="user-list"
+    ),  # te lleva a la vista
+    path(
+        "roles/<int:pk>/asignar",
+        roles.views.RoleAssignmentView.as_view(),
+        name="assign_roles",
+    ),  # te lleva al usuario despues de hacer click
+    path(
+        "users/", user.views.UserListView.as_view(), name="user-list"
+    ),  # Ruta para la lista de usuarios
 ]

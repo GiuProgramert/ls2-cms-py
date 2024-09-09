@@ -31,6 +31,8 @@ DEBUG = os.environ.get("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = ["localhost","172.25.46.171"]
 
+CSRF_TRUSTED_ORIGINS = ["https://localhost:8000"]
+
 
 # Application definition
 
@@ -41,9 +43,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # Own apps
     "user",
     "article",
     "roles",
+    "notification",
+    # Third party apps
+    "django_prose_editor",
 ]
 
 MIDDLEWARE = [
@@ -116,7 +122,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "es"
 
 TIME_ZONE = "UTC"
 

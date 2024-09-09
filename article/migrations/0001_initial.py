@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
                             ("suscription", "Suscripción"),
                             ("pay", "Pago"),
                         ],
-                        default=article.models.ArticleType["FREE"],
+                        default=article.models.CategoryType["FREE"],
                     ),
                 ),
                 ("state", models.BooleanField(default=True)),
