@@ -15,7 +15,7 @@ class CustomPasswordChangeForm(PasswordChangeForm):
         new_password1 (CharField): Campo para la nueva contraseña, incluye reglas como un mínimo de 8 caracteres.
         new_password2 (CharField): Campo para confirmar la nueva contraseña.
     """
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["old_password"].label = "Contraseña actual"
@@ -102,7 +102,7 @@ class ProfileForm(forms.ModelForm):
         labels (dict): Etiquetas personalizadas para los campos.
         help_texts (dict): Textos de ayuda personalizados para los campos.
     """
-    
+
     class Meta:
         model = CustomUser
         fields = ["username", "phone"]  # Ajusta los campos según sea necesario
