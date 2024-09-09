@@ -105,26 +105,25 @@ def register(request):
     """
     Maneja el registro de nuevos usuarios.
 
-    Si la solicitud es POST y el formulario es válido, crea un nuevo usuario y lo autentica. 
-    Luego, redirige al usuario a la página de inicio.
-
-    Args:
-        request (HttpRequest): La solicitud HTTP recibida.
-
-    Returns:
-        HttpResponse: Redirige al usuario a la página de inicio si el registro es exitoso,
-        o renderiza la página de registro con el formulario en caso contrario.
+    Si la solicitud es POST y el formulario es válido, crea un nuevo usuario y lo autentica.
+    Luego, redirige al usuario a la página de inicio, al usuario recien registrado se le asiga el rol de visitante por defecto.
     """
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
+
+            # Fetch the "Visitante" role and assign it to the new user
+            visitante_role = Role.objects.get(name="Visitante")  # Assumes the role name is "Visitante"
+            user.roles.add(visitante_role)  # Assign the role to the user
+            user.save()  # Save the user with the new role
+
+            # Log the user in after registration
             login(request, user)
-            return redirect("home")  # Te redirige a home una vez se completó correctamente el form
+            return redirect("home")  # Redirect to home after successful registration
     else:
         form = CustomUserCreationForm()
     return render(request, "user/register.html", {"form": form})
-
 
 @login_required
 def edit_profile(request):
