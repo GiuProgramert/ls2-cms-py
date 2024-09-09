@@ -17,4 +17,3 @@ def send_email(to, subject, html):
     except Exception as Error:
         print("No se pudo enviar el mail")
         print(Error)
-
