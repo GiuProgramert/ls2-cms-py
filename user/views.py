@@ -56,7 +56,7 @@ def logout_view(request):
         HttpResponse: Redirige al usuario a la página de inicio de sesión.
     """
     logout(request)
-    return redirect("login")
+    return redirect("/")
 
 
 class UserListView(UserPassesTestMixin, ListView):
