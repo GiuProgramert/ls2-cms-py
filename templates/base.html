@@ -53,6 +53,7 @@
           {% endif %}
 
           {% if not user.is_authenticated %}
+          <li class="navbar-item"><a href="{% url 'register' %}">Registrarse</a></li> <!-- Nuevo enlace de registro -->
             <li class="navbar-item"><a href="/login">Iniciar sesión</a></li>
           {% else %}
             <li class="navbar-item"><a href="/logout">Cerrar sesión</a></li>
@@ -63,7 +64,9 @@
       <div class="navbar-user">
         {% if user.is_authenticated %}
         <span>{{ user.username }}</span>
-        <i class="fa-solid fa-user"></i>
+        <a href="{% url 'edit_profile' %}">
+          <i class="fa-solid fa-user"></i>
+        </a>
         {% endif %}
       </div>
     </nav>

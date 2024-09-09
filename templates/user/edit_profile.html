@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Editar Perfil</h2>
+
+<!-- Display success or error messages -->
+{% if messages %}
+    <div>
+        {% for message in messages %}
+            <div class="alert {{ message.tags }}">{{ message }}</div>  <!-- Add your custom styling here -->
+        {% endfor %}
+    </div>
+{% endif %}
+
+<!-- Profile Form -->
+<form method="post" action="{% url 'edit_profile' %}">
+    {% csrf_token %}
+    
+    <h3>Detalles del Perfil</h3>
+    {{ profile_form.as_p }}
+
+    <button type="submit" name="profile_submit" class="btn btn-primary">Guardar Perfil</button>
+</form>
+
+<!-- Password Change Form -->
+<form method="post" action="{% url 'edit_profile' %}">
+    {% csrf_token %}
+
+    <h3>Cambiar Contraseña</h3>
+    {{ password_form.as_p }}
+
+    <button type="submit" name="password_submit" class="btn btn-primary">Cambiar Contraseña</button>
+</form>
+
+{% endblock content %}

@@ -1,5 +1,6 @@
 from django import forms
-from article.models import Category
+from article.models import Category, Article
+from django_prose_editor.fields import ProseEditorFormField
 
 
 class CategoryForm(forms.ModelForm):
@@ -8,7 +9,7 @@ class CategoryForm(forms.ModelForm):
 
     Esta clase utiliza `forms.ModelForm` para generar un formulario basado en el modelo `Category`.
     Los campos incluidos en el formulario son: 'name', 'description', 'type', 'state', e 'is_moderated'.
-    
+
     Attributes:
         Meta (class): Clase interna que define las opciones del formulario.
             model (Model): Modelo en el que se basa el formulario.
@@ -27,3 +28,16 @@ class CategoryForm(forms.ModelForm):
             "state": "Estado",
             "is_moderated": "Moderado",
         }
+
+
+class ArticleForm(forms.ModelForm):
+    body = ProseEditorFormField()
+
+    class Meta:
+        model = Article
+        fields = ["title", "description"]
+
+        labels = {"title": "Titulo", "description": "Descripción", "body": "Cuerpo"}
+
+    # def save(self, commit=True):
+    #     return super().save(commit=commit)

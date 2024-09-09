@@ -1,6 +1,18 @@
+{% extends 'base.html' %}
+
 {% block headblock %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/category_list.css' %}">
 
 {% endblock headblock %}
-<h1>Crear un articulo</h1>
+
+{% block content %}
+
+<form method="post">
+    {{ form.errors }} {# Always makes sense #}
+    {{ form.media }}  {# This is the important line! #}
+    {{ form.as_div }}
+    <button type="submit">send</button>
+  </form>
+
+{% endblock content %}

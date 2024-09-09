@@ -292,28 +292,28 @@ class CreateArticleTestCase(TestCase):
         """
         Test para verificar que no se puede crear una categoría con un formulario inválido
         """
-        
+
         data = {
-            'name': '',
-            'description': 'This is a test category',
+            "name": "",
+            "description": "This is a test category",
         }
 
         self.client.login(username="testuser", password="testpassword")
-        response = self.client.post(reverse('category-create'), data)
+        response = self.client.post(reverse("category-create"), data)
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'article/category_form.html')
-        self.assertIsInstance(response.context['form'], CategoryForm)
-        self.assertNotEqual(len(response.context['form'].errors), 0)
+        self.assertTemplateUsed(response, "article/category_form.html")
+        self.assertIsInstance(response.context["form"], CategoryForm)
+        self.assertNotEqual(len(response.context["form"].errors), 0)
 
     def test_actualizar_categoria_vista(self):
         """
         Test para verificar que se puede acceder a la vista de actualización de categoría
         """
-        
+
         self.client.login(username="testuser", password="testpassword")
         response = self.client.get(reverse("category-update", args=[self.category.pk]))
-        
+
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "article/category_form.html")
         self.assertIsInstance(response.context["form"], CategoryForm)
@@ -333,13 +333,15 @@ class CreateArticleTestCase(TestCase):
         }
 
         self.client.login(username="testuser", password="testpassword")
-        response = self.client.post(reverse("category-update", args=[self.category.pk]), data)
-        
+        response = self.client.post(
+            reverse("category-update", args=[self.category.pk]), data
+        )
+
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("category-list"))
-        
+
         self.category.refresh_from_db()
-        
+
         self.assertEqual(self.category.name, "Updated Category")
 
     def test_actualizar_categoria_post_form_invalido(self):
@@ -350,7 +352,9 @@ class CreateArticleTestCase(TestCase):
         data = {"name": ""}
 
         self.client.login(username="testuser", password="testpassword")
-        response = self.client.post(reverse("category-update", args=[self.category.pk]), data)
+        response = self.client.post(
+            reverse("category-update", args=[self.category.pk]), data
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "article/category_form.html")
@@ -363,12 +367,12 @@ class CreateArticleTestCase(TestCase):
         Test para verificar que un usuario autenticado con permisos puede eliminar una categoría
         """
 
-        self.client.login(username='testuser', password='testpassword')
+        self.client.login(username="testuser", password="testpassword")
 
-        response = self.client.post(reverse('category-delete', args=[self.category.pk]))
+        response = self.client.post(reverse("category-delete", args=[self.category.pk]))
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse('category-list'))
+        self.assertRedirects(response, reverse("category-list"))
         self.assertFalse(Category.objects.filter(pk=self.category.pk).exists())
 
     def test_eliminacion_categoria_usuario_sin_permiso(self):
@@ -377,17 +381,17 @@ class CreateArticleTestCase(TestCase):
         """
 
         self.role.permissions.remove(self.permission_manejar_categorias)
-        self.client.login(username='testuser', password='testpassword')
+        self.client.login(username="testuser", password="testpassword")
 
-        response = self.client.post(reverse('category-delete', args=[self.category.pk]))
+        response = self.client.post(reverse("category-delete", args=[self.category.pk]))
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse('forbidden'))
+        self.assertRedirects(response, reverse("forbidden"))
         self.assertTrue(Category.objects.filter(pk=self.category.pk).exists())
 
     def test_eliminacion_categoria_sin_autentificacion(self):
-        response = self.client.post(reverse('category-delete', args=[self.category.pk]))
-        
+        response = self.client.post(reverse("category-delete", args=[self.category.pk]))
+
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse('login'))
+        self.assertRedirects(response, reverse("login"))
         self.assertTrue(Category.objects.filter(pk=self.category.pk).exists())

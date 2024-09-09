@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from enum import Enum
+from django_prose_editor.sanitized import SanitizedProseEditorField
 
 User = get_user_model()
 
@@ -55,6 +56,7 @@ class Article(models.Model):
 
     Attributes:
         title (str): Título del artículo.
+        description (str): Descripción del articulo
         autor (ForeignKey): Referencia al usuario autor del artículo.
         views_number (int): Número de visualizaciones del artículo.
         shares_number (int): Número de veces que se ha compartido el artículo.
@@ -65,9 +67,25 @@ class Article(models.Model):
 
     title = models.CharField(max_length=100)
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
+    description = models.TextField(max_length=300, null=True)
 
     views_number = models.IntegerField(default=0)
     shares_number = models.IntegerField(default=0)
     likes_number = models.IntegerField(default=0)
     dislikes_number = models.IntegerField(default=0)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+
+
+class ArticleContent(models.Model):
+    """
+    Modelo que representa el contenido del articulo
+
+    Attibutes:
+        body (str): campo que simboliza el contenido del articulo
+        autor (str): campo que simboliza el autor que realizo el cambio en el contenido
+        article (ForeignKey): Referencia al articulo
+    """
+
+    body = SanitizedProseEditorField()
+    autor = models.ForeignKey(User, on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE)
