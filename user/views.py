@@ -26,7 +26,6 @@ def login_view(request):
         HttpResponse: Redirige al usuario a la página de inicio en caso de éxito,
         o renderiza la página de inicio de sesión con un mensaje de error.
     """
-
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -35,9 +34,7 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
-            return redirect(
-                "home"
-            )  # Cambia 'home' por la URL a la que quieras redirigir después del login
+            return redirect("home")  # Cambia 'home' por la URL a la que quieras redirigir después del login
         else:
             messages.error(request, "Nombre de usuario o contraseña incorrecta")
 
@@ -56,7 +53,6 @@ def logout_view(request):
     Returns:
         HttpResponse: Redirige al usuario a la página de inicio de sesión.
     """
-
     logout(request)
     return redirect("login")
 
@@ -75,7 +71,6 @@ class UserListView(UserPassesTestMixin, ListView):
     Methods:
         get_queryset(): Filtra los usuarios para excluir aquellos con el rol de 'Administrador'.
     """
-
     model = CustomUser
     template_name = "user/user_list.html"
     context_object_name = "users"
@@ -92,7 +87,10 @@ class UserListView(UserPassesTestMixin, ListView):
 
     def test_func(self):
         """
-        Solo permite acceso a usuarios con permisos específicos.
+        Verifica si el usuario actual tiene permiso para acceder a esta vista.
+
+        Returns:
+            bool: True si el usuario tiene permisos, False en caso contrario.
         """
         return self.request.user.tiene_permisos([PermissionEnum.MANEJO_ROLES])
 
@@ -104,14 +102,25 @@ class UserListView(UserPassesTestMixin, ListView):
 
 
 def register(request):
+    """
+    Maneja el registro de nuevos usuarios.
+
+    Si la solicitud es POST y el formulario es válido, crea un nuevo usuario y lo autentica. 
+    Luego, redirige al usuario a la página de inicio.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP recibida.
+
+    Returns:
+        HttpResponse: Redirige al usuario a la página de inicio si el registro es exitoso,
+        o renderiza la página de registro con el formulario en caso contrario.
+    """
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect(
-                "home"
-            )  # te redirige a home una vez se completo correctamente el form
+            return redirect("home")  # Te redirige a home una vez se completó correctamente el form
     else:
         form = CustomUserCreationForm()
     return render(request, "user/register.html", {"form": form})
@@ -119,6 +128,19 @@ def register(request):
 
 @login_required
 def edit_profile(request):
+    """
+    Maneja la edición del perfil y cambio de contraseña del usuario.
+
+    Permite al usuario editar su perfil y/o cambiar su contraseña desde la misma vista. 
+    Muestra mensajes de éxito o error según la validación de los formularios.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP recibida.
+
+    Returns:
+        HttpResponse: Redirige al usuario a la misma página con los formularios 
+        de perfil y contraseña, mostrando los mensajes correspondientes.
+    """
     if request.method == "POST":
         if "profile_submit" in request.POST:  # Profile form was submitted
             profile_form = ProfileForm(request.POST, instance=request.user)
@@ -131,17 +153,15 @@ def edit_profile(request):
                 messages.error(request, "Por favor corrija los errores en el perfil.")
 
         elif "password_submit" in request.POST:  # Password form was submitted
-            password_form = CustomPasswordChangeForm(
-                user=request.user, data=request.POST
-            )
+            password_form = CustomPasswordChangeForm(user=request.user, data=request.POST)
             if password_form.is_valid():
                 password_form.save()
                 update_session_auth_hash(
                     request, password_form.user
-                )  # Keep the user logged in after changing the password
+                )  # Mantiene la sesión después de cambiar la contraseña
                 messages.success(
                     request, "Contraseña actualizada correctamente."
-                )  # Success message for password
+                )  # Mensaje de éxito para contraseña
             else:
                 messages.error(
                     request,
@@ -159,3 +179,4 @@ def edit_profile(request):
         "user/edit_profile.html",
         {"profile_form": profile_form, "password_form": password_form},
     )
+
