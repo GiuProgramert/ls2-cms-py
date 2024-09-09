@@ -18,7 +18,8 @@
   {{ form.as_p }}
   
   <button type="submit">Guardar</button>
+  <a href="{% url 'category-list' %}">Cancelar</a>
 </form>
 
-<a href="{% url 'category-list' %}">Cancelar</a>
+
 {% endblock content %}

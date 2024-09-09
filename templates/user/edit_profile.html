@@ -1,5 +1,10 @@
 {% extends "base.html" %}
+{% block headblock %}
 
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/edit_profile.css' %}">
+
+{% endblock headblock %}
 {% block content %}
 <h2>Editar Perfil</h2>
 
@@ -7,7 +12,7 @@
 {% if messages %}
     <div>
         {% for message in messages %}
-            <div class="alert {{ message.tags }}">{{ message }}</div>  <!-- Add your custom styling here -->
+            <div class="alert {{ message.tags }}">{{ message }}</div>
         {% endfor %}
     </div>
 {% endif %}
@@ -17,8 +22,9 @@
     {% csrf_token %}
     
     <h3>Detalles del Perfil</h3>
-    {{ profile_form.as_p }}
-
+    <table class="form-table">
+        {{ profile_form.as_table }}
+    </table>
     <button type="submit" name="profile_submit" class="btn btn-primary">Guardar Perfil</button>
 </form>
 
@@ -27,8 +33,9 @@
     {% csrf_token %}
 
     <h3>Cambiar Contraseña</h3>
-    {{ password_form.as_p }}
-
+    <table class="form-table">
+        {{ password_form.as_table }}
+    </table>
     <button type="submit" name="password_submit" class="btn btn-primary">Cambiar Contraseña</button>
 </form>
 
