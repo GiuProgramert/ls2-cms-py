@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from roles.models import Role
-#from article.models import UserCategoryPurchase
 
 class CustomUser(AbstractUser):
     """
@@ -51,22 +50,3 @@ class CustomUser(AbstractUser):
                 con_permiso = False
 
         return con_permiso
-
-    def has_purchased_category(self, category):
-        """
-        Verifica si el usuario ha comprado una categoría específica.
-
-        Args:
-            category (Category): La categoría a verificar.
-
-        Returns:
-            bool: Retorna True si el usuario ha comprado la categoría, False si no.
-        """
-        # Utilizamos el modelo UserCategoryPurchase para verificar la compra
-        from article.models import UserCategoryPurchase
-
-
-        
-        return UserCategoryPurchase.objects.filter(
-            user=self, category=category
-        ).exists()
