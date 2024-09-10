@@ -4,6 +4,7 @@ from notification.utils import send_email
 from io import StringIO
 import sys
 
+
 class SendEmailTestCase(TestCase):
     """
     Casos de prueba para la función `send_email` de notification.utils.

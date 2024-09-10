@@ -102,6 +102,7 @@ class CreateArticleTestCase(TestCase):
             is_moderated=False,
         )
 
+    # TODO check test function
     def test_crear_articulo_autenticado_con_permiso(self):
         """
         Test para verificar que un usuario con permisos puede acceder a la vista
@@ -111,11 +112,12 @@ class CreateArticleTestCase(TestCase):
 
         self.client.login(username="testuser", password="testpassword")
 
-        response = self.client.get(reverse("create-article"))
+        response = self.client.get(reverse("article-create"))
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "article/create_article.html")
 
+    # TODO check test function
     def test_crear_articulo_autenticado_sin_permiso(self):
         """
         Test para verificar que un usuario sin permisos no puede acceder a la vista
@@ -126,11 +128,12 @@ class CreateArticleTestCase(TestCase):
         self.client.login(username="testuser", password="testpassword")
         self.role.permissions.remove(self.permission_crear_articulos)
 
-        response = self.client.get(reverse("create-article"))
+        response = self.client.get(reverse("article-create"))
 
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("forbidden"))
 
+    # TODO check test function
     def test_crear_articulo_no_autenticado(self):
         """
         Test para verificar que un usuario no autenticado no puede acceder a la vista
@@ -138,7 +141,7 @@ class CreateArticleTestCase(TestCase):
         Es correcto sí se redirige a la vista de login
         """
 
-        response = self.client.get(reverse("create-article"))
+        response = self.client.get(reverse("article-create"))
 
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("login"))
