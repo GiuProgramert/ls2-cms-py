@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from roles.models import Role
-
+#from article.models import UserCategoryPurchase
 
 class CustomUser(AbstractUser):
     """
@@ -14,9 +14,9 @@ class CustomUser(AbstractUser):
     roles = models.ManyToManyField(Role)
 
     # Relación con las categorías compradas
-    purchased_categories = models.ManyToManyField(
-        'article.Category', through='article.UserCategoryPurchase', related_name='users_who_purchased'
-    )
+    # purchased_categories = models.ManyToManyField(
+    #    'article.Category', through='article.UserCategoryPurchase', related_name='users_who_purchased'
+    # )
 
     # Necesario para evitar errores django
     groups = models.ManyToManyField(
@@ -62,4 +62,11 @@ class CustomUser(AbstractUser):
         Returns:
             bool: Retorna True si el usuario ha comprado la categoría, False si no.
         """
-        return self.purchased_categories.filter(id=category.id).exists()
+        # Utilizamos el modelo UserCategoryPurchase para verificar la compra
+        from article.models import UserCategoryPurchase
+
+
+        
+        return UserCategoryPurchase.objects.filter(
+            user=self, category=category
+        ).exists()
