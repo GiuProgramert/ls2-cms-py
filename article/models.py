@@ -89,3 +89,4 @@ class ArticleContent(models.Model):
     body = MDTextField()
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)

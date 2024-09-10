@@ -1,0 +1,60 @@
+{% extends "base.html" %} 
+
+{% block headblock %}
+{% load static %}
+  <link rel="stylesheet" href="{% static 'css/article_update_history.css' %}">
+  <link href="{% static 'mdeditor/css/editormd.min.css' %}" rel="stylesheet">
+  <link href="{% static 'mdeditor/css/editormd.preview.css' %}" rel="stylesheet">
+{% endblock headblock %}
+
+{% block content %}
+
+<div class="article-details-container">
+
+    <h1 class="article-title">{{ article.title }}</h1>
+
+    <div>
+      <h2 class="article-title">Descripción</h2>
+      <p>{{ article.description }}</p>
+    </div>
+
+    <div>
+      <h2 class="article-title">Categoría</h2>
+      <p>{{ article.category.name }}</p>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="article_id" value="{{ article.id }}">
+        <ul>
+            {% for article_content in article_contents %}
+                <li class="article-history-box">
+                    <input 
+                        type="radio" 
+                        name="article_content_id" 
+                        value="{{article_content.id}}" 
+                        id="article_content_id-{{article_content.id}}" 
+                        required
+                    >
+                
+                    <label for="article_content_id-{{article_content.id}}">
+                        <div class="article-info">
+                            <span><b>Identificador:</b> {{article_content.id}}</span>
+                            <span><b>Creador por:</b> {{article_content.autor.username}} </span>
+                            <span><b>Fecha de creación:</b> {{article_content.created_at}}</span>
+                
+                            <div>Seleccionar: </div>
+                        </div>
+                
+                        <div class="article-body">{{article_content.body|safe}}</div>
+                    </label>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <button type="submit">Seleccionar</button>
+    </form>
+
+</div>
+
+{% endblock content %}
