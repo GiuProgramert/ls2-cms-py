@@ -90,3 +90,22 @@ class ArticleContent(models.Model):
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
+    
+class UserCategoryPurchase(models.Model):
+    """
+    Modelo que representa una compra de categoría por un usuario.
+
+    Attributes:
+        user (ForeignKey): El usuario que realizó la compra.
+        category (ForeignKey): La categoría que fue comprada.
+        purchase_date (DateTimeField): Fecha de la compra.
+        price (DecimalField): Precio de la categoría en el momento de la compra.
+    """
+    user = models.ForeignKey('user.CustomUser', on_delete=models.CASCADE)
+    category = models.ForeignKey('Category', on_delete=models.CASCADE)
+    purchase_date = models.DateTimeField(auto_now_add=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.user.username} compró {self.category.name} el {self.purchase_date}"
+
