@@ -1,0 +1,36 @@
+{% extends "base.html" %} 
+
+{% block headblock %}
+{% load static %}
+  <link rel="stylesheet" href="{% static 'css/article_detail.css' %}">
+  <link href="{% static 'mdeditor/css/editormd.min.css' %}" rel="stylesheet">
+  <link href="{% static 'mdeditor/css/editormd.preview.css' %}" rel="stylesheet">
+{% endblock headblock %}
+
+{% block content %}
+
+<div class="article-details-container">
+
+    <h1 class="article-title">{{ article.title }}</h1>
+
+    <div>
+      <h2 class="article-title">Descripción</h2>
+      <p>{{ article.description }}</p>
+    </div>
+
+    <div>
+      <h2 class="article-title">Categoría</h2>
+      <p>{{ article.category.name }}</p>
+    </div>
+
+    <hr>
+
+    <div class="article-body">{{ article_render_content|safe }}</div>
+
+    <a href="{% url 'article-update' article.id %}" class="detail-link">Editar</a>
+    {% comment %} <a href="{% url 'article-delete' article.id %}">Eliminar</a> {% endcomment %}
+    <a href="" class="detail-link">Eliminar</a>
+    <a href="{% url 'article-list' %}" class="detail-link">Volver a la lista</a>
+</div>
+
+{% endblock content %}

@@ -3,6 +3,7 @@ import resend
 
 resend.api_key = os.environ["RESEND_API_KEY"]
 
+
 def send_email(to, subject, html):
     """
     Función para enviar un correo electrónico utilizando la API de Resend.

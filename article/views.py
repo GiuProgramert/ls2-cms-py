@@ -1,6 +1,8 @@
+import mistune
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
 from roles.utils import PermissionEnum
-from article.models import Category
+from article.models import Category, ArticleContent, Article
 from article.forms import CategoryForm, ArticleForm
 
 
@@ -53,7 +55,12 @@ def forbidden(request):
     return render(request, "article/forbidden.html")
 
 
-def create_article(request):
+# =============================================================================
+# Article
+# =============================================================================
+
+
+def article_create(request):
     """
     Vista que permite la creación de un artículo.
 
@@ -74,7 +81,191 @@ def create_article(request):
     if not request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS]):
         return redirect("forbidden")
 
-    return render(request, "article/create_article.html", {"form": ArticleForm})
+    if request.method == "POST":
+        form = ArticleForm(request.POST)
+        if form.is_valid():
+            article = form.save(commit=False)
+            article.autor = request.user
+            article.save()
+
+            ArticleContent.objects.create(
+                body=request.POST.get("body"), autor=request.user, article=article
+            )
+
+            return redirect("home")
+
+    return render(request, "article/article_form.html", {"form": ArticleForm})
+
+
+def article_update(request, pk):
+    """
+    Vista que permite la actualización de un artículo.
+
+    Solo los usuarios autenticados y con el permiso `EDITAR_ARTICULOS` pueden
+    acceder a esta vista. Si no se cumplen las condiciones, se redirige al
+    usuario a la página de login o a la página de acceso prohibido.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID del artículo a actualizar.
+
+    Returns:
+        HttpResponse: Renderiza la plantilla 'article/update_article.html' o redirige.
+    """
+
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    if not request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS]):
+        return redirect("forbidden")
+
+    article = get_object_or_404(Article, pk=pk)
+
+    if request.method == "POST":
+        form = ArticleForm(request.POST, instance=article)
+        if form.is_valid():
+            article = form.save(commit=False)
+            article.save()
+
+            ArticleContent.objects.create(
+                body=request.POST.get("body"), autor=request.user, article=article
+            )
+
+            return redirect("home")
+    else:
+        form = ArticleForm(instance=article)
+
+        last_content = ArticleContent.objects.filter(article=article).last()
+        if last_content:
+            form.initial["body"] = last_content.body
+
+    return render(request, "article/article_form.html", {"form": form})
+
+
+def article_update_history(request, pk):
+    """
+    Vista que muestra el historial de versiones de un artículo.
+
+    Solo los usuarios autenticados y con el permiso `VER_HISTORIAL_ARTICULOS`
+    pueden acceder a esta vista. Si no se cumplen las condiciones, se redirige
+    al usuario a la página de login o a la página de acceso prohibido.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID del artículo.
+
+    Returns:
+        HttpResponse: Renderiza la plantilla 'article/article_update_history.html' o redirige.
+    """
+
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    if not request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS]):
+        return redirect("forbidden")
+
+    if request.method == "POST":
+        article_id = request.POST.get("article_id")
+        article_content_id = request.POST.get("article_content_id")
+
+        if not article_content_id or not article_id:
+            return HttpResponse("No se ha encontrado el contenido", status=404)
+
+        article_content = get_object_or_404(ArticleContent, pk=article_content_id)
+        article = get_object_or_404(Article, pk=article_id)
+
+        ArticleContent.objects.create(
+            body=article_content.body, autor=request.user, article=article
+        )
+
+        return redirect("home")
+
+    article = get_object_or_404(Article, pk=pk)
+    article_contents_ref = ArticleContent.objects.filter(article=article)
+
+    article_contents = [
+        {
+            "id": article_content.id,
+            "autor": article_content.autor,
+            "created_at": article_content.created_at,
+            "body": mistune.html(article_content.body),
+        }
+        for article_content in article_contents_ref
+    ]
+
+    return render(
+        request,
+        "article/article_update_history.html",
+        {"article": article, "article_contents": article_contents},
+    )
+
+
+def article_list(request):
+    """
+    Vista que muestra la lista de artículos.
+
+    Solo los usuarios autenticados y con el permiso `VER_ARTICULOS` pueden
+    acceder a esta vista. Si no se cumplen las condiciones, se redirige al
+    usuario a la página de login o a la página de acceso prohibido.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+
+    Returns:
+        HttpResponse: Renderiza la plantilla 'article/article_list.html' o redirige.
+    """
+
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    if not request.user.tiene_permisos([PermissionEnum.VER_INICIO]):
+        return redirect("forbidden")
+
+    articles = Article.objects.all()
+
+    return render(request, "article/article_list.html", {"articles": articles})
+
+
+def article_detail(request, pk):
+    """
+    Vista que muestra el detalle de un artículo.
+
+    Solo los usuarios autenticados y con el permiso `VER_ARTICULOS` pueden
+    acceder a esta vista. Si no se cumplen las condiciones, se redirige al
+    usuario a la página de login o a la página de acceso prohibido.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID del artículo.
+
+    Returns:
+        HttpResponse: Renderiza la plantilla 'article/article_detail.html' o redirige.
+    """
+
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    if not request.user.tiene_permisos([PermissionEnum.VER_INICIO]):
+        return redirect("forbidden")
+
+    article = get_object_or_404(Article, pk=pk)
+    article_content = ArticleContent.objects.filter(article=article).last()
+
+    if not article_content:
+        return HttpResponse("No hay contenido para este artículo", status=404)
+
+    article_render_content = mistune.html(article_content.body)
+
+    return render(
+        request,
+        "article/article_detail.html",
+        {"article": article, "article_render_content": article_render_content},
+    )
+
+
+# =============================================================================
+# Category views
+# =============================================================================
 
 
 def category_list(request):

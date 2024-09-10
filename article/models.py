@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from enum import Enum
-from django_prose_editor.sanitized import SanitizedProseEditorField
+from mdeditor.fields import MDTextField
 
 User = get_user_model()
 
@@ -86,6 +86,7 @@ class ArticleContent(models.Model):
         article (ForeignKey): Referencia al articulo
     """
 
-    body = SanitizedProseEditorField()
+    body = MDTextField()
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)

@@ -19,21 +19,29 @@ import article.views
 import user.views
 import roles.views
 
+from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.conf import settings
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("forbidden", article.views.forbidden, name="forbidden"),
     path("", article.views.home, name="home"),
     path("login/", user.views.login_view, name="login"),
     path("register/", user.views.register, name="register"),
     path("logout/", user.views.logout_view, name="logout"),
-    path("article/create", article.views.create_article, name="create-article"),
-    path("forbidden", article.views.forbidden, name="forbidden"),
+    path("article/", article.views.article_list, name="article-list"),
+    path("article/create", article.views.article_create, name="article-create"),
+    path(
+        "article/<int:pk>/update", article.views.article_update, name="article-update"
+    ),
+    path("article/<int:pk>/update/history", article.views.article_update_history, name="article-update-history"),
+    path("article/<int:pk>/detail", article.views.article_detail, name="article-detail"),
+    path("profile/edit/", user.views.edit_profile, name="edit_profile"),
     path("categories/", article.views.category_list, name="category-list"),
     path("categories/<int:pk>/", article.views.category_detail, name="category-detail"),
     path("categories/create/", article.views.category_create, name="category-create"),
-    path("profile/edit/", user.views.edit_profile, name="edit_profile"),
     path(
         "categories/<int:pk>/update/",
         article.views.category_update,
@@ -44,15 +52,16 @@ urlpatterns = [
         article.views.category_delete,
         name="category-delete",
     ),
-    path(
-        "roles/", user.views.UserListView.as_view(), name="user-list"
-    ),  # te lleva a la vista
+    path("roles/", user.views.UserListView.as_view(), name="user-list"),
     path(
         "roles/<int:pk>/asignar",
         roles.views.RoleAssignmentView.as_view(),
         name="assign_roles",
-    ),  # te lleva al usuario despues de hacer click
-    path(
-        "users/", user.views.UserListView.as_view(), name="user-list"
-    ),  # Ruta para la lista de usuarios
+    ),
+    path("users/", user.views.UserListView.as_view(), name="user-list"),
+
+    path(r"mdeditor/", include("mdeditor.urls")),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
