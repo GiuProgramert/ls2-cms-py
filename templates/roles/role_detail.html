@@ -1,0 +1,39 @@
+{% extends "base.html" %} 
+{% block headblock %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/role_detail.css' %}">
+{% endblock headblock %}
+
+{% block content %}
+<div class="role-details-container">
+
+    <h2>{{ role.name }}</h2>
+    <p><strong>Descripción:</strong> {{ role.description }}</p>
+
+    <h3>Permisos asignados</h3>
+    <table class="permissions-table">
+        <thead>
+            <tr>
+                <th>Nombre del Permiso</th>
+                <th>Descripción del Permiso</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for permission in role.permissions.all %}
+                <tr>
+                    <td>{{ permission.name }}</td>
+                    <td>{{ permission.description }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="2">Este rol no tiene permisos asignados.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{% url 'role-update' role.id %}">Editar</a>
+    <a href="{% url 'role-delete' role.id %}">Eliminar</a>
+    <a href="{% url 'role-list' %}">Volver a la lista</a>
+</div>
+{% endblock content %}
