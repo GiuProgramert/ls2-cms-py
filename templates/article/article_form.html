@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block headblock %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/article_form.css' %}">
+
+{% endblock headblock %}
+
+{% block content %}
+
+<h2>
+  {% if form.instance.pk %}
+      Editar Articulo
+  {% else %}
+      Crear Articulo
+  {% endif %}
+</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.errors }} {# Always makes sense #}
+    {{ form.media }}  {# This is the important line! #}
+    {{ form.as_div }}
+    <button type="submit">
+      {% if form.instance.pk %}
+          Editar Articulo
+      {% else %}
+          Crear Articulo
+      {% endif %}
+    </button>
+    <a href="{% url 'home' %}">CANCELAR</a>
+  </form>
+
+{% endblock content %}
