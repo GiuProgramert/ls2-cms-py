@@ -1,0 +1,19 @@
+{% extends "base.html" %} 
+
+{% block headblock %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/role_list.css' %}">
+{% endblock headblock %}
+
+{% block content %}
+<h2>Roles</h2> 
+
+<div class="list-container">
+    {% for role in roles %}
+        <a href="{% url 'role-detail' role.id %}" class="role">{{ role.name }}</a> 
+    {% endfor %}
+
+    <a href="{% url 'role-create' %}" class="button">Crear nuevo rol</a>
+</div>   
+
+{% endblock content %}

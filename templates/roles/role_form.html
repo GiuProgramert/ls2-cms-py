@@ -1,0 +1,53 @@
+{% extends "base.html" %} 
+{% block headblock %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/role_form.css' %}">
+{% endblock headblock %}
+
+{% block content %}
+<h2>
+    {% if form.instance.pk %}
+        Editar Rol
+    {% else %}
+        Crear Rol
+    {% endif %}
+</h2>
+
+<form method="post">
+  {% csrf_token %}
+
+  <div class="form-group">
+    <label for="id_name">Nombre</label>
+    {{ form.name }}
+  </div>
+
+  <div class="form-group">
+    <label for="id_description">Descripción</label>
+    {{ form.description }}
+  </div>
+
+  <div class="form-group">
+    <label>Permisos</label>
+    <table class="permissions-table">
+      <thead>
+        <tr>
+          <th>Nombre del Permiso</th>
+          <th>Asignar</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for checkbox in form.permissions %}
+          <tr>
+            <td>{{ checkbox.choice_label }}</td>
+            <td class="checkbox-cell">{{ checkbox.tag }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <button type="submit">Guardar</button>
+  <a href="{% url 'role-list' %}">Cancelar</a>
+</form>
+
+{% endblock content %}
