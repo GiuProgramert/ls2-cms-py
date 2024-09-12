@@ -1,0 +1,19 @@
+{% extends "base.html" %} 
+
+{% block headblock %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/role_list.css' %}">
+{% endblock headblock %}
+
+{% block content %}
+
+<h2>¿Estás seguro de que deseas eliminar "{{ role.name }}"?</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Eliminar</button>
+</form>
+
+<a href="{% url 'role-detail' role.id %}">Cancelar</a>
+
+{% endblock content %}
