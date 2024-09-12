@@ -34,10 +34,17 @@ urlpatterns = [
     # Article
     path("article/", article.views.article_list, name="article-list"),
     path("article/create", article.views.article_create, name="article-create"),
-    path("article/<int:pk>/update", article.views.article_update, name="article-update"),
-    path("article/<int:pk>/update/history", article.views.article_update_history, name="article-update-history"),
-    path("article/<int:pk>/detail", article.views.article_detail, name="article-detail"),
-
+    path(
+        "article/<int:pk>/update", article.views.article_update, name="article-update"
+    ),
+    path(
+        "article/<int:pk>/update/history",
+        article.views.article_update_history,
+        name="article-update-history",
+    ),
+    path(
+        "article/<int:pk>/detail", article.views.article_detail, name="article-detail"
+    ),
     path("profile/edit/", user.views.edit_profile, name="edit_profile"),
     # Categories
     path("categories/", article.views.category_list, name="category-list"),
