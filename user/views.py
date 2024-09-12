@@ -6,6 +6,10 @@ from .models import CustomUser, Role
 from .forms import CustomUserCreationForm
 from django.contrib.auth.mixins import UserPassesTestMixin
 from roles.utils import PermissionEnum
+from django.contrib.auth.decorators import login_required
+from .forms import ProfileForm
+from django.contrib.auth import update_session_auth_hash
+from .forms import CustomPasswordChangeForm
 
 
 def login_view(request):
@@ -22,7 +26,6 @@ def login_view(request):
         HttpResponse: Redirige al usuario a la página de inicio en caso de éxito,
         o renderiza la página de inicio de sesión con un mensaje de error.
     """
-
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -52,9 +55,8 @@ def logout_view(request):
     Returns:
         HttpResponse: Redirige al usuario a la página de inicio de sesión.
     """
-
     logout(request)
-    return redirect("login")
+    return redirect("/")
 
 
 class UserListView(UserPassesTestMixin, ListView):
@@ -88,7 +90,10 @@ class UserListView(UserPassesTestMixin, ListView):
 
     def test_func(self):
         """
-        Solo permite acceso a usuarios con permisos específicos.
+        Verifica si el usuario actual tiene permiso para acceder a esta vista.
+
+        Returns:
+            bool: True si el usuario tiene permisos, False en caso contrario.
         """
         return self.request.user.tiene_permisos([PermissionEnum.MANEJO_ROLES])
 
@@ -120,10 +125,76 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
+
+            # Fetch the "Visitante" role and assign it to the new user
+            visitante_role = Role.objects.get(
+                name="Visitante"
+            )  # Assumes the role name is "Visitante"
+            user.roles.add(visitante_role)  # Assign the role to the user
+            user.save()  # Save the user with the new role
+
+            # Log the user in after registration
             login(request, user)
             return redirect(
                 "home"
-            )  # redirige a home una vez se completo correctamente el form
+            )
     else:
         form = CustomUserCreationForm()
     return render(request, "user/register.html", {"form": form})
+
+
+@login_required
+def edit_profile(request):
+    """
+    Maneja la edición del perfil y cambio de contraseña del usuario.
+
+    Permite al usuario editar su perfil y/o cambiar su contraseña desde la misma vista.
+    Muestra mensajes de éxito o error según la validación de los formularios.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP recibida.
+
+    Returns:
+        HttpResponse: Redirige al usuario a la misma página con los formularios
+        de perfil y contraseña, mostrando los mensajes correspondientes.
+    """
+    if request.method == "POST":
+        if "profile_submit" in request.POST:  # Profile form was submitted
+            profile_form = ProfileForm(request.POST, instance=request.user)
+            if profile_form.is_valid():
+                profile_form.save()
+                messages.success(
+                    request, "Perfil actualizado correctamente."
+                )  # Success message for profile
+            else:
+                messages.error(request, "Por favor corrija los errores en el perfil.")
+
+        elif "password_submit" in request.POST:  # Password form was submitted
+            password_form = CustomPasswordChangeForm(
+                user=request.user, data=request.POST
+            )
+            if password_form.is_valid():
+                password_form.save()
+                update_session_auth_hash(
+                    request, password_form.user
+                )  # Mantiene la sesión después de cambiar la contraseña
+                messages.success(
+                    request, "Contraseña actualizada correctamente."
+                )  # Mensaje de éxito para contraseña
+            else:
+                messages.error(
+                    request,
+                    "Por favor corrija los errores en el formulario de contraseña.",
+                )
+
+        return redirect("edit_profile")
+
+    else:
+        profile_form = ProfileForm(instance=request.user)
+        password_form = CustomPasswordChangeForm(user=request.user)
+
+    return render(
+        request,
+        "user/edit_profile.html",
+        {"profile_form": profile_form, "password_form": password_form},
+    )

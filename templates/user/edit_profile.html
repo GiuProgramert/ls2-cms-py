@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block headblock %}
+
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/edit_profile.css' %}">
+
+{% endblock headblock %}
+{% block content %}
+<h2>Editar Perfil</h2>
+
+<!-- Display success or error messages -->
+{% if messages %}
+    <div>
+        {% for message in messages %}
+            <div class="alert {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<!-- Profile Form -->
+<form method="post" action="{% url 'edit_profile' %}">
+    {% csrf_token %}
+    
+    <h3>Detalles del Perfil</h3>
+    <table class="form-table">
+        {{ profile_form.as_table }}
+    </table>
+    <button type="submit" name="profile_submit" class="btn btn-primary">Guardar Perfil</button>
+</form>
+
+<!-- Password Change Form -->
+<form method="post" action="{% url 'edit_profile' %}">
+    {% csrf_token %}
+
+    <h3>Cambiar Contraseña</h3>
+    <table class="form-table">
+        {{ password_form.as_table }}
+    </table>
+    <button type="submit" name="password_submit" class="btn btn-primary">Cambiar Contraseña</button>
+</form>
+
+{% endblock content %}

@@ -4,8 +4,10 @@ from django.urls import reverse
 from roles.models import Role
 from roles.utils import PermissionEnum
 from roles.models import Permission
-from article.models import Category, CategoryType
+from article.models import Category, CategoryType,Article, ArticleContent
 from article.forms import CategoryForm
+from article.forms import ArticleForm
+
 
 User = get_user_model()
 
@@ -102,20 +104,7 @@ class CreateArticleTestCase(TestCase):
             is_moderated=False,
         )
 
-    def test_crear_articulo_autenticado_con_permiso(self):
-        """
-        Test para verificar que un usuario con permisos puede acceder a la vista
-
-        Es correcto sí se redirige a la vista de create_article
-        """
-
-        self.client.login(username="testuser", password="testpassword")
-
-        response = self.client.get(reverse("create-article"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "article/create_article.html")
-
+    # TODO check test function
     def test_crear_articulo_autenticado_sin_permiso(self):
         """
         Test para verificar que un usuario sin permisos no puede acceder a la vista
@@ -126,11 +115,12 @@ class CreateArticleTestCase(TestCase):
         self.client.login(username="testuser", password="testpassword")
         self.role.permissions.remove(self.permission_crear_articulos)
 
-        response = self.client.get(reverse("create-article"))
+        response = self.client.get(reverse("article-create"))
 
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("forbidden"))
 
+    # TODO check test function
     def test_crear_articulo_no_autenticado(self):
         """
         Test para verificar que un usuario no autenticado no puede acceder a la vista
@@ -138,7 +128,7 @@ class CreateArticleTestCase(TestCase):
         Es correcto sí se redirige a la vista de login
         """
 
-        response = self.client.get(reverse("create-article"))
+        response = self.client.get(reverse("article-create"))
 
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("login"))
@@ -395,3 +385,179 @@ class CreateArticleTestCase(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("login"))
         self.assertTrue(Category.objects.filter(pk=self.category.pk).exists())
+
+class PruebasGestionArticulo(TestCase):
+    def setUp(self):
+        """
+        Inicializa la configuración de las pruebas.
+        Crea un usuario, un rol, permisos, y una categoría para los tests.
+        """
+        self.client = Client()
+        self.user_can_manage_articles = User.objects.create_user(
+            username="articleuser", password="articlepassword"
+        )
+
+        # Crear rol y permisos
+        self.role = Role.objects.create(name="ArticleManagerRole")
+        self.permission_crear_articulos = Permission.objects.create(
+            name=PermissionEnum.CREAR_ARTICULOS
+        )
+        self.permission_editar_articulos = Permission.objects.create(
+            name=PermissionEnum.EDITAR_ARTICULOS
+        )
+        self.permission_ver_articulos = Permission.objects.create(
+            name=PermissionEnum.VER_INICIO
+        )
+
+        # Añadir permisos al rol
+        self.role.permissions.add(
+            self.permission_crear_articulos,
+            self.permission_editar_articulos,
+            self.permission_ver_articulos,
+        )
+
+        # Asignar rol al usuario
+        self.user_can_manage_articles.roles.add(self.role)
+
+        # Crear una categoría
+        self.category = Category.objects.create(
+            name="Test Category",
+            description="A test category",
+            type=CategoryType.FREE.value,
+            state=True,
+            is_moderated=False,
+        )
+
+        # Crear un artículo
+        self.article = Article.objects.create(
+            title="Test Article",
+            autor=self.user_can_manage_articles,
+            category=self.category,
+            description="A description for the test article",
+        )
+
+        ArticleContent.objects.create(
+            article=self.article,
+            body="Test Article Content",
+            autor=self.user_can_manage_articles,
+        )
+
+    def test_crear_articulo_autenticado_con_permiso(self):
+        """
+        Verificar que un usuario con permiso 'CREAR_ARTICULOS' puede crear un artículo.
+        """
+        self.client.login(username="articleuser", password="articlepassword")
+
+        data = {
+            "title": "New Article",
+            "description": "This is a new article",
+            "category": self.category.id,  # ID de categoría válido
+            "body": "This is the content of the new article"
+        }
+
+        response = self.client.post(reverse("article-create"), data)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("home"))
+        self.assertTrue(Article.objects.filter(title="New Article").exists())
+
+    def test_crear_articulo_autenticado_sin_permiso(self):
+        """
+        Verificar que un usuario sin permiso 'CREAR_ARTICULOS' es redirigido.
+        """
+        self.role.permissions.remove(self.permission_crear_articulos)
+        self.client.login(username="articleuser", password="articlepassword")
+
+        response = self.client.get(reverse("article-create"))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("forbidden"))
+
+    def test_actualizar_articulo_autenticado_con_permiso(self):
+        """
+        Verificar que un usuario con permiso 'EDITAR_ARTICULOS' puede actualizar un artículo.
+        """
+        self.client.login(username="articleuser", password="articlepassword")
+
+        data = {
+            "title": "Updated Title",
+            "description": "Updated description",
+            "category": self.category.id,
+            "body": "Updated article content",
+        }
+
+        response = self.client.post(reverse("article-update", args=[self.article.pk]), data)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("home"))
+
+        # Verificar que el artículo fue actualizado
+        self.article.refresh_from_db()
+        self.assertEqual(self.article.title, "Updated Title")
+
+    def test_actualizar_articulo_autenticado_sin_permiso(self):
+        """
+        Verificar que un usuario sin permiso 'EDITAR_ARTICULOS' es redirigido.
+        """
+        self.role.permissions.remove(self.permission_editar_articulos)
+        self.client.login(username="articleuser", password="articlepassword")
+
+        response = self.client.get(reverse("article-update", args=[self.article.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("forbidden"))
+
+    def test_historial_articulo_autenticado_con_permiso(self):
+        """
+        Verificar que un usuario con permiso 'EDITAR_ARTICULOS' puede ver el historial de un artículo.
+        """
+        self.client.login(username="articleuser", password="articlepassword")
+        response = self.client.get(reverse("article-update-history", args=[self.article.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "article/article_update_history.html")
+
+    def test_historial_articulo_autenticado_sin_permiso(self):
+        """
+        Verificar que un usuario sin permiso 'EDITAR_ARTICULOS' es redirigido.
+        """
+        self.role.permissions.remove(self.permission_editar_articulos)
+        self.client.login(username="articleuser", password="articlepassword")
+        response = self.client.get(reverse("article-update-history", args=[self.article.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("forbidden"))
+
+    def test_listar_articulos_autenticado_con_permiso(self):
+        """
+        Verificar que un usuario con permiso 'VER_INICIO' puede ver la lista de artículos.
+        """
+        self.client.login(username="articleuser", password="articlepassword")
+        response = self.client.get(reverse("article-list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "article/article_list.html")
+
+    def test_listar_articulos_autenticado_sin_permiso(self):
+        """
+        Verificar que un usuario sin permiso 'VER_INICIO' es redirigido.
+        """
+        self.role.permissions.remove(self.permission_ver_articulos)
+        self.client.login(username="articleuser", password="articlepassword")
+        response = self.client.get(reverse("article-list"))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("forbidden"))
+
+    def test_detalle_articulo_autenticado_con_permiso(self):
+        """
+        Verificar que un usuario con permiso 'VER_INICIO' puede ver los detalles de un artículo.
+        """
+        self.client.login(username="articleuser", password="articlepassword")
+        response = self.client.get(reverse("article-detail", args=[self.article.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "article/article_detail.html")
+
+    def test_detalle_articulo_autenticado_sin_permiso(self):
+        """
+        Verificar que un usuario sin permiso 'VER_INICIO' es redirigido.
+        """
+        self.role.permissions.remove(self.permission_ver_articulos)
+        self.client.login(username="articleuser", password="articlepassword")
+        response = self.client.get(reverse("article-detail", args=[self.article.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("forbidden"))
