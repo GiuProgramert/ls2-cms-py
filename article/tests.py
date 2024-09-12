@@ -4,9 +4,8 @@ from django.urls import reverse
 from roles.models import Role
 from roles.utils import PermissionEnum
 from roles.models import Permission
-from article.models import Category, CategoryType,Article, ArticleContent
+from article.models import Category, CategoryType, Article, ArticleContent
 from article.forms import CategoryForm
-from article.forms import ArticleForm
 
 
 User = get_user_model()
@@ -386,6 +385,7 @@ class CreateArticleTestCase(TestCase):
         self.assertRedirects(response, reverse("login"))
         self.assertTrue(Category.objects.filter(pk=self.category.pk).exists())
 
+
 class PruebasGestionArticulo(TestCase):
     def setUp(self):
         """
@@ -452,7 +452,7 @@ class PruebasGestionArticulo(TestCase):
             "title": "New Article",
             "description": "This is a new article",
             "category": self.category.id,  # ID de categoría válido
-            "body": "This is the content of the new article"
+            "body": "This is the content of the new article",
         }
 
         response = self.client.post(reverse("article-create"), data)
@@ -485,7 +485,9 @@ class PruebasGestionArticulo(TestCase):
             "body": "Updated article content",
         }
 
-        response = self.client.post(reverse("article-update", args=[self.article.pk]), data)
+        response = self.client.post(
+            reverse("article-update", args=[self.article.pk]), data
+        )
 
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("home"))
@@ -510,7 +512,9 @@ class PruebasGestionArticulo(TestCase):
         Verificar que un usuario con permiso 'EDITAR_ARTICULOS' puede ver el historial de un artículo.
         """
         self.client.login(username="articleuser", password="articlepassword")
-        response = self.client.get(reverse("article-update-history", args=[self.article.pk]))
+        response = self.client.get(
+            reverse("article-update-history", args=[self.article.pk])
+        )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "article/article_update_history.html")
 
@@ -520,7 +524,9 @@ class PruebasGestionArticulo(TestCase):
         """
         self.role.permissions.remove(self.permission_editar_articulos)
         self.client.login(username="articleuser", password="articlepassword")
-        response = self.client.get(reverse("article-update-history", args=[self.article.pk]))
+        response = self.client.get(
+            reverse("article-update-history", args=[self.article.pk])
+        )
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("forbidden"))
 
