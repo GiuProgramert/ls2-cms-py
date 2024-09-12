@@ -11,26 +11,45 @@
 
 <div class="article-details-container">
 
-    <h1 class="article-title">{{ article.title }}</h1>
+    <div class="article-header">
+      <h1 class="article-title">{{ article.title }}</h1>
 
-    <div>
-      <h2 class="article-title">Descripción</h2>
-      <p>{{ article.description }}</p>
+      <div class="article-actions">
+        <a href="{% url 'article-to-revision' pk=article.id %}" class="detail-link">Pasar a Revisión</a>
+        <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
+        <a href="{% url 'article-to-draft' pk=article.id %}" class="detail-link">Pasar a Borrador</a>
+        <a href="{% url 'article-to-inactive' pk=article.id %}" class="detail-link">Inactivar</a>
+        <a href="{% url 'article-update' article.id %}" class="detail-link">Editar</a>
+        <a href="{% url 'article-list' %}" class="detail-link">Volver a la lista</a>
+      </div>
+
+      <div>
+        <h2 class="article-title">Descripción</h2>
+        <p class="article-description">{{ article.description }}</p>
+      </div>
+
+      <div>
+        <h2 class="article-title">Categoría</h2>
+        <p class="article-description">{{ article.category.name }}</p>
+      </div>
+
+      <div>
+        <h2 class="article-title">Estado</h2>
+        <p class="article-description">
+          {% if article.status == 'd' %}
+            Borrador
+          {% elif article.status == 'p' %}
+            Publicado
+          {% elif article.status == 'i' %}
+            Inactivo
+          {% elif article.status == 'r' %}
+            Revisión
+          {% endif %}
+        </p>
+      </div>
     </div>
-
-    <div>
-      <h2 class="article-title">Categoría</h2>
-      <p>{{ article.category.name }}</p>
-    </div>
-
-    <hr>
 
     <div class="article-body">{{ article_render_content|safe }}</div>
-
-    <a href="{% url 'article-update' article.id %}" class="detail-link">Editar</a>
-    {% comment %} <a href="{% url 'article-delete' article.id %}">Eliminar</a> {% endcomment %}
-    <a href="" class="detail-link">Eliminar</a>
-    <a href="{% url 'article-list' %}" class="detail-link">Volver a la lista</a>
 </div>
 
 {% endblock content %}

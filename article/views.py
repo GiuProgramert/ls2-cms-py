@@ -1,8 +1,14 @@
 import mistune
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from roles.utils import PermissionEnum
-from article.models import Category, ArticleContent, Article
+from article.models import (
+    Category,
+    ArticleContent,
+    Article,
+    ArticleStates,
+    CategoryType,
+)
 from article.forms import CategoryForm, ArticleForm
 
 
@@ -21,22 +27,54 @@ def home(request):
         HttpResponse: Renderiza la plantilla 'article/home.html'.
     """
 
-    # send_email(None, None, None)
+    categories = Category.objects.all()
 
     if not request.user.is_authenticated:
-        tus_permisos = []
+        permissions = []
+
+        permited_categories = [
+            category
+            for category in categories
+            if category.type == CategoryType.FREE.value
+        ]
+
+        not_permited_categories = [
+            {"name": category.name, "type": category.type}
+            for category in categories
+            if category.type != CategoryType.FREE.value
+        ]
     else:
-        tus_permisos = [
+        permissions = [
             permiso.name
             for rol in request.user.roles.all()
             for permiso in rol.permissions.all()
         ]
 
+        permited_categories = [
+            category
+            for category in categories
+            if category.type
+            in (CategoryType.FREE.value, CategoryType.SUSCRIPTION.value)
+        ]
+
+        not_permited_categories = [
+            {"name": category.name, "type": category.type}
+            for category in categories
+            if category.type == CategoryType.PAY.value
+        ]
+
+    articles = Article.objects.filter(
+        category__in=permited_categories, state=ArticleStates.PUBLISHED.value
+    )
+
     return render(
         request,
         "article/home.html",
         {
-            "permisos": tus_permisos,
+            "permisos": permissions,
+            "permited_categories": permited_categories,
+            "not_permited_categories": not_permited_categories,
+            "articles": articles,
         },
     )
 
@@ -261,6 +299,76 @@ def article_detail(request, pk):
         "article/article_detail.html",
         {"article": article, "article_render_content": article_render_content},
     )
+
+
+def article_to_revision(request, pk):
+    """
+    Vista que cambia el estado de un artículo a Revisión.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID del artículo.
+    """
+
+    article = get_object_or_404(Article, pk=pk)
+
+    if article.state != ArticleStates.DRAFT.value:
+        return HttpResponseBadRequest(
+            "El artículo debe estar en Borrador para pasar a Revisión"
+        )
+
+    article.change_state(ArticleStates.REVISION.value)
+    return redirect("article-detail", pk=pk)
+
+
+def article_to_published(request, pk):
+    """
+    Vista que cambia el estado de un artículo a Publicado.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID del artículo.
+    """
+
+    article = get_object_or_404(Article, pk=pk)
+
+    if article.state != ArticleStates.REVISION.value:
+        return HttpResponseBadRequest(
+            "El artículo debe estar en revisión para publicarse"
+        )
+
+    article.change_state(ArticleStates.PUBLISHED.value)
+    return redirect("article-detail", pk=pk)
+
+
+def article_to_draft(request, pk):
+    """
+    Vista que cambia el estado de un artículo a Borrador.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID del artículo
+    """
+
+    article = get_object_or_404(Article, pk=pk)
+
+    article.change_state(ArticleStates.DRAFT.value)
+    return redirect("article-detail", pk=pk)
+
+
+def article_to_inactive(request, pk):
+    """
+    Vista que cambia el estado de un artículo a Inactivo.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID del artículo
+    """
+
+    article = get_object_or_404(Article, pk=pk)
+
+    article.change_state(ArticleStates.INACTIVE.value)
+    return redirect("article-detail", pk=pk)
 
 
 # =============================================================================

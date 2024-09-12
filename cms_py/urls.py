@@ -45,6 +45,26 @@ urlpatterns = [
     path(
         "article/<int:pk>/detail", article.views.article_detail, name="article-detail"
     ),
+    path(
+        "article/<int:pk>/update/state/revision/",
+        article.views.article_to_revision,
+        name="article-to-revision",
+    ),
+    path(
+        "article/<int:pk>/update/state/published/",
+        article.views.article_to_published,
+        name="article-to-published",
+    ),
+    path(
+        "article/<int:pk>/update/state/draft/",
+        article.views.article_to_draft,
+        name="article-to-draft",
+    ),
+    path(
+        "article/<int:pk>/update/state/inactive/",
+        article.views.article_to_inactive,
+        name="article-to-inactive",
+    ),
     path("profile/edit/", user.views.edit_profile, name="edit_profile"),
     # Categories
     path("categories/", article.views.category_list, name="category-list"),
