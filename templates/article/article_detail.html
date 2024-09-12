@@ -1,0 +1,73 @@
+{% extends "base.html" %} 
+
+{% block headblock %}
+{% load static %}
+  <link rel="stylesheet" href="{% static 'css/article_detail.css' %}">
+  <link href="{% static 'mdeditor/css/editormd.min.css' %}" rel="stylesheet">
+  <link href="{% static 'mdeditor/css/editormd.preview.css' %}" rel="stylesheet">
+{% endblock headblock %}
+
+{% block content %}
+
+<div class="article-details-container">
+
+    <div class="article-header">
+      <h1 class="article-title">{{ article.title }}</h1>
+
+      <div class="article-actions">
+
+        {% if article.state != 'd' %}
+          <a href="{% url 'article-to-draft' pk=article.id %}" class="detail-link">Pasar a Borrador</a>
+        {% endif %}
+
+        {% if article.state != 'r' and article.state == 'd' %}
+          <a href="{% url 'article-to-revision' pk=article.id %}" class="detail-link">Pasar a Revisión</a>
+        {% endif %}
+
+        {% if article.state != 'p' and article.state == 'r' %}
+          {% if can_publish or not is_moderated_category %}
+            <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
+          {% endif %}
+        {% endif %}
+
+        {% if article.state != 'i' %}
+          <a href="{% url 'article-to-inactive' pk=article.id %}" class="detail-link">Inactivar</a>
+        {% endif %}
+        
+        {% if can_edit %}
+          <a href="{% url 'article-update' article.id %}" class="detail-link">Editar</a>
+        {% endif %}
+
+        {% comment %} <a href="{% url 'article-list' %}" class="detail-link">Volver a la lista</a> {% endcomment %}
+      </div>
+
+      <div>
+        <h2 class="article-title">Descripción</h2>
+        <p class="article-description">{{ article.description }}</p>
+      </div>
+
+      <div>
+        <h2 class="article-title">Categoría</h2>
+        <p class="article-description">{{ article.category.name }}</p>
+      </div>
+
+      <div>
+        <h2 class="article-title">Estado</h2>
+        <p class="article-description">
+          {% if article.state == 'd' %}
+            Borrador
+          {% elif article.state == 'p' %}
+            Publicado
+          {% elif article.state == 'i' %}
+            Inactivo
+          {% elif article.state == 'r' %}
+            Revisión
+          {% endif %}
+        </p>
+      </div>
+    </div>
+
+    <div class="article-body">{{ article_render_content|safe }}</div>
+</div>
+
+{% endblock content %}

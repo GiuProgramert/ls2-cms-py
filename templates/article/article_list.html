@@ -1,0 +1,20 @@
+{% extends "base.html" %} 
+
+{% block headblock %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/category_list.css' %}">
+
+{% endblock headblock %}
+
+{% block content %}
+<h2>Articulos</h2>
+
+<div class="list-container">
+    {% for article in articles %}
+        <a href="" class="category">{{ article.title }}</a>
+    {% endfor %}
+
+    <a href="{% url 'article-create' %}" class="button">Crear nuevo articulo</a>
+</div>   
+
+{% endblock content %}

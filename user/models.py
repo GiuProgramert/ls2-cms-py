@@ -7,18 +7,16 @@ class CustomUser(AbstractUser):
     """
     Modelo personalizado de usuario que extiende el modelo `AbstractUser` de Django.
 
-    Este modelo incluye campos adicionales como `phone` y una relación de muchos a muchos con el modelo `Role`.
-    Además, incluye métodos personalizados para manejar permisos de usuario.
-
-    Attributes:
-        phone (str): Número de teléfono del usuario.
-        roles (ManyToManyField): Relación de muchos a muchos con el modelo `Role`, que define los roles del usuario.
-        groups (ManyToManyField): Grupos a los que pertenece el usuario, definidos por el modelo `Group`.
-        user_permissions (ManyToManyField): Permisos específicos del usuario, definidos por el modelo `Permission`.
+    Incluye la relación de compras de categorías de pago.
     """
 
     phone = models.CharField(max_length=20)
     roles = models.ManyToManyField(Role)
+
+    # Relación con las categorías compradas
+    # purchased_categories = models.ManyToManyField(
+    #    'article.Category', through='article.UserCategoryPurchase', related_name='users_who_purchased'
+    # )
 
     # Necesario para evitar errores django
     groups = models.ManyToManyField(
@@ -46,7 +44,6 @@ class CustomUser(AbstractUser):
         Returns:
             bool: Retorna `True` si el usuario tiene todos los permisos, de lo contrario `False`.
         """
-
         con_permiso = True
 
         for permiso in permisos:

@@ -148,3 +148,72 @@ button:hover, .btn:hover {
   transform: translateY(-2px); /* Levantar ligeramente el párrafo */
   transition: all 0.3s ease; /* Transición suave para efectos */
 }
+
+.main-container {
+  display: grid;
+  margin: 20px 0;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.main-container .articles {
+  grid-column: 1 / span 2;
+}
+
+.articles {
+  flex: 3;
+  margin-right: 20px;
+}
+
+.article-card {
+  background-color: #fff;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.article-card .author {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.article-card .title {
+  font-size: 1.5rem;
+  margin: 10px 0;
+}
+
+.article-card .description {
+  font-size: 1rem;
+  color: #333;
+}
+
+.article-actions {
+  margin-top: 10px;
+}
+
+.article-actions span {
+  margin-right: 20px;
+  font-size: 0.9rem;
+}
+
+.categories {
+  flex: 1;
+}
+
+.category-section {
+  background-color: #fff;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.category-section h3 {
+  margin-bottom: 10px;
+}
+
+.category-section p {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 5px;
+}

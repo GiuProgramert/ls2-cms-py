@@ -1,0 +1,92 @@
+@import url("home.css");
+@import url("category_detail.css");
+
+/* Ajuste del contenedor del formulario para diferentes resoluciones */
+@media (min-width: 768px) {
+  .article-details-container {
+    max-width: auto; /* Aumentar el ancho máximo para pantallas más grandes */
+  }
+}
+
+.article-details-container, .article-header {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.article-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 500px;
+}
+
+.article-header {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.detail-link {
+  padding: 0.75rem 1rem; /* Espaciado interno */
+  background-color: #3182ce; /* Fondo azul (similar a Tailwind's blue-600) */
+  color: #ffffff; /* Color de texto blanco */
+  border: none; /* Sin borde */
+  border-radius: 4px; /* Bordes redondeados */
+  font-size: 1rem; /* Tamaño de fuente */
+  font-weight: 600; /* Texto en negrita */
+  cursor: pointer; /* Cambiar el cursor al pasar sobre el botón */
+  transition: background-color 0.3s; /* Transición suave para el fondo */
+  text-decoration: none; /* Sin subrayado */
+}
+
+.detail-link:hover {
+  background-color: #2b6cb0; /* Cambiar fondo al pasar el mouse (similar a Tailwind's blue-700) */
+}
+
+.article-title {
+    color: #1a202c; /* Color del texto (similar a Tailwind's gray-900) */
+    margin-bottom: 0.5rem; /* Margen inferior para separar del formulario */
+}
+
+.article-body {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.article-description {
+  margin-bottom: 0;
+}
+
+.article-body img {
+  object-fit: contain;
+  width: 1000px;
+  margin-top: 20px;
+}
+
+.article-body h1, h2, h3, h4, h5, h6 {
+  color: black;
+}
+
+.article-body p {
+  margin-bottom: 0.8rem;
+}
+
+.article-body blockquote {
+  background-color: #f7fafc; /* Fondo gris claro (similar a Tailwind's gray-100) */
+  border-left: 4px solid #3182ce; /* Borde izquierdo azul (similar a Tailwind's blue-600) */
+  padding: 1rem; /* Espaciado interno */
+  margin: 1rem 0; /* Margen superior e inferior */
+}
+
+.article-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.article-body th, .article-body td {
+  border: 1px solid #e2e8f0; /* Borde gris claro (similar a Tailwind's gray-200) */
+  padding: 0.5rem; /* Espaciado interno */
+}
