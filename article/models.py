@@ -45,7 +45,7 @@ class Category(models.Model):
     type = models.CharField(choices=type_choices, default=CategoryType.FREE)
     state = models.BooleanField(default=True)
     is_moderated = models.BooleanField(default=False)
-    
+
     def has_purchased_category(self, user):
         """
         Verifica si el usuario ha comprado una categoría específica.
@@ -56,12 +56,26 @@ class Category(models.Model):
         Returns:
             bool: Retorna True si el usuario ha comprado la categoría, False si no.
         """
-        return UserCategoryPurchase.objects.filter(
-            user=user, category=self
-        ).exists()
+        return UserCategoryPurchase.objects.filter(user=user, category=self).exists()
 
     def __str__(self):
         return self.name
+
+
+class ArticleStates(Enum):
+    """
+    Enumeración que define los estados de un artículo.
+
+    Los valores posibles son:
+    - PENDING: Artículo pendiente de revisión.
+    - APPROVED: Artículo aprobado.
+    - REJECTED: Artículo rechazado.
+    """
+
+    DRAFT = "d"
+    REVISION = "r"
+    PUBLISHED = "p"
+    INACTIVE = "i"
 
 
 class Article(models.Model):
@@ -88,6 +102,26 @@ class Article(models.Model):
     likes_number = models.IntegerField(default=0)
     dislikes_number = models.IntegerField(default=0)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    state = models.CharField(
+        max_length=1,
+        choices=[
+            (ArticleStates.DRAFT.value, "Borrador"),
+            (ArticleStates.REVISION.value, "En revisión"),
+            (ArticleStates.PUBLISHED.value, "Publicado"),
+            (ArticleStates.INACTIVE.value, "Inactivo"),
+        ],
+        default=ArticleStates.DRAFT.value,
+    )
+
+    def change_state(self, new_state):
+        """
+        Cambia el estado del artículo.
+
+        Args:
+            new_state (str): El nuevo estado del artículo.
+        """
+        self.state = new_state
+        self.save()
 
 
 class ArticleContent(models.Model):
@@ -105,6 +139,7 @@ class ArticleContent(models.Model):
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
+
 class UserCategoryPurchase(models.Model):
     """
     Modelo que representa una compra de categoría por un usuario.
@@ -115,10 +150,13 @@ class UserCategoryPurchase(models.Model):
         purchase_date (DateTimeField): Fecha de la compra.
         price (DecimalField): Precio de la categoría en el momento de la compra.
     """
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     purchase_date = models.DateTimeField(auto_now_add=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return f"{self.user.username} compró {self.category.name} el {self.purchase_date}"
+        return (
+            f"{self.user.username} compró {self.category.name} el {self.purchase_date}"
+        )

@@ -1,0 +1,85 @@
+/* Importar el CSS existente para reutilizar estilos */
+@import url('home.css');
+
+/* Estilo principal para el contenedor de los detalles del rol */
+.role-details-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background-color: #f7fafc;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilo para el título del rol */
+.role-details-container h2 {
+    color: #2d3748;
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+/* Estilo para la tabla de permisos */
+.permissions-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.permissions-table th, .permissions-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.permissions-table th {
+    background-color: #f1f5f9; /* Fondo gris claro para encabezados */
+    color: #2d3748; /* Color del texto */
+    font-weight: 600; /* Negrita para los encabezados */
+}
+
+.permissions-table td {
+    color: #4a5568; /* Color del texto */
+    background-color: #ffffff; /* Fondo blanco */
+}
+
+.permissions-table tbody tr:nth-child(even) {
+    background-color: #f7fafc; /* Fondo alternativo para filas pares */
+}
+
+/* Estilo para los enlaces */
+.role-details-container a {
+    display: inline-block;
+    margin-right: 1rem;
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #3182ce;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+
+.role-details-container a:hover {
+    background-color: #2b6cb0;
+}
+
+.role-details-container a[href*="delete"] {
+    background-color: #e53e3e;
+}
+
+.role-details-container a[href*="delete"]:hover {
+    background-color: #c53030;
+}
+
+.role-details-container a[href*="list"] {
+    background-color: #a0aec0;
+    color: #1a202c;
+}
+
+.role-details-container a[href*="list"]:hover {
+    background-color: #718096;
+}

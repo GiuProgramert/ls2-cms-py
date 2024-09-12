@@ -11,16 +11,22 @@
 
 <div class="article-details-container">
 
-    <h1 class="article-title">{{ article.title }}</h1>
-
-    <div>
-      <h2 class="article-title">Descripción</h2>
-      <p>{{ article.description }}</p>
+    <div class="article-header">
+        <h1 class="article-title">{{ article.title }}</h1>
+    
+        <div>
+          <h2 class="article-title">Descripción</h2>
+          <p>{{ article.description }}</p>
+        </div>
+    
+        <div>
+          <h2 class="article-title">Categoría</h2>
+          <p>{{ article.category.name }}</p>
+        </div>
     </div>
 
-    <div>
-      <h2 class="article-title">Categoría</h2>
-      <p>{{ article.category.name }}</p>
+    <div class="article-header">
+        <h2 class="article-title">Historial de versiones</h2>
     </div>
 
     <form method="POST">
