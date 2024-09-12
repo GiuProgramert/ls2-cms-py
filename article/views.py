@@ -67,6 +67,8 @@ def home(request):
         category__in=permited_categories, state=ArticleStates.PUBLISHED.value
     )
 
+    print(permissions)
+
     return render(
         request,
         "article/home.html",
@@ -292,12 +294,22 @@ def article_detail(request, pk):
     if not article_content:
         return HttpResponse("No hay contenido para este artículo", status=404)
 
+    can_edit = request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS])
+    can_publish = request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
+    is_moderated_category = article.category.is_moderated
+
     article_render_content = mistune.html(article_content.body)
 
     return render(
         request,
         "article/article_detail.html",
-        {"article": article, "article_render_content": article_render_content},
+        {
+            "article": article,
+            "article_render_content": article_render_content,
+            "can_edit": can_edit,
+            "can_publish": can_publish,
+            "is_moderated_category": is_moderated_category,
+        },
     )
 
 
@@ -331,6 +343,11 @@ def article_to_published(request, pk):
     """
 
     article = get_object_or_404(Article, pk=pk)
+
+    can_publish = request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
+    
+    if not can_publish:
+        return redirect("forbidden")
 
     if article.state != ArticleStates.REVISION.value:
         return HttpResponseBadRequest(
