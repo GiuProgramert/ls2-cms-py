@@ -67,8 +67,6 @@ def home(request):
         category__in=permited_categories, state=ArticleStates.PUBLISHED.value
     )
 
-    print(permissions)
-
     return render(
         request,
         "article/home.html",
