@@ -67,8 +67,6 @@ def home(request):
         category__in=permited_categories, state=ArticleStates.PUBLISHED.value
     )
 
-    print(permissions)
-
     return render(
         request,
         "article/home.html",
@@ -263,7 +261,7 @@ def article_list(request):
 
     articles = Article.objects.all()
     can_create = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
-
+    
     return render(
         request,
         "article/article_list.html",

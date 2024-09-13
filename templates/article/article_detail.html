@@ -36,11 +36,9 @@
           <a href="{% url 'article-to-inactive' pk=article.id %}" class="detail-link">Inactivar</a>
         {% endif %}
         
-        {% if can_edit %}
+        {% if can_edit and article.state != 'p' %}
           <a href="{% url 'article-update' article.id %}" class="detail-link">Editar</a>
         {% endif %}
-
-        <a href="{% url 'article-list' %}" class="detail-link">Volver a la lista</a>
       </div>
 
       <div>
@@ -70,6 +68,19 @@
     </div>
 
     <div class="article-body">{{ article_render_content|safe }}</div>
+
+    <div class="article-history">
+      {% if can_edit %}
+        <a href="{% url 'article-update-history' article.id %}" class="detail-link">Ver historial de cambios</a>
+      {% endif %}
+      <a href="{% if request.GET.from == 'home' %}{% url 'home' %}{% else %}{% url 'article-list' %}{% endif %}" class="detail-link">
+        {% if request.GET.from == 'home' %}
+          Volver a la página principal
+        {% else %}
+          Volver a la lista
+        {% endif %}
+      </a>
+    </div>
 </div>
 
 {% endblock content %}

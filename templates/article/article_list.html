@@ -10,7 +10,7 @@
 
 <div class="list-container">
     {% for article in articles %}
-        <a href="{% url 'article-detail' article.id %}" class="category">{{ article.title }}</a>
+        <a href="{% url 'article-detail' article.id %}?from=article-list" class="category">{{ article.title }}</a>
     {% endfor %}
 
     {% if can_create %}
