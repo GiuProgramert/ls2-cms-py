@@ -127,10 +127,10 @@ def register(request):
             user = form.save()
 
             # Fetch the "Visitante" role and assign it to the new user
-            visitante_role = Role.objects.get(
-                name="Visitante"
+            suscriptor_role = Role.objects.get(
+                name="Suscriptor"
             )  # Assumes the role name is "Visitante"
-            user.roles.add(visitante_role)  # Assign the role to the user
+            user.roles.add(suscriptor_role)  # Assign the role to the user
             user.save()  # Save the user with the new role
 
             # Log the user in after registration
