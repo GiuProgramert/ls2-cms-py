@@ -58,6 +58,12 @@
             </li>
           {% endif %}
 
+          {% if "ver_inicio" in permisos %}
+            <li class="navbar-item">
+              <a href="{% url 'article-list' %}">Articulos</a>
+            </li>
+          {% endif %}
+
           {% if not user.is_authenticated %}
             <li class="navbar-item"><a href="{% url 'register' %}">Registrarse</a></li>
             <li class="navbar-item"><a href="/login">Iniciar sesión</a></li>

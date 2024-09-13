@@ -262,8 +262,16 @@ def article_list(request):
         return redirect("forbidden")
 
     articles = Article.objects.all()
-
-    return render(request, "article/article_list.html", {"articles": articles})
+    can_create = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
+    
+    return render(
+        request,
+        "article/article_list.html",
+        {
+            "articles": articles,
+            "can_create": can_create,  
+        },
+    )
 
 
 def article_detail(request, pk):
