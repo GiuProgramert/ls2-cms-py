@@ -25,9 +25,11 @@
         {% endif %}
 
         {% if can_publish and article.state == 'r' %}
-          {% if not is_moderated_category %}
             <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
-          {% endif %}
+        {% endif %}
+        
+        {% if not is_moderated_category and article.state == 'r' %}
+            <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
         {% endif %}
 
         {% if can_edit and article.state != 'i' %}
