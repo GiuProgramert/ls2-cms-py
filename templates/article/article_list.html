@@ -11,7 +11,7 @@
 
 <div class="list-container">
     {% for article in articles %}
-        <a href="" class="category">{{ article.title }}</a>
+        <a href="{% url 'article-detail' article.id %}"" class="category">{{ article.title }}</a>
     {% endfor %}
 
     <a href="{% url 'article-create' %}" class="button">Crear nuevo articulo</a>
