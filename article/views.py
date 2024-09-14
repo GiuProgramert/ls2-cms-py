@@ -275,17 +275,6 @@ def article_list(request):
 def article_detail(request, pk):
     """
     Vista que muestra el detalle de un artículo.
-
-    Solo los usuarios autenticados y con el permiso `VER_ARTICULOS` pueden
-    acceder a esta vista. Si no se cumplen las condiciones, se redirige al
-    usuario a la página de login o a la página de acceso prohibido.
-
-    Args:
-        request (HttpRequest): La solicitud HTTP.
-        pk (int): El ID del artículo.
-
-    Returns:
-        HttpResponse: Renderiza la plantilla 'article/article_detail.html' o redirige.
     """
 
     if not request.user.is_authenticated:
@@ -300,7 +289,12 @@ def article_detail(request, pk):
     if not article_content:
         return HttpResponse("No hay contenido para este artículo", status=404)
 
-    # Separate permissions for editing as editor and author
+    # Check if the user is in "Administrador" or "Autor" roles
+    is_admin = request.user.roles.filter(name="Administrador").exists()
+    is_author = request.user.roles.filter(name="Autor").exists()
+
+    can_inactivate = is_admin or is_author  # True if user is either Admin or Author
+    
     can_edit_as_editor = request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS])
     can_edit_as_author = request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS_BORRADOR])
     
@@ -322,9 +316,11 @@ def article_detail(request, pk):
             "can_edit_as_author": can_edit_as_author,
             "can_edit": can_edit,
             "can_publish": can_publish,
+            "can_inactivate": can_inactivate,  # Pass this to the template
             "is_moderated_category": is_moderated_category,
         },
     )
+
 
 
 def article_to_revision(request, pk):

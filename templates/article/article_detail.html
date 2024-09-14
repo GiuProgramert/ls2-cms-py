@@ -38,7 +38,8 @@
             <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
         {% endif %}
 
-        {% if can_edit and article.state != 'i' %}
+        <!-- Display Inactivate option only for Admin or Author roles -->
+        {% if can_inactivate %}
           <a href="{% url 'article-to-inactive' pk=article.id %}" class="detail-link">Inactivar</a>
         {% endif %}
         
