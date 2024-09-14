@@ -1,4 +1,4 @@
-{% extends "base.html" %} 
+{% extends "base.html" %}  
 
 {% block headblock %}
 {% load static %}
@@ -15,6 +15,12 @@
       <h1 class="article-title">{{ article.title }}</h1>
 
       <div class="article-actions">
+
+        {% if article.state == 'r' and can_edit_as_editor %}
+          <a href="{% url 'article-update' article.id %}" class="detail-link">Editar como editor</a>
+        {% elif article.state == 'd' and can_edit_as_author %}
+          <a href="{% url 'article-update' article.id %}" class="detail-link">Editar como autor</a>
+        {% endif %}
 
         {% if can_edit and article.state != 'r' %}
           <a href="{% url 'article-to-draft' pk=article.id %}" class="detail-link">Pasar a Borrador</a>
@@ -36,9 +42,6 @@
           <a href="{% url 'article-to-inactive' pk=article.id %}" class="detail-link">Inactivar</a>
         {% endif %}
         
-        {% if can_edit and article.state != 'p' %}
-          <a href="{% url 'article-update' article.id %}" class="detail-link">Editar</a>
-        {% endif %}
       </div>
 
       <div>

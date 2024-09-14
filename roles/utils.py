@@ -26,7 +26,8 @@ class PermissionEnum(str, Enum):
     VER_CATEGORIAS_SUSCRIPTOR = "ver_categorias_suscriptor"
     VER_CATEGORIAS_PAGO = "ver_categorias_pago"
     CREAR_ARTICULOS = "crear_articulos"
-    EDITAR_ARTICULOS = "editar_articulos"
+    EDITAR_ARTICULOS = "editar_articulos" #editar articulos en edicion
+    EDITAR_ARTICULOS_BORRADOR = "editar_articulos_borrador"
     MODERAR_ARTICULOS = "moderar_articulos"
     PUBLICAR_COMENTARIOS = "publicar_comentarios"
     LEER_COMENTARIOS = "leer_comentarios"

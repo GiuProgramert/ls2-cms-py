@@ -154,7 +154,7 @@ def article_update(request, pk):
     if not request.user.is_authenticated:
         return redirect("login")
 
-    if not request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS]):
+    if not request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS]) and not request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS_BORRADOR]):
         return redirect("forbidden")
 
     article = get_object_or_404(Article, pk=pk)
@@ -300,7 +300,13 @@ def article_detail(request, pk):
     if not article_content:
         return HttpResponse("No hay contenido para este artículo", status=404)
 
-    can_edit = request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS])
+    # Separate permissions for editing as editor and author
+    can_edit_as_editor = request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS])
+    can_edit_as_author = request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS_BORRADOR])
+    
+    # General edit permission (either editor or author)
+    can_edit = can_edit_as_editor or can_edit_as_author
+    
     can_publish = request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
     is_moderated_category = article.category.is_moderated
 
@@ -312,6 +318,8 @@ def article_detail(request, pk):
         {
             "article": article,
             "article_render_content": article_render_content,
+            "can_edit_as_editor": can_edit_as_editor,
+            "can_edit_as_author": can_edit_as_author,
             "can_edit": can_edit,
             "can_publish": can_publish,
             "is_moderated_category": is_moderated_category,
