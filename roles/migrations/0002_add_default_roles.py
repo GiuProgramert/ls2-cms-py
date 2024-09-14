@@ -14,18 +14,23 @@ def add_default_roles(apps, schema_editor):
         name="Editor", description="Rol de editor con privilegios de edición"
     )
 
-    Role.objects.create(name="Autor", description="Rol de autor con privilegios de escritura")
-
     Role.objects.create(
-        name="Publicador", description="Rol de publicador con privilegios de publicación"
+        name="Autor", description="Rol de autor con privilegios de escritura"
     )
 
     Role.objects.create(
-        name="Visitante", description="Rol de visitante con acceso de lectura a atriculos del tipo free"
+        name="Publicador",
+        description="Rol de publicador con privilegios de publicación",
     )
 
     Role.objects.create(
-        name="Suscriptor", description="Rol de suscriptor con privilegios para suscribirse a categorías, leer, comentar y evaluar artículos a los cuales tiene acceso"
+        name="Visitante",
+        description="Rol de visitante con acceso de lectura a atriculos del tipo free",
+    )
+
+    Role.objects.create(
+        name="Suscriptor",
+        description="Rol de suscriptor con privilegios para suscribirse a categorías, leer, comentar y evaluar artículos a los cuales tiene acceso",
     )
 
 

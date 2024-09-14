@@ -3,28 +3,28 @@
 from django.db import migrations
 from roles.utils import PermissionEnum
 
-def add_default_roles(apps, schema_editor):
 
+def add_default_roles(apps, schema_editor):
     Permission = apps.get_model("roles", "permission")
     Role = apps.get_model("roles", "Role")
-    
+
     Permission.objects.create(
         name=PermissionEnum.EDITAR_ARTICULOS_BORRADOR,
         description="editar articulos cuando el contenido esta en estado de borrador",
     )
-    
+
     Role.objects.get(name="Autor").permissions.add(
         Permission.objects.get(name=PermissionEnum.EDITAR_ARTICULOS_BORRADOR),
     )
-    
+
     Role.objects.get(name="Administrador").permissions.add(
         Permission.objects.get(name=PermissionEnum.EDITAR_ARTICULOS_BORRADOR),
     )
 
-class Migration(migrations.Migration):
 
+class Migration(migrations.Migration):
     dependencies = [
-        ('roles', '0004_add_primeros_permisos'),
+        ("roles", "0004_add_primeros_permisos"),
     ]
 
     operations = [

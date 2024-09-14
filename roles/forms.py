@@ -1,6 +1,7 @@
 from django import forms
 from roles.models import Role, Permission
 
+
 class RoleForm(forms.ModelForm):
     """
     Formulario para la creación y edición de roles.
@@ -13,23 +14,23 @@ class RoleForm(forms.ModelForm):
             - model (Role): Modelo de base asociado al formulario.
             - fields (list): Lista de campos del modelo `Role` que serán incluidos en el formulario.
         permissions (ModelMultipleChoiceField): Campo que permite seleccionar uno o más permisos
-            mediante una lista de checkboxes. Este campo utiliza el conjunto de permisos disponibles 
+            mediante una lista de checkboxes. Este campo utiliza el conjunto de permisos disponibles
             en el sistema (`Permission.objects.all()`) y es obligatorio.
         labels (dict): Diccionario que proporciona etiquetas personalizadas para los campos del formulario.
     """
 
     class Meta:
         model = Role
-        fields = ['name', 'description', 'permissions']
+        fields = ["name", "description", "permissions"]
 
     permissions = forms.ModelMultipleChoiceField(
-        queryset = Permission.objects.all(),
-        widget = forms.CheckboxSelectMultiple,
-        required = True,
-        label = "Permisos"
+        queryset=Permission.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        required=True,
+        label="Permisos",
     )
 
     labels = {
-                "name": "Nombre",
-                "description": "Descripción",
-            }
+        "name": "Nombre",
+        "description": "Descripción",
+    }

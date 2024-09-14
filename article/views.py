@@ -154,7 +154,9 @@ def article_update(request, pk):
     if not request.user.is_authenticated:
         return redirect("login")
 
-    if not request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS]) and not request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS_BORRADOR]):
+    if not request.user.tiene_permisos(
+        [PermissionEnum.EDITAR_ARTICULOS]
+    ) and not request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS_BORRADOR]):
         return redirect("forbidden")
 
     article = get_object_or_404(Article, pk=pk)
@@ -261,13 +263,13 @@ def article_list(request):
 
     articles = Article.objects.all()
     can_create = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
-    
+
     return render(
         request,
         "article/article_list.html",
         {
             "articles": articles,
-            "can_create": can_create,  
+            "can_create": can_create,
         },
     )
 
@@ -294,13 +296,15 @@ def article_detail(request, pk):
     is_author = request.user.roles.filter(name="Autor").exists()
 
     can_inactivate = is_admin or is_author  # True if user is either Admin or Author
-    
+
     can_edit_as_editor = request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS])
-    can_edit_as_author = request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS_BORRADOR])
-    
+    can_edit_as_author = request.user.tiene_permisos(
+        [PermissionEnum.EDITAR_ARTICULOS_BORRADOR]
+    )
+
     # General edit permission (either editor or author)
     can_edit = can_edit_as_editor or can_edit_as_author
-    
+
     can_publish = request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
     is_moderated_category = article.category.is_moderated
 
@@ -322,7 +326,6 @@ def article_detail(request, pk):
     )
 
 
-
 def article_to_revision(request, pk):
     """
     Vista que cambia el estado de un artículo a Revisión.
@@ -333,11 +336,6 @@ def article_to_revision(request, pk):
     """
 
     article = get_object_or_404(Article, pk=pk)
-
-    if article.state != ArticleStates.DRAFT.value:
-        return HttpResponseBadRequest(
-            "El artículo debe estar en Borrador para pasar a Revisión"
-        )
 
     article.change_state(ArticleStates.REVISION.value)
     return redirect("article-detail", pk=pk)
@@ -355,7 +353,7 @@ def article_to_published(request, pk):
     article = get_object_or_404(Article, pk=pk)
 
     can_publish = request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
-    
+
     if not can_publish:
         return redirect("forbidden")
 

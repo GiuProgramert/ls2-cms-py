@@ -70,18 +70,29 @@ urlpatterns = [
     path("categories/", article.views.category_list, name="category-list"),
     path("categories/<int:pk>/", article.views.category_detail, name="category-detail"),
     path("categories/create/", article.views.category_create, name="category-create"),
-    path("categories/<int:pk>/update/", article.views.category_update, name="category-update"),
-    path("categories/<int:pk>/delete/", article.views.category_delete, name="category-delete"),
+    path(
+        "categories/<int:pk>/update/",
+        article.views.category_update,
+        name="category-update",
+    ),
+    path(
+        "categories/<int:pk>/delete/",
+        article.views.category_delete,
+        name="category-delete",
+    ),
     # User
     path("users/", user.views.UserListView.as_view(), name="user-list"),
-    path("users/<int:pk>/asignar", roles.views.RoleAssignmentView.as_view(), name="assign_roles"),
+    path(
+        "users/<int:pk>/asignar",
+        roles.views.RoleAssignmentView.as_view(),
+        name="assign_roles",
+    ),
     # Roles
     path("roles/", roles.views.role_list, name="role-list"),
     path("roles/<int:pk>/detail", roles.views.role_detail, name="role-detail"),
     path("roles/create/", roles.views.role_create, name="role-create"),
     path("roles/<int:pk>/update/", roles.views.role_update, name="role-update"),
     path("roles/<int:pk>/delete/", roles.views.role_delete, name="role-delete"),
-
     path(r"mdeditor/", include("mdeditor.urls")),
 ]
 
