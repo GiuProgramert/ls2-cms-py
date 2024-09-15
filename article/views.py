@@ -291,23 +291,29 @@ def article_detail(request, pk):
     if not article_content:
         return HttpResponse("No hay contenido para este artículo", status=404)
 
-    # Check if the user is in "Administrador" or "Autor" roles
+    # Check if the user is an admin
     is_admin = request.user.roles.filter(name="Administrador").exists()
-    is_author = request.user.roles.filter(name="Autor").exists()
 
-    can_inactivate = is_admin or is_author  # True if user is either Admin or Author
+    # Check if the user is the author of the article
+    is_author = article.autor == request.user
 
-    can_edit_as_editor = request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS])
-    can_edit_as_author = request.user.tiene_permisos(
-        [PermissionEnum.EDITAR_ARTICULOS_BORRADOR]
-    )
+    # Determine if the user can inactivate (either admin or author)
+    can_inactivate = is_admin or is_author
+
+    # Determine if the user can edit as an editor or author
+    can_edit_as_editor = is_admin or request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS])
+    can_edit_as_author = (is_author and request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS_BORRADOR])) or is_admin
 
     # General edit permission (either editor or author)
     can_edit = can_edit_as_editor or can_edit_as_author
 
+    # Can publish only if the user has permission to moderate articles
     can_publish = request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
+
+    # Check if the category requires moderation
     is_moderated_category = article.category.is_moderated
 
+    # Convert article content body using mistune
     article_render_content = mistune.html(article_content.body)
 
     return render(
@@ -324,6 +330,7 @@ def article_detail(request, pk):
             "is_moderated_category": is_moderated_category,
         },
     )
+
 
 
 def article_to_revision(request, pk):
