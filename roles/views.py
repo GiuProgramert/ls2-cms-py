@@ -44,7 +44,8 @@ class RoleAssignmentView(UserPassesTestMixin, UpdateView):
         Redirige a la página de "forbidden" si no se tiene permiso.
         """
         return redirect("forbidden")
-    
+
+
 def role_list(request):
     """
     Vista que muestra la lista de roles.
@@ -70,6 +71,7 @@ def role_list(request):
 
     return render(request, "roles/role_list.html", {"roles": roles})
 
+
 def role_detail(request, pk):
     """
     Vista que muestra el detalle de un rol específico.
@@ -94,6 +96,7 @@ def role_detail(request, pk):
 
     role = get_object_or_404(Role, pk=pk)
     return render(request, "roles/role_detail.html", {"role": role})
+
 
 def role_create(request):
     """
@@ -125,6 +128,7 @@ def role_create(request):
         form = RoleForm()
 
     return render(request, "roles/role_form.html", {"form": form})
+
 
 def role_update(request, pk):
     """
@@ -161,6 +165,7 @@ def role_update(request, pk):
 
     return render(request, "roles/role_form.html", {"form": form})
 
+
 def role_delete(request, pk):
     """
     Vista que permite eliminar un rol existente.
@@ -191,4 +196,3 @@ def role_delete(request, pk):
 
     # Si el método no es POST, mostrar la página de confirmación
     return render(request, "roles/role_confirm_delete.html", {"role": role})
-

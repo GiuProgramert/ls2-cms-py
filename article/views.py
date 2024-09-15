@@ -154,7 +154,9 @@ def article_update(request, pk):
     if not request.user.is_authenticated:
         return redirect("login")
 
-    if not request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS]):
+    if not request.user.tiene_permisos(
+        [PermissionEnum.EDITAR_ARTICULOS]
+    ) and not request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS_BORRADOR]):
         return redirect("forbidden")
 
     article = get_object_or_404(Article, pk=pk)
@@ -261,13 +263,13 @@ def article_list(request):
 
     articles = Article.objects.all()
     can_create = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
-    
+
     return render(
         request,
         "article/article_list.html",
         {
             "articles": articles,
-            "can_create": can_create,  
+            "can_create": can_create,
         },
     )
 
@@ -275,17 +277,6 @@ def article_list(request):
 def article_detail(request, pk):
     """
     Vista que muestra el detalle de un artículo.
-
-    Solo los usuarios autenticados y con el permiso `VER_ARTICULOS` pueden
-    acceder a esta vista. Si no se cumplen las condiciones, se redirige al
-    usuario a la página de login o a la página de acceso prohibido.
-
-    Args:
-        request (HttpRequest): La solicitud HTTP.
-        pk (int): El ID del artículo.
-
-    Returns:
-        HttpResponse: Renderiza la plantilla 'article/article_detail.html' o redirige.
     """
 
     if not request.user.is_authenticated:
@@ -300,10 +291,29 @@ def article_detail(request, pk):
     if not article_content:
         return HttpResponse("No hay contenido para este artículo", status=404)
 
-    can_edit = request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS])
+    # Check if the user is an admin
+    is_admin = request.user.roles.filter(name="Administrador").exists()
+
+    # Check if the user is the author of the article
+    is_author = article.autor == request.user
+
+    # Determine if the user can inactivate (either admin or author)
+    can_inactivate = is_admin or is_author
+
+    # Determine if the user can edit as an editor or author
+    can_edit_as_editor = is_admin or request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS])
+    can_edit_as_author = (is_author and request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS_BORRADOR])) or is_admin
+
+    # General edit permission (either editor or author)
+    can_edit = can_edit_as_editor or can_edit_as_author
+
+    # Can publish only if the user has permission to moderate articles
     can_publish = request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
+
+    # Check if the category requires moderation
     is_moderated_category = article.category.is_moderated
 
+    # Convert article content body using mistune
     article_render_content = mistune.html(article_content.body)
 
     return render(
@@ -312,11 +322,15 @@ def article_detail(request, pk):
         {
             "article": article,
             "article_render_content": article_render_content,
+            "can_edit_as_editor": can_edit_as_editor,
+            "can_edit_as_author": can_edit_as_author,
             "can_edit": can_edit,
             "can_publish": can_publish,
+            "can_inactivate": can_inactivate,  # Pass this to the template
             "is_moderated_category": is_moderated_category,
         },
     )
+
 
 
 def article_to_revision(request, pk):
@@ -329,11 +343,6 @@ def article_to_revision(request, pk):
     """
 
     article = get_object_or_404(Article, pk=pk)
-
-    if article.state != ArticleStates.DRAFT.value:
-        return HttpResponseBadRequest(
-            "El artículo debe estar en Borrador para pasar a Revisión"
-        )
 
     article.change_state(ArticleStates.REVISION.value)
     return redirect("article-detail", pk=pk)
@@ -351,7 +360,7 @@ def article_to_published(request, pk):
     article = get_object_or_404(Article, pk=pk)
 
     can_publish = request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
-    
+
     if not can_publish:
         return redirect("forbidden")
 

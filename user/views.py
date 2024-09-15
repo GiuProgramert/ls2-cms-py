@@ -135,9 +135,7 @@ def register(request):
 
             # Log the user in after registration
             login(request, user)
-            return redirect(
-                "home"
-            )
+            return redirect("home")
     else:
         form = CustomUserCreationForm()
     return render(request, "user/register.html", {"form": form})
