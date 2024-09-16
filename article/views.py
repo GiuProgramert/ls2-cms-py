@@ -291,6 +291,10 @@ def article_detail(request, pk):
     if not article_content:
         return HttpResponse("No hay contenido para este artículo", status=404)
 
+    # Increment view count
+    article.views_number += 1
+    article.save()
+
     # Check if the user is an admin
     is_admin = request.user.roles.filter(name="Administrador").exists()
 
@@ -326,10 +330,11 @@ def article_detail(request, pk):
             "can_edit_as_author": can_edit_as_author,
             "can_edit": can_edit,
             "can_publish": can_publish,
-            "can_inactivate": can_inactivate,  # Pass this to the template
+            "can_inactivate": can_inactivate,
             "is_moderated_category": is_moderated_category,
         },
     )
+
 
 
 
