@@ -80,6 +80,16 @@
         <p class="article-description">{{ article.views_number }}</p>
       </div>
 
+      <div>
+        <h2 class="article-title">Votos</h2>
+        <p class="article-description">
+          Me gusta: {{ article.likes_number }} 
+          <a href="{% url 'like-article' article.id %}" class="btn btn-success">👍</a>
+          No me gusta: {{ article.dislikes_number }} 
+          <a href="{% url 'dislike-article' article.id %}" class="btn btn-danger">👎</a>
+        </p>
+      </div>
+
     </div>
 
     <div class="article-body">{{ article_render_content|safe }}</div>

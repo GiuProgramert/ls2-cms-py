@@ -1,6 +1,7 @@
 import mistune
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, HttpResponseBadRequest
+from django.contrib.auth.decorators import login_required
 from roles.utils import PermissionEnum
 from article.models import (
     Category,
@@ -8,6 +9,7 @@ from article.models import (
     Article,
     ArticleStates,
     CategoryType,
+    ArticleVote,
 )
 from article.forms import CategoryForm, ArticleForm
 
@@ -556,3 +558,53 @@ def category_delete(request, pk):
     return render(
         request, "article/category_confirm_delete.html", {"category": category}
     )
+
+@login_required
+def like_article(request, pk):
+    article = get_object_or_404(Article, pk=pk)
+    # Get or create the vote, ensuring that 'vote' is not null
+    vote, created = ArticleVote.objects.get_or_create(
+        user=request.user, article=article,
+        defaults={'vote': ArticleVote.LIKE}
+    )
+
+    if not created and vote.vote != ArticleVote.LIKE:
+        # If user previously disliked, undo that dislike
+        if vote.vote == ArticleVote.DISLIKE:
+            article.dislikes_number -= 1
+        # Set the vote to like
+        vote.vote = ArticleVote.LIKE
+        article.likes_number += 1
+        vote.save()
+
+    elif created:
+        # If this is the first time the user liked the article
+        article.likes_number += 1
+
+    article.save()
+    return redirect('article-detail', pk=pk)
+
+@login_required
+def dislike_article(request, pk):
+    article = get_object_or_404(Article, pk=pk)
+    # Get or create the vote, ensuring that 'vote' is not null
+    vote, created = ArticleVote.objects.get_or_create(
+        user=request.user, article=article,
+        defaults={'vote': ArticleVote.DISLIKE}
+    )
+
+    if not created and vote.vote != ArticleVote.DISLIKE:
+        # If user previously liked, undo that like
+        if vote.vote == ArticleVote.LIKE:
+            article.likes_number -= 1
+        # Set the vote to dislike
+        vote.vote = ArticleVote.DISLIKE
+        article.dislikes_number += 1
+        vote.save()
+
+    elif created:
+        # If this is the first time the user disliked the article
+        article.dislikes_number += 1
+
+    article.save()
+    return redirect('article-detail', pk=pk)

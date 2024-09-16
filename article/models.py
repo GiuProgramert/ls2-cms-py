@@ -160,3 +160,19 @@ class UserCategoryPurchase(models.Model):
         return (
             f"{self.user.username} compró {self.category.name} el {self.purchase_date}"
         )
+        
+class ArticleVote(models.Model):
+    LIKE = 1
+    DISLIKE = -1
+    VOTE_CHOICES = [
+        (LIKE, 'Like'),
+        (DISLIKE, 'Dislike'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE)
+    vote = models.IntegerField(choices=VOTE_CHOICES)
+
+    class Meta:
+        unique_together = ('user', 'article')
+

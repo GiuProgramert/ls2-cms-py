@@ -27,6 +27,8 @@ from django.conf import settings
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('toggle_user_status/<int:user_id>/', user.views.toggle_user_status, name='toggle-user-status'),
+    path('article/<int:pk>/like/', article.views.like_article, name='like-article'),
+    path('article/<int:pk>/dislike/', article.views.dislike_article, name='dislike-article'),
     path("forbidden", article.views.forbidden, name="forbidden"),
     path("", article.views.home, name="home"),
     path("login/", user.views.login_view, name="login"),
