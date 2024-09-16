@@ -37,9 +37,9 @@
           
           <!-- Button for toggling user status -->
           {% if user.is_active %}
-          <a href="{% url 'toggle_user_status' user.pk %}" class="btn btn-danger">Desactivar</a>
+          <a href="{% url 'toggle-user-status' user.pk %}" class="btn btn-danger">Desactivar</a>
           {% else %}
-          <a href="{% url 'toggle_user_status' user.pk %}" class="btn btn-success">Activar</a>
+          <a href="{% url 'toggle-user-status' user.pk %}" class="btn btn-success">Activar</a>
           {% endif %}
         </td>
       </tr>
