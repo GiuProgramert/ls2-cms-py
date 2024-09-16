@@ -364,11 +364,6 @@ def article_to_published(request, pk):
     if not can_publish:
         return redirect("forbidden")
 
-    if article.state != ArticleStates.REVISION.value:
-        return HttpResponseBadRequest(
-            "El artículo debe estar en revisión para publicarse"
-        )
-
     article.change_state(ArticleStates.PUBLISHED.value)
     return redirect("article-detail", pk=pk)
 
