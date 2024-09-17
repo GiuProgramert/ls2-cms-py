@@ -1,6 +1,8 @@
+from article import models
 import mistune
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, HttpResponseBadRequest
+from django.contrib.auth.decorators import login_required
 from roles.utils import PermissionEnum
 from article.models import (
     Category,
@@ -8,8 +10,10 @@ from article.models import (
     Article,
     ArticleStates,
     CategoryType,
+    ArticleVote,
 )
 from article.forms import CategoryForm, ArticleForm
+from django.db.models import Avg
 
 
 def home(request):
@@ -66,6 +70,14 @@ def home(request):
     articles = Article.objects.filter(
         category__in=permited_categories, state=ArticleStates.PUBLISHED.value
     )
+    
+    # Add average rating for each article
+    for article in articles:
+        ratings = ArticleVote.objects.filter(article=article)
+        if ratings.exists():
+            article.avg_rating = round(ratings.aggregate(Avg('rating'))['rating__avg'], 1)
+        else:
+            article.avg_rating = None
 
     return render(
         request,
@@ -274,26 +286,77 @@ def article_list(request):
     )
 
 
+@login_required
 def article_detail(request, pk):
     """
-    Vista que muestra el detalle de un artículo.
+    View that shows the details of an article.
     """
 
+    # Ensure user is authenticated and has the right permissions
     if not request.user.is_authenticated:
         return redirect("login")
 
     if not request.user.tiene_permisos([PermissionEnum.VER_INICIO]):
         return redirect("forbidden")
 
+    # Fetch the article and its content
     article = get_object_or_404(Article, pk=pk)
     article_content = ArticleContent.objects.filter(article=article).last()
 
     if not article_content:
-        return HttpResponse("No hay contenido para este artículo", status=404)
+        return HttpResponse("No content for this article", status=404)
 
     # Increment view count
     article.views_number += 1
     article.save()
+
+    # Fetch the user's vote and rating for the article
+    user_vote = ArticleVote.objects.filter(article=article, user=request.user).first()
+
+    # Handle like/dislike and rating submissions
+    if request.method == 'POST':
+        if 'rating' in request.POST:
+            # Rating submission logic
+            rating_value = int(request.POST.get('rating'))
+            if user_vote:
+                user_vote.rating = rating_value
+                user_vote.save()
+            else:
+                ArticleVote.objects.create(user=request.user, article=article, rating=rating_value)
+
+        elif 'like' in request.POST or 'dislike' in request.POST:
+            # Handle like/dislike submission
+            if 'like' in request.POST:
+                if user_vote and user_vote.vote != ArticleVote.LIKE:
+                    if user_vote.vote == ArticleVote.DISLIKE:
+                        article.dislikes_number -= 1
+                    user_vote.vote = ArticleVote.LIKE
+                    article.likes_number += 1
+                    user_vote.save()
+                elif not user_vote:
+                    ArticleVote.objects.create(user=request.user, article=article, vote=ArticleVote.LIKE)
+                    article.likes_number += 1
+
+            elif 'dislike' in request.POST:
+                if user_vote and user_vote.vote != ArticleVote.DISLIKE:
+                    if user_vote.vote == ArticleVote.LIKE:
+                        article.likes_number -= 1
+                    user_vote.vote = ArticleVote.DISLIKE
+                    article.dislikes_number += 1
+                    user_vote.save()
+                elif not user_vote:
+                    ArticleVote.objects.create(user=request.user, article=article, vote=ArticleVote.DISLIKE)
+                    article.dislikes_number += 1
+
+            article.save()
+
+    # Calculate the average rating for the article
+    ratings = ArticleVote.objects.filter(article=article)
+    avg_rating = ratings.aggregate(Avg('rating'))['rating__avg']
+
+    # Check if the average rating is None before rounding
+    if avg_rating is not None:
+        avg_rating = round(avg_rating, 1)
 
     # Check if the user is an admin
     is_admin = request.user.roles.filter(name="Administrador").exists()
@@ -332,6 +395,8 @@ def article_detail(request, pk):
             "can_publish": can_publish,
             "can_inactivate": can_inactivate,
             "is_moderated_category": is_moderated_category,
+            "avg_rating": avg_rating,
+            "user_vote": user_vote,  # Pass both vote and rating information to the template
         },
     )
 
@@ -556,3 +621,53 @@ def category_delete(request, pk):
     return render(
         request, "article/category_confirm_delete.html", {"category": category}
     )
+
+@login_required
+def like_article(request, pk):
+    article = get_object_or_404(Article, pk=pk)
+    # Get or create the vote, ensuring that 'vote' is not null
+    vote, created = ArticleVote.objects.get_or_create(
+        user=request.user, article=article,
+        defaults={'vote': ArticleVote.LIKE}
+    )
+
+    if not created and vote.vote != ArticleVote.LIKE:
+        # If user previously disliked, undo that dislike
+        if vote.vote == ArticleVote.DISLIKE:
+            article.dislikes_number -= 1
+        # Set the vote to like
+        vote.vote = ArticleVote.LIKE
+        article.likes_number += 1
+        vote.save()
+
+    elif created:
+        # If this is the first time the user liked the article
+        article.likes_number += 1
+
+    article.save()
+    return redirect('article-detail', pk=pk)
+
+@login_required
+def dislike_article(request, pk):
+    article = get_object_or_404(Article, pk=pk)
+    # Get or create the vote, ensuring that 'vote' is not null
+    vote, created = ArticleVote.objects.get_or_create(
+        user=request.user, article=article,
+        defaults={'vote': ArticleVote.DISLIKE}
+    )
+
+    if not created and vote.vote != ArticleVote.DISLIKE:
+        # If user previously liked, undo that like
+        if vote.vote == ArticleVote.LIKE:
+            article.likes_number -= 1
+        # Set the vote to dislike
+        vote.vote = ArticleVote.DISLIKE
+        article.dislikes_number += 1
+        vote.save()
+
+    elif created:
+        # If this is the first time the user disliked the article
+        article.dislikes_number += 1
+
+    article.save()
+    return redirect('article-detail', pk=pk)
