@@ -168,11 +168,23 @@ class ArticleVote(models.Model):
         (LIKE, 'Like'),
         (DISLIKE, 'Dislike'),
     ]
+    
+    RATING_CHOICES = [
+        (1, '1 Star'),
+        (2, '2 Stars'),
+        (3, '3 Stars'),
+        (4, '4 Stars'),
+        (5, '5 Stars'),
+    ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
-    vote = models.IntegerField(choices=VOTE_CHOICES)
+    vote = models.IntegerField(choices=VOTE_CHOICES, null=True, blank=True)
+    rating = models.IntegerField(choices=RATING_CHOICES, null=True, blank=True)
 
     class Meta:
         unique_together = ('user', 'article')
+        
+    def __str__(self):
+        return f"{self.user.username} rated {self.article.title} with {self.rating} stars"
 
