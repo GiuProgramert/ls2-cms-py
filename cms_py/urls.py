@@ -31,18 +31,17 @@ urlpatterns = [
         user.views.toggle_user_status,
         name="toggle-user-status",
     ),
-    path("article/<int:pk>/like/", article.views.like_article, name="like-article"),
-    path(
-        "article/<int:pk>/dislike/",
-        article.views.dislike_article,
-        name="dislike-article",
-    ),
     path("forbidden", article.views.forbidden, name="forbidden"),
     path("", article.views.home, name="home"),
+    # ================================================================================
+    # Authentication
+    # ================================================================================
     path("login/", user.views.login_view, name="login"),
     path("register/", user.views.register, name="register"),
     path("logout/", user.views.logout_view, name="logout"),
+    # ================================================================================
     # Article
+    # ================================================================================
     path("article/", article.views.article_list, name="article-list"),
     path("article/create", article.views.article_create, name="article-create"),
     path(
@@ -76,8 +75,19 @@ urlpatterns = [
         article.views.article_to_inactive,
         name="article-to-inactive",
     ),
+    path("article/<int:pk>/like/", article.views.like_article, name="like-article"),
+    path(
+        "article/<int:pk>/dislike/",
+        article.views.dislike_article,
+        name="dislike-article",
+    ),
+    # ================================================================================
+    # Profile
+    # ================================================================================
     path("profile/edit/", user.views.edit_profile, name="edit_profile"),
+    # ================================================================================
     # Categories
+    # ================================================================================
     path("categories/", article.views.category_list, name="category-list"),
     path("categories/<int:pk>/", article.views.category_detail, name="category-detail"),
     path("categories/create/", article.views.category_create, name="category-create"),
@@ -91,14 +101,18 @@ urlpatterns = [
         article.views.category_delete,
         name="category-delete",
     ),
+    # ================================================================================
     # User
+    # ================================================================================
     path("users/", user.views.UserListView.as_view(), name="user-list"),
     path(
         "users/<int:pk>/asignar",
         roles.views.RoleAssignmentView.as_view(),
         name="assign_roles",
     ),
+    # ================================================================================
     # Roles
+    # ================================================================================
     path("roles/", roles.views.role_list, name="role-list"),
     path("roles/<int:pk>/detail", roles.views.role_detail, name="role-detail"),
     path("roles/create/", roles.views.role_create, name="role-create"),
