@@ -31,6 +31,9 @@
           {% else %}
             No calificado
           {% endif %}
+          {% if not authenticated and article.category.type != 'free' %}
+            <p><i>Este artículo pertenece a una categoría de suscripción o de pago. Inicie sesión o suscríbase para ver el contenido completo.</i></p>
+          {% endif %}
           </p>
         </div>
       </div>

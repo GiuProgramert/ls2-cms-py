@@ -19,16 +19,6 @@ from django.db.models import Avg
 def home(request):
     """
     Vista que muestra la página principal del artículo.
-
-    Si el usuario está autenticado, se recopilan los permisos que tiene
-    y se envían al contexto de la plantilla. Si no está autenticado,
-    se envía una lista vacía de permisos.
-
-    Args:
-        request (HttpRequest): La solicitud HTTP.
-
-    Returns:
-        HttpResponse: Renderiza la plantilla 'article/home.html'.
     """
 
     categories = Category.objects.all()
@@ -36,6 +26,7 @@ def home(request):
     if not request.user.is_authenticated:
         permissions = []
 
+        # Allow viewing of all categories but restrict access based on type
         permited_categories = [
             category
             for category in categories
@@ -67,19 +58,21 @@ def home(request):
             if category.type == CategoryType.PAY.value
         ]
 
-    articles = Article.objects.filter(
-        category__in=permited_categories, state=ArticleStates.PUBLISHED.value
-    )
+    # Fetch all articles for the home page
+    articles = Article.objects.filter(state=ArticleStates.PUBLISHED.value)
 
     # Add average rating for each article
     for article in articles:
         ratings = ArticleVote.objects.filter(article=article)
-        if ratings.exists():
-            article.avg_rating = round(
-                ratings.aggregate(Avg("rating"))["rating__avg"], 1
-            )
+        avg_rating = ratings.aggregate(Avg("rating"))["rating__avg"]
+        
+        # Check if avg_rating is None before rounding
+        if avg_rating is not None:
+            article.avg_rating = round(avg_rating, 1)
         else:
-            article.avg_rating = None
+            article.avg_rating = None  # Or set it to 0 if you prefer
+    
+    authenticated = request.user.is_authenticated
 
     return render(
         request,
@@ -89,8 +82,10 @@ def home(request):
             "permited_categories": permited_categories,
             "not_permited_categories": not_permited_categories,
             "articles": articles,
+            "authenticated":authenticated
         },
     )
+
 
 
 def forbidden(request):
