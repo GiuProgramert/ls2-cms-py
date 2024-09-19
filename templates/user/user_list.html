@@ -34,6 +34,13 @@
         </td>
         <td>
           <a href="{% url 'assign_roles' user.pk %}" class="btn">Asignar Roles</a>
+          
+          <!-- Button for toggling user status -->
+          {% if user.is_active %}
+          <a href="{% url 'toggle-user-status' user.pk %}" class="btn btn-danger">Desactivar</a>
+          {% else %}
+          <a href="{% url 'toggle-user-status' user.pk %}" class="btn btn-success">Activar</a>
+          {% endif %}
         </td>
       </tr>
       {% empty %}

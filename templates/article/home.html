@@ -24,6 +24,15 @@
           <span><i class="fas fa-thumbs-up"></i> {{ article.likes_number }}</span>
           <span><i class="fas fa-thumbs-down"></i> {{ article.dislikes_number }}</span>
         </div>
+        <div>
+          <p>Promedio de calificación: 
+          {% if article.avg_rating %}
+            {{ article.avg_rating }} estrellas
+          {% else %}
+            No calificado
+          {% endif %}
+          </p>
+        </div>
       </div>
       {% endfor %}
   </section>

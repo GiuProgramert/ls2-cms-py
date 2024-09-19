@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.views.generic import ListView
@@ -13,19 +13,6 @@ from .forms import CustomPasswordChangeForm
 
 
 def login_view(request):
-    """
-    Maneja la vista de inicio de sesión.
-
-    Si el método de la solicitud es POST, intenta autenticar al usuario con el nombre de usuario y la contraseña proporcionados.
-    Si la autenticación es exitosa, redirige al usuario a la página de inicio. En caso contrario, muestra un mensaje de error.
-
-    Args:
-        request (HttpRequest): La solicitud HTTP recibida.
-
-    Returns:
-        HttpResponse: Redirige al usuario a la página de inicio en caso de éxito,
-        o renderiza la página de inicio de sesión con un mensaje de error.
-    """
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -33,12 +20,13 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            login(request, user)
-            return redirect(
-                "home"
-            )  # Cambia 'home' por la URL a la que quieras redirigir después del login
+            if user.is_active:  # Ensure the user is active before logging in
+                login(request, user)
+                return redirect("home")
+            else:
+                messages.error(request, "Tu cuenta está desactivada. Contacta al administrador.")
         else:
-            messages.error(request, "Nombre de usuario o contraseña incorrecta")
+            messages.error(request, "Nombre de usuario o contraseña incorrecta.")
 
     return render(request, "user/login.html")
 
@@ -135,9 +123,7 @@ def register(request):
 
             # Log the user in after registration
             login(request, user)
-            return redirect(
-                "home"
-            )
+            return redirect("home")
     else:
         form = CustomUserCreationForm()
     return render(request, "user/register.html", {"form": form})
@@ -198,3 +184,20 @@ def edit_profile(request):
         "user/edit_profile.html",
         {"profile_form": profile_form, "password_form": password_form},
     )
+
+@login_required
+def toggle_user_status(request, user_id):
+    """
+    Toggle the active/inactive status of a user.
+    """
+    user = get_object_or_404(CustomUser, pk=user_id)
+    
+    if user.is_active:
+        user.is_active = False
+        messages.success(request, f"{user.username} ha sido desactivado.")
+    else:
+        user.is_active = True
+        messages.success(request, f"{user.username} ha sido activado.")
+    
+    user.save()
+    return redirect('user-list')  # Change 'user_list' to the actual URL name for your user list view
