@@ -24,7 +24,9 @@ def login_view(request):
                 login(request, user)
                 return redirect("home")
             else:
-                messages.error(request, "Tu cuenta está desactivada. Contacta al administrador.")
+                messages.error(
+                    request, "Tu cuenta está desactivada. Contacta al administrador."
+                )
         else:
             messages.error(request, "Nombre de usuario o contraseña incorrecta.")
 
@@ -185,19 +187,22 @@ def edit_profile(request):
         {"profile_form": profile_form, "password_form": password_form},
     )
 
+
 @login_required
 def toggle_user_status(request, user_id):
     """
     Toggle the active/inactive status of a user.
     """
     user = get_object_or_404(CustomUser, pk=user_id)
-    
+
     if user.is_active:
         user.is_active = False
         messages.success(request, f"{user.username} ha sido desactivado.")
     else:
         user.is_active = True
         messages.success(request, f"{user.username} ha sido activado.")
-    
+
     user.save()
-    return redirect('user-list')  # Change 'user_list' to the actual URL name for your user list view
+    return redirect(
+        "user-list"
+    )  # Change 'user_list' to the actual URL name for your user list view

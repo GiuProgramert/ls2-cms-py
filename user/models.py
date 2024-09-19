@@ -17,7 +17,9 @@ class CustomUser(AbstractUser):
     # purchased_categories = models.ManyToManyField(
     #    'article.Category', through='article.UserCategoryPurchase', related_name='users_who_purchased'
     # )
-    is_active = models.BooleanField(default=True)  # This field manages whether the user is active or not
+    is_active = models.BooleanField(
+        default=True
+    )  # This field manages whether the user is active or not
     # Necesario para evitar errores django
     groups = models.ManyToManyField(
         Group,

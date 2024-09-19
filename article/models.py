@@ -160,21 +160,22 @@ class UserCategoryPurchase(models.Model):
         return (
             f"{self.user.username} compró {self.category.name} el {self.purchase_date}"
         )
-        
+
+
 class ArticleVote(models.Model):
     LIKE = 1
     DISLIKE = -1
     VOTE_CHOICES = [
-        (LIKE, 'Like'),
-        (DISLIKE, 'Dislike'),
+        (LIKE, "Like"),
+        (DISLIKE, "Dislike"),
     ]
-    
+
     RATING_CHOICES = [
-        (1, '1 Star'),
-        (2, '2 Stars'),
-        (3, '3 Stars'),
-        (4, '4 Stars'),
-        (5, '5 Stars'),
+        (1, "1 Star"),
+        (2, "2 Stars"),
+        (3, "3 Stars"),
+        (4, "4 Stars"),
+        (5, "5 Stars"),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -183,8 +184,9 @@ class ArticleVote(models.Model):
     rating = models.IntegerField(choices=RATING_CHOICES, null=True, blank=True)
 
     class Meta:
-        unique_together = ('user', 'article')
-        
-    def __str__(self):
-        return f"{self.user.username} rated {self.article.title} with {self.rating} stars"
+        unique_together = ("user", "article")
 
+    def __str__(self):
+        return (
+            f"{self.user.username} rated {self.article.title} with {self.rating} stars"
+        )

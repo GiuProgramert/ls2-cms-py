@@ -81,44 +81,48 @@
       </div>
 
       <div>
-        <h2 class="article-title">Votos</h2>
-        <p class="article-description">
-          Me gusta: {{ article.likes_number }} 
-          <a href="{% url 'like-article' article.id %}" class="btn btn-success">👍</a>
-          No me gusta: {{ article.dislikes_number }} 
-          <a href="{% url 'dislike-article' article.id %}" class="btn btn-danger">👎</a>
-        </p>
+        {% if authenticated %}
+          <h2 class="article-title">Votos</h2>
+          <p class="article-description">
+            Me gusta: {{ article.likes_number }} 
+            <a href="{% url 'like-article' article.id %}" class="btn btn-success">👍</a>
+            No me gusta: {{ article.dislikes_number }} 
+            <a href="{% url 'dislike-article' article.id %}" class="btn btn-danger">👎</a>
+          </p>
+        {% endif %}
       </div>
 
       <div>
-        <h2 class="article-title">Votar artículo</h2>
-        {% if user_rating %}
-          <p>Has calificado este artículo con {{ user_rating.rating }} estrellas.</p>
-          <form method="POST">
-            {% csrf_token %}
-            <label for="rating">Cambiar calificación:</label>
-            <select name="rating" id="rating">
-              <option value="1" {% if user_rating.rating == 1 %}selected{% endif %}>1 Estrella</option>
-              <option value="2" {% if user_rating.rating == 2 %}selected{% endif %}>2 Estrellas</option>
-              <option value="3" {% if user_rating.rating == 3 %}selected{% endif %}>3 Estrellas</option>
-              <option value="4" {% if user_rating.rating == 4 %}selected{% endif %}>4 Estrellas</option>
-              <option value="5" {% if user_rating.rating == 5 %}selected{% endif %}>5 Estrellas</option>
-            </select>
-            <button type="submit" class="btn btn-primary">Actualizar</button>
-          </form>
-        {% else %}
-          <form method="POST">
-            {% csrf_token %}
-            <label for="rating">Calificar:</label>
-            <select name="rating" id="rating">
-              <option value="1">1 Estrella</option>
-              <option value="2">2 Estrellas</option>
-              <option value="3">3 Estrellas</option>
-              <option value="4">4 Estrellas</option>
-              <option value="5">5 Estrellas</option>
-            </select>
-            <button type="submit" class="btn btn-primary">Enviar</button>
-          </form>
+        {% if authenticated %}
+          <h2 class="article-title">Votar artículo</h2>
+          {% if user_rating %}
+            <p>Has calificado este artículo con {{ user_rating.rating }} estrellas.</p>
+            <form method="POST">
+              {% csrf_token %}
+              <label for="rating">Cambiar calificación:</label>
+              <select name="rating" id="rating">
+                <option value="1" {% if user_rating.rating == 1 %}selected{% endif %}>1 Estrella</option>
+                <option value="2" {% if user_rating.rating == 2 %}selected{% endif %}>2 Estrellas</option>
+                <option value="3" {% if user_rating.rating == 3 %}selected{% endif %}>3 Estrellas</option>
+                <option value="4" {% if user_rating.rating == 4 %}selected{% endif %}>4 Estrellas</option>
+                <option value="5" {% if user_rating.rating == 5 %}selected{% endif %}>5 Estrellas</option>
+              </select>
+              <button type="submit" class="btn btn-primary">Actualizar</button>
+            </form>
+          {% else %}
+            <form method="POST">
+              {% csrf_token %}
+              <label for="rating">Calificar:</label>
+              <select name="rating" id="rating">
+                <option value="1">1 Estrella</option>
+                <option value="2">2 Estrellas</option>
+                <option value="3">3 Estrellas</option>
+                <option value="4">4 Estrellas</option>
+                <option value="5">5 Estrellas</option>
+              </select>
+              <button type="submit" class="btn btn-primary">Enviar</button>
+            </form>
+          {% endif %}
         {% endif %}
       </div>
 
