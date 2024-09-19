@@ -4,15 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('article', '0009_articlevote_rating'),
+        ("article", "0009_articlevote_rating"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='articlevote',
-            name='vote',
-            field=models.IntegerField(blank=True, choices=[(1, 'Like'), (-1, 'Dislike')], null=True),
+            model_name="articlevote",
+            name="vote",
+            field=models.IntegerField(
+                blank=True, choices=[(1, "Like"), (-1, "Dislike")], null=True
+            ),
         ),
     ]
