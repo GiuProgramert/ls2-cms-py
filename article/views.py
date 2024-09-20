@@ -285,7 +285,18 @@ def article_list(request):
 
 def article_detail(request, pk):
     """
-    View that shows the details of an article.
+    Vista que muestra los detalles de un artículo.
+
+    Si el usuario no está autenticado, se le permitirá ver el artículo solo si 
+    pertenece a una categoría gratuita. Para los usuarios autenticados, también 
+    se maneja la lógica de 'me gusta', 'no me gusta' y calificación.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID del artículo a mostrar.
+
+    Returns:
+        HttpResponse: Renderiza la plantilla 'article/article_detail.html'.
     """
 
     # Fetch the article and its content
@@ -676,6 +687,20 @@ def category_delete(request, pk):
 
 @login_required
 def like_article(request, pk):
+    """
+    Vista que permite que un usuario marque como 'me gusta' un artículo.
+
+    Si el usuario ya ha marcado el artículo como 'no me gusta', se revierte
+    esa acción antes de marcarlo como 'me gusta'. Si es la primera vez que 
+    marca el artículo, simplemente se incrementa el contador de 'me gusta'.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID del artículo al que se está aplicando el 'me gusta'.
+
+    Returns:
+        HttpResponse: Redirige a la vista de detalle del artículo.
+    """
     article = get_object_or_404(Article, pk=pk)
     # Get or create the vote, ensuring that 'vote' is not null
     vote, created = ArticleVote.objects.get_or_create(
@@ -701,6 +726,20 @@ def like_article(request, pk):
 
 @login_required
 def dislike_article(request, pk):
+    """
+    Vista que permite que un usuario marque como 'no me gusta' un artículo.
+
+    Si el usuario ya ha marcado el artículo como 'me gusta', se revierte
+    esa acción antes de marcarlo como 'no me gusta'. Si es la primera vez que 
+    marca el artículo, simplemente se incrementa el contador de 'no me gusta'.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID del artículo al que se está aplicando el 'no me gusta'.
+
+    Returns:
+        HttpResponse: Redirige a la vista de detalle del artículo.
+    """
     article = get_object_or_404(Article, pk=pk)
     # Get or create the vote, ensuring that 'vote' is not null
     vote, created = ArticleVote.objects.get_or_create(
