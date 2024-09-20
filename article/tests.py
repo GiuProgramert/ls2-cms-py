@@ -4,7 +4,7 @@ from django.urls import reverse
 from roles.models import Role
 from roles.utils import PermissionEnum
 from roles.models import Permission
-from article.models import Category, CategoryType, Article, ArticleContent
+from article.models import Category, CategoryType, Article, ArticleContent,ArticleVote,ArticleStates
 from article.forms import CategoryForm
 
 
@@ -567,3 +567,70 @@ class PruebasGestionArticulo(TestCase):
         response = self.client.get(reverse("article-detail", args=[self.article.pk]))
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("forbidden"))
+
+
+class CasoDePruebaVotoArticulo(TestCase):
+    """
+    Pruebas para dar 'me gusta' y 'no me gusta' a artículos utilizando los modelos proporcionados en codigo3 y el modelo CustomUser.
+    """
+
+    def setUp(self):
+        """
+        Configura el cliente de prueba, usuario, categoría y artículos usando los modelos de codigo3 y el modelo CustomUser.
+        """
+        self.client = Client()
+
+        # Crear usuario con el modelo CustomUser y asignarle un rol
+        self.user = User.objects.create_user(username="votante", password="password", phone="123456789")
+        self.user.roles.add(Role.objects.get(name="Administrador"))
+
+        # Crear categoría
+        self.category = Category.objects.create(
+            name="Categoría de Prueba",
+            description="Esta es una categoría de prueba",
+            type=CategoryType.FREE.value,
+            state=True,
+            is_moderated=False
+        )
+
+        # Crear artículo
+        self.article = Article.objects.create(
+            title="Artículo de Prueba",
+            autor=self.user,  # Usando el modelo CustomUser
+            description="Esta es una descripción para el artículo de prueba",
+            category=self.category,
+            state=ArticleStates.PUBLISHED.value  # Configurando el estado del artículo como publicado
+        )
+        
+        ArticleContent.objects.create(
+            article=self.article,
+            body="Contenido del Artículo de Prueba",
+            autor=self.user,
+        )
+
+        # Iniciar sesión del usuario
+        self.client.login(username="votante", password="password")
+
+    def prueba_me_gusta_articulo(self):
+        """
+        Prueba para dar 'me gusta' a un artículo.
+        """
+        response = self.client.get(reverse("like-article", args=[self.article.pk]))
+        self.article.refresh_from_db()
+        vote = ArticleVote.objects.get(article=self.article, user=self.user)
+
+        self.assertEqual(self.article.likes_number, 1)
+        self.assertEqual(vote.vote, ArticleVote.LIKE)
+        self.assertRedirects(response, reverse("article-detail", args=[self.article.pk]))
+
+    def prueba_no_me_gusta_articulo(self):
+        """
+        Prueba para dar 'no me gusta' a un artículo.
+        """
+        response = self.client.get(reverse("dislike-article", args=[self.article.pk]))
+        self.article.refresh_from_db()
+        vote = ArticleVote.objects.get(article=self.article, user=self.user)
+
+        self.assertEqual(self.article.dislikes_number, 1)
+        self.assertEqual(vote.vote, ArticleVote.DISLIKE)
+        self.assertRedirects(response, reverse("article-detail", args=[self.article.pk]))
