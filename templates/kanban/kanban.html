@@ -1,9 +1,64 @@
 {% extends 'base.html' %}
 {% block headblock %}
 {% load static %}
-
+  <link rel="stylesheet" href="{% static 'css/kanban.css' %}">
 {% endblock headblock %}
 {% block content %}
-  Vista kanban
   
+  <h2>
+    Estado de los articulos
+  </h2>
+
+  <div class="kanban">
+    <div class="state draft">
+      <h4>Borrador</h4>
+
+      <div class="items" data-state="draft">
+        {% for article in draft_articles %}
+          <div class="item" draggable="true" data-id="{{ article.id }}">
+            <p>{{ article.title }}</p>
+            <p>{{ article.autor.username }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="state revision">
+      <h4>Revisión</h4>
+
+      <div class="items" data-state="revision">
+        {% for article in revision_articles %}
+          <div class="item" draggable="true" data-id="{{ article.id }}">
+            <p>{{ article.title }}</p>
+            <p>{{ article.autor.username }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="state published">
+      <h4>Publicado</h4>
+
+      <div class="items" data-state="published">
+        {% for article in published_articles %}
+          <div class="item" draggable="true" data-id="{{ article.id }}">
+            <p>{{ article.title }}</p>
+            <p>{{ article.autor.username }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="state inactive">
+      <h4>Inactivo</h4>
+
+      <div class="items" data-state="inactive">
+        {% for article in inactive_articles %}
+          <div class="item" draggable="true" data-id="{{ article.id }}">
+            <p>{{ article.title }}</p>
+            <p>{{ article.autor.username }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+<script src="{% static 'scripts/kanban.js' %}" defer></script>
 {% endblock %}
