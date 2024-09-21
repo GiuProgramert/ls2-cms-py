@@ -29,6 +29,7 @@ urlpatterns = [
         views.article_to_inactive,
         name="article-to-inactive",
     ),
+    path("<int:pk>/update/state/edited/", views.article_to_edited, name="article-to-edited"),
     path("<int:pk>/like/", views.like_article, name="like-article"),
     path("<int:pk>/dislike/", views.dislike_article, name="dislike-article"),
 ]

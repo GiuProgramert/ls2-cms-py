@@ -1,7 +1,7 @@
-from article import models
 import mistune
+
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
 from roles.utils import PermissionEnum
 from article.models import (
@@ -65,13 +65,13 @@ def home(request):
     for article in articles:
         ratings = ArticleVote.objects.filter(article=article)
         avg_rating = ratings.aggregate(Avg("rating"))["rating__avg"]
-        
+
         # Check if avg_rating is None before rounding
         if avg_rating is not None:
             article.avg_rating = round(avg_rating, 1)
         else:
             article.avg_rating = None  # Or set it to 0 if you prefer
-    
+
     authenticated = request.user.is_authenticated
 
     return render(
@@ -82,10 +82,9 @@ def home(request):
             "permited_categories": permited_categories,
             "not_permited_categories": not_permited_categories,
             "articles": articles,
-            "authenticated":authenticated
+            "authenticated": authenticated,
         },
     )
-
 
 
 def forbidden(request):
@@ -287,8 +286,8 @@ def article_detail(request, pk):
     """
     Vista que muestra los detalles de un artículo.
 
-    Si el usuario no está autenticado, se le permitirá ver el artículo solo si 
-    pertenece a una categoría gratuita. Para los usuarios autenticados, también 
+    Si el usuario no está autenticado, se le permitirá ver el artículo solo si
+    pertenece a una categoría gratuita. Para los usuarios autenticados, también
     se maneja la lógica de 'me gusta', 'no me gusta' y calificación.
 
     Args:
@@ -465,9 +464,11 @@ def article_detail(request, pk):
         )
 
 
+@login_required
 def article_to_revision(request, pk):
     """
     Vista que cambia el estado de un artículo a Revisión.
+
 
     Args:
         request (HttpRequest): La solicitud HTTP.
@@ -476,10 +477,19 @@ def article_to_revision(request, pk):
 
     article = get_object_or_404(Article, pk=pk)
 
-    article.change_state(ArticleStates.REVISION.value)
+    is_admin = request.user.roles.filter(name="Administrador").exists()
+    is_autor = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
+
+    # Solo el autor (cuando el estado es DRAFT) o el admin puede cambiar a REVISIÓN
+    if is_admin or (is_autor and article.state == ArticleStates.DRAFT.value):
+        article.change_state(ArticleStates.REVISION.value)
+    else:
+        return redirect("forbidden")
+
     return redirect("article-detail", pk=pk)
 
 
+@login_required
 def article_to_published(request, pk):
     """
     Vista que cambia el estado de un artículo a Publicado.
@@ -488,45 +498,91 @@ def article_to_published(request, pk):
         request (HttpRequest): La solicitud HTTP.
         pk (int): El ID del artículo.
     """
-
     article = get_object_or_404(Article, pk=pk)
 
-    can_publish = request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
+    is_admin = request.user.roles.filter(name="Administrador").exists()
+    can_publish = is_admin or request.user.tiene_permisos(
+        [PermissionEnum.PUBLICAR_ARTICULOS]
+    )
 
-    if not can_publish:
+    # Solo el publicador o el admin puede cambiar a PUBLICADO, y el estado actual debe ser EDITED
+    if can_publish and article.state == ArticleStates.EDITED.value:
+        article.change_state(ArticleStates.PUBLISHED.value)
+    else:
         return redirect("forbidden")
 
-    article.change_state(ArticleStates.PUBLISHED.value)
     return redirect("article-detail", pk=pk)
 
 
+@login_required
+def article_to_edited(request, pk):
+    """
+    Vista que cambia el estado de un artículo a Editado.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID del artículo.
+    """
+    article = get_object_or_404(Article, pk=pk)
+
+    is_admin = request.user.roles.filter(name="Administrador").exists()
+    is_editor = is_admin or request.user.tiene_permisos(
+        [PermissionEnum.EDITAR_ARTICULOS]
+    )
+
+    # Solo el editor o el admin pueden cambiar a EDITADO y el estado actual debe ser REVISIÓN
+    if is_editor and article.state == ArticleStates.REVISION.value:
+        article.change_state(ArticleStates.EDITED.value)
+    else:
+        return redirect("forbidden")
+
+    return redirect("article-detail", pk=pk)
+
+
+@login_required
 def article_to_draft(request, pk):
     """
     Vista que cambia el estado de un artículo a Borrador.
 
     Args:
         request (HttpRequest): La solicitud HTTP.
-        pk (int): El ID del artículo
+        pk (int): El ID del artículo.
     """
-
     article = get_object_or_404(Article, pk=pk)
 
-    article.change_state(ArticleStates.DRAFT.value)
-    return redirect("article-detail", pk=pk)
+    is_admin = request.user.roles.filter(name="Administrador").exists()
+    is_editor = is_admin or request.user.tiene_permisos(
+        [PermissionEnum.EDITAR_ARTICULOS]
+    )
+    
+    # Solo el autor (cuando el estado es REVISION) o el admin puede cambiar a DRAFT
+    if is_admin or (is_editor and article.state == ArticleStates.REVISION.value):
+        article.change_state(ArticleStates.DRAFT.value)
+        return redirect("article-detail", pk=pk)
+    
+    return HttpResponseForbidden("No puedes editar este contenido")
 
 
+@login_required
 def article_to_inactive(request, pk):
     """
     Vista que cambia el estado de un artículo a Inactivo.
 
     Args:
         request (HttpRequest): La solicitud HTTP.
-        pk (int): El ID del artículo
+        pk (int): El ID del artículo.
     """
-
     article = get_object_or_404(Article, pk=pk)
 
-    article.change_state(ArticleStates.INACTIVE.value)
+    is_admin = request.user.roles.filter(name="Administrador").exists()
+    is_autor = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
+
+    # Solo el autor o el admin puede cambiar a INACTIVO
+    if is_admin or is_autor:
+        article.change_state(ArticleStates.INACTIVE.value)
+    else:
+        return redirect("forbidden")
+
     return redirect("article-detail", pk=pk)
 
 
@@ -691,7 +747,7 @@ def like_article(request, pk):
     Vista que permite que un usuario marque como 'me gusta' un artículo.
 
     Si el usuario ya ha marcado el artículo como 'no me gusta', se revierte
-    esa acción antes de marcarlo como 'me gusta'. Si es la primera vez que 
+    esa acción antes de marcarlo como 'me gusta'. Si es la primera vez que
     marca el artículo, simplemente se incrementa el contador de 'me gusta'.
 
     Args:
@@ -730,7 +786,7 @@ def dislike_article(request, pk):
     Vista que permite que un usuario marque como 'no me gusta' un artículo.
 
     Si el usuario ya ha marcado el artículo como 'me gusta', se revierte
-    esa acción antes de marcarlo como 'no me gusta'. Si es la primera vez que 
+    esa acción antes de marcarlo como 'no me gusta'. Si es la primera vez que
     marca el artículo, simplemente se incrementa el contador de 'no me gusta'.
 
     Args:
