@@ -10,124 +10,127 @@
 {% block content %}
 
 <div class="article-details-container">
+  <div class="article-actions">
+    {% if article.state == 'r' and can_edit_as_editor %}
+      <a href="{% url 'article-update' article.id %}" class="detail-link">Editar como editor</a>
+    {% elif article.state == 'd' and can_edit_as_author %}
+      <a href="{% url 'article-update' article.id %}" class="detail-link">Editar como autor</a>
+    {% endif %}
 
+    {% if can_edit and article.state == 'i' or can_edit and article.state == 'r' %}
+      <a href="{% url 'article-to-draft' pk=article.id %}" class="detail-link">Pasar a Borrador</a>
+    {% endif %}
+
+    {% if can_edit and article.state == 'p' or can_edit and article.state == 'd' %}
+      <a href="{% url 'article-to-revision' pk=article.id %}" class="detail-link">Pasar a Revisión</a>
+    {% endif %}
+    
+    {% if can_publish %}
+      {% if not is_moderated_category and article.state != 'p' %}
+        <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
+      {% elif article.state == 'r' %}
+        <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
+      {% endif %}
+    {% endif %}
+
+    <!-- Display Inactivate option only for Admin or Author roles -->
+    {% if can_inactivate and article.state != 'i' %}
+      <a href="{% url 'article-to-inactive' pk=article.id %}" class="detail-link">Inactivar</a>
+    {% endif %}
+    
+  </div>
+  <br>
+  <br>
+
+    <!-- Título del artículo -->
     <div class="article-header">
-      <h1 class="article-title">{{ article.title }}</h1>
+      <h1 class="text-3xl font-bold mb-4">{{ article.title }}</h1>
 
-      <div class="article-actions">
+      <!-- Tabla con información del artículo -->
+      <table class="min-w-full table-auto bg-white shadow-md rounded-lg overflow-hidden">
+        <tbody>
+          <tr class="bg-gray-100">
+            <th class="text-left p-4">Descripción</th>
+            <td class="p-4">{{ article.description }}</td>
+          </tr>
+          <tr>
+            <th class="text-left p-4">Categoría</th>
+            <td class="p-4">{{ article.category.name }}</td>
+          </tr>
+          <tr class="bg-gray-100">
+            <th class="text-left p-4">Autor</th>
+            <td class="p-4">{{ article.autor.username }}</td>
+          </tr>
+          <tr>
+            <th class="text-left p-4">Estado</th>
+            <td class="p-4">
+              {% if article.state == 'd' %}
+                Borrador
+              {% elif article.state == 'p' %}
+                Publicado
+              {% elif article.state == 'i' %}
+                Inactivo
+              {% elif article.state == 'r' %}
+                Revisión
+              {% endif %}
+            </td>
+          </tr>
+          <tr class="bg-gray-100">
+            <th class="text-left p-4">Visualizaciones</th>
+            <td class="p-4">{{ article.views_number }}</td>
+          </tr>
+        </tbody>
+      </table>
 
-        {% if article.state == 'r' and can_edit_as_editor %}
-          <a href="{% url 'article-update' article.id %}" class="detail-link">Editar como editor</a>
-        {% elif article.state == 'd' and can_edit_as_author %}
-          <a href="{% url 'article-update' article.id %}" class="detail-link">Editar como autor</a>
-        {% endif %}
-
-        {% if can_edit and article.state == 'i' or can_edit and article.state == 'r' %}
-          <a href="{% url 'article-to-draft' pk=article.id %}" class="detail-link">Pasar a Borrador</a>
-        {% endif %}
-
-        {% if can_edit and article.state == 'p' or can_edit and article.state == 'd' %}
-          <a href="{% url 'article-to-revision' pk=article.id %}" class="detail-link">Pasar a Revisión</a>
-        {% endif %}
-        
-        {% if can_publish %}
-          {% if not is_moderated_category and article.state != 'p' %}
-            <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
-          {% elif article.state == 'r' %}
-            <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
-          {% endif %}
-        {% endif %}
-
-        <!-- Display Inactivate option only for Admin or Author roles -->
-        {% if can_inactivate and article.state != 'i' %}
-          <a href="{% url 'article-to-inactive' pk=article.id %}" class="detail-link">Inactivar</a>
-        {% endif %}
-        
-      </div>
-
-      <div>
-        <h2 class="article-title">Descripción</h2>
-        <p class="article-description">{{ article.description }}</p>
-      </div>
-
-      <div>
-        <h2 class="article-title">Categoría</h2>
-        <p class="article-description">{{ article.category.name }}</p>
-      </div>
-
-      <div>
-        <h2 class="article-title">Autor</h2>
-        <p class="article-description">{{ article.autor.username }}</p>
-      </div>
-
-      <div>
-        <h2 class="article-title">Estado</h2>
-        <p class="article-description">
-          {% if article.state == 'd' %}
-            Borrador
-          {% elif article.state == 'p' %}
-            Publicado
-          {% elif article.state == 'i' %}
-            Inactivo
-          {% elif article.state == 'r' %}
-            Revisión
-          {% endif %}
-        </p>
-      </div>
-
-      <div>
-        <h2 class="article-title">Visualizaciones</h2>
-        <p class="article-description">{{ article.views_number }}</p>
-      </div>
-
-      <div>
+      <!-- Votos -->
+      <div class="mt-8">
         {% if authenticated %}
-          <h2 class="article-title">Votos</h2>
-          <p class="article-description">
-            Me gusta: {{ article.likes_number }} 
+          <h2 class="text-2xl font-semibold mb-4">Votos del artículo</h2>
+          <div class="flex items-center space-x-4">
+            <span class="text-lg">Me gusta: {{ article.likes_number }}</span>
             <a href="{% url 'like-article' article.id %}" class="btn btn-success">👍</a>
-            No me gusta: {{ article.dislikes_number }} 
+            <span class="text-lg">No me gusta: {{ article.dislikes_number }}</span>
             <a href="{% url 'dislike-article' article.id %}" class="btn btn-danger">👎</a>
-          </p>
+          </div>
+          <br>
         {% endif %}
       </div>
 
-      <div>
-        {% if authenticated %}
-          <h2 class="article-title">Votar artículo</h2>
+      <!-- Votar artículo -->
+      {% if authenticated %}
+        <div class="mt-8">
+          <h2 class="text-2xl font-semibold mb-4">Votar artículo</h2>
           {% if user_rating %}
             <p>Has calificado este artículo con {{ user_rating.rating }} estrellas.</p>
-            <form method="POST">
+            <form method="POST" class="mt-4">
               {% csrf_token %}
               <label for="rating">Cambiar calificación:</label>
-              <select name="rating" id="rating">
-                <option value="1" {% if user_rating.rating == 1 %}selected{% endif %}>1 Estrella</option>
-                <option value="2" {% if user_rating.rating == 2 %}selected{% endif %}>2 Estrellas</option>
-                <option value="3" {% if user_rating.rating == 3 %}selected{% endif %}>3 Estrellas</option>
-                <option value="4" {% if user_rating.rating == 4 %}selected{% endif %}>4 Estrellas</option>
-                <option value="5" {% if user_rating.rating == 5 %}selected{% endif %}>5 Estrellas</option>
+              <select name="rating" id="rating" class="border border-gray-300 rounded px-3 py-2">
+                {% for i in "12345" %}
+                  <option value="{{ i }}" {% if user_rating.rating == i %}selected{% endif %}>{{ i }} Estrella{{ i|pluralize }}</option>
+                {% endfor %}
               </select>
-              <button type="submit" class="btn btn-primary">Actualizar</button>
+              <button type="submit" class="btn btn-primary ml-4">Actualizar</button>
             </form>
           {% else %}
-            <form method="POST">
+            <form method="POST" class="mt-4">
               {% csrf_token %}
               <label for="rating">Calificar:</label>
-              <select name="rating" id="rating">
-                <option value="1">1 Estrella</option>
-                <option value="2">2 Estrellas</option>
-                <option value="3">3 Estrellas</option>
-                <option value="4">4 Estrellas</option>
-                <option value="5">5 Estrellas</option>
+              <select name="rating" id="rating" class="border border-gray-300 rounded px-3 py-2">
+                {% for i in "12345" %}
+                  <option value="{{ i }}">{{ i }} Estrella{{ i|pluralize }}</option>
+                {% endfor %}
               </select>
-              <button type="submit" class="btn btn-primary">Enviar</button>
+              <button type="submit" class="btn btn-primary ml-4">Enviar</button>
             </form>
           {% endif %}
-        {% endif %}
-      </div>
+        </div>
+        <br>
+      {% endif %}
 
-      <div>
-        <h2 class="article-title">Promedio de calificación</h2>
+      <!-- Promedio de calificación -->
+      <div class="mt-8">
+        <h2 class="text-2xl font-semibold mb-4">Promedio de calificación</h2>
         {% if avg_rating %}
           <p>Este artículo tiene una calificación promedio de {{ avg_rating }} estrellas.</p>
         {% else %}
@@ -135,30 +138,39 @@
         {% endif %}
       </div>
 
-      <!-- Display the user's last rating -->
-      {% if user_vote and user_vote.rating %}
-      <div>
-        <p>Tu última calificación fue de {{ user_vote.rating }} estrellas.</p>
-      </div>
-      
-{% endif %}
-
-    </div>
-
-    <div class="article-body">{{ article_render_content|safe }}</div>
-
-    <div class="article-history">
-      {% if can_edit %}
-        <a href="{% url 'article-update-history' article.id %}" class="detail-link">Ver historial de cambios</a>
-      {% endif %}
-      <a href="{% if request.GET.from == 'home' %}{% url 'home' %}{% else %}{% url 'article-list' %}{% endif %}" class="detail-link">
-        {% if request.GET.from == 'home' %}
-          Volver a la página principal
-        {% else %}
-          Volver a la lista
+      <!-- Historial de cambios y enlaces de navegación -->
+      <div class="mt-8">
+        {% if can_edit %}
+          <a href="{% url 'article-update-history' article.id %}" class="detail-link">Ver historial de cambios</a>
         {% endif %}
-      </a>
+        <a href="{% if request.GET.from == 'home' %}{% url 'home' %}{% else %}{% url 'article-list' %}{% endif %}" class="detail-link">
+          {% if request.GET.from == 'home' %}
+            Volver a la página principal
+          {% else %}
+            Volver a la lista
+          {% endif %}
+        </a>
+      </div>
     </div>
-</div>
+    <br>
+    <br>
 
+    <!-- Renderizado del contenido del artículo -->
+    <h2 class="text-2xl font-semibold mb-4">ARTICULO SOBRE: {{ article.title }}</h2>
+    <div class="article-body mt-12 bg-white p-8 rounded-lg shadow">{{ article_render_content|safe }}</div>
+
+    <!-- Sección de comentarios de Disqus -->
+    <div id="disqus_thread" class="mt-12"></div>
+    <script>
+        (function() { 
+          var d = document, s = d.createElement('script');
+          s.src = 'https://cmspy.disqus.com/embed.js';
+          s.setAttribute('data-timestamp', +new Date());
+          (d.head || d.body).appendChild(s);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    
+</div>
+<script id="dsq-count-scr" src="//cmspy.disqus.com/count.js" async></script>
 {% endblock content %}
