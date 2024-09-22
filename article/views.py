@@ -272,14 +272,14 @@ def article_list(request):
     can_create = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
     can_edit = request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS])
     can_publish = request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
-    
+
     articles = []
-    
+
     if can_publish or can_edit:
         articles = Article.objects.all()
     elif can_create:
         articles = Article.objects.filter(autor=request.user)
-    
+
     return render(
         request,
         "article/article_list.html",
@@ -487,14 +487,19 @@ def article_to_revision(request, pk):
 
     is_admin = request.user.roles.filter(name="Administrador").exists()
     is_autor = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
+    is_editor = request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS])
+    is_publisher = request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
 
     # Solo el autor (cuando el estado es DRAFT) o el admin puede cambiar a REVISIÓN
-    if is_admin or (is_autor and article.state == ArticleStates.DRAFT.value):
+    if (
+        is_admin
+        or (is_autor and article.state == ArticleStates.DRAFT.value)
+        or ((is_editor or is_publisher) and article.state == ArticleStates.EDITED.value)
+    ):
         article.change_state(ArticleStates.REVISION.value)
-    else:
-        return redirect("forbidden")
+        return redirect("article-detail", pk=pk)
 
-    return redirect("article-detail", pk=pk)
+    return HttpResponseForbidden("No puedes editar este contenido")
 
 
 @login_required
@@ -510,16 +515,15 @@ def article_to_published(request, pk):
 
     is_admin = request.user.roles.filter(name="Administrador").exists()
     can_publish = is_admin or request.user.tiene_permisos(
-        [PermissionEnum.PUBLICAR_ARTICULOS]
+        [PermissionEnum.MODERAR_ARTICULOS]
     )
 
     # Solo el publicador o el admin puede cambiar a PUBLICADO, y el estado actual debe ser EDITED
     if can_publish and article.state == ArticleStates.EDITED.value:
         article.change_state(ArticleStates.PUBLISHED.value)
-    else:
-        return redirect("forbidden")
+        return redirect("article-detail", pk=pk)
 
-    return redirect("article-detail", pk=pk)
+    return HttpResponseForbidden("No puedes editar este contenido")
 
 
 @login_required
@@ -541,10 +545,9 @@ def article_to_edited(request, pk):
     # Solo el editor o el admin pueden cambiar a EDITADO y el estado actual debe ser REVISIÓN
     if is_editor and article.state == ArticleStates.REVISION.value:
         article.change_state(ArticleStates.EDITED.value)
-    else:
-        return redirect("forbidden")
+        return redirect("article-detail", pk=pk)
 
-    return redirect("article-detail", pk=pk)
+    return HttpResponseForbidden("No puedes editar este contenido")
 
 
 @login_required
@@ -562,12 +565,12 @@ def article_to_draft(request, pk):
     is_editor = is_admin or request.user.tiene_permisos(
         [PermissionEnum.EDITAR_ARTICULOS]
     )
-    
+
     # Solo el autor (cuando el estado es REVISION) o el admin puede cambiar a DRAFT
     if is_admin or (is_editor and article.state == ArticleStates.REVISION.value):
         article.change_state(ArticleStates.DRAFT.value)
         return redirect("article-detail", pk=pk)
-    
+
     return HttpResponseForbidden("No puedes editar este contenido")
 
 
@@ -588,10 +591,9 @@ def article_to_inactive(request, pk):
     # Solo el autor o el admin puede cambiar a INACTIVO
     if is_admin or is_autor:
         article.change_state(ArticleStates.INACTIVE.value)
-    else:
-        return redirect("forbidden")
+        return redirect("article-detail", pk=pk)
 
-    return redirect("article-detail", pk=pk)
+    return HttpResponseForbidden("No puedes editar este contenido")
 
 
 # =============================================================================

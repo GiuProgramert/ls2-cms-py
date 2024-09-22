@@ -4,15 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('article', '0011_alter_articlevote_rating'),
+        ("article", "0011_alter_articlevote_rating"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='article',
-            name='state',
-            field=models.CharField(choices=[('d', 'Borrador'), ('r', 'En revisión'), ('e', 'Editado'), ('p', 'Publicado'), ('i', 'Inactivo')], default='d', max_length=1),
+            model_name="article",
+            name="state",
+            field=models.CharField(
+                choices=[
+                    ("d", "Borrador"),
+                    ("r", "En revisión"),
+                    ("e", "Editado"),
+                    ("p", "Publicado"),
+                    ("i", "Inactivo"),
+                ],
+                default="d",
+                max_length=1,
+            ),
         ),
     ]

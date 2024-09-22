@@ -67,3 +67,7 @@
 .dragging {
   opacity: 0.5;
 }
+
+.toast {
+  box-shadow: none !important;
+}

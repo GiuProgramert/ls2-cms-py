@@ -52,8 +52,8 @@
         {% for article in edited_articles %}
           {% comment %} Solamente el editor o el admin pueden pasar a otro estado {% endcomment %}
           <div 
-            class="item {% if is_admin or is_publisher %}clickable{% endif %}" 
-            draggable="true" 
+            class="item {% if is_admin or is_publisher or is_editor %}clickable{% endif %}" 
+            draggable="{% if is_admin or is_publisher or is_editor %}true{% else %}false{% endif %}" 
             data-id="{{ article.id }}"
           >
             <p>{{ article.title }}</p>
@@ -69,8 +69,8 @@
       <div class="items" data-state="published">
         {% for article in published_articles %}
           <div 
-            class="item {% if is_admin or is_publisher %}clickable{% endif %}" 
-            draggable="{% if is_admin or is_publisher %}true{% else %}false{% endif %}" 
+            class="item {% if is_admin or is_autor %}clickable{% endif %}" 
+            draggable="{% if is_admin or is_autor %}true{% else %}false{% endif %}" 
             data-id="{{ article.id }}"
           >
             <p>{{ article.title }}</p>
@@ -85,8 +85,8 @@
       <div class="items" data-state="inactive">
         {% for article in inactive_articles %}
           <div 
-            class="item {% if is_admin or is_autor %}clickable{% endif %}" 
-            draggable="{% if is_admin or is_autor %}true{% else %}false{% endif %}" 
+            class="item"  
+            draggable="false" 
             data-id="{{ article.id }}"
           >
             <p>{{ article.title }}</p>
@@ -97,5 +97,13 @@
     </div>
   </div>
 
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+  var isAdmin = {{ is_admin|yesno:"true,false" }};
+  var isAutor = {{ is_autor|yesno:"true,false" }};
+  var isEditor = {{ is_editor|yesno:"true,false" }};
+  var isPublisher = {{ is_publisher|yesno:"true,false" }};
+</script>
 <script src="{% static 'scripts/kanban.js' %}" defer></script>
 {% endblock %}

@@ -27,7 +27,7 @@ def kanban_view(request):
     is_autor = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
 
     # Autors can only see their own articles
-    if not is_editor or not is_admin or not is_publisher:
+    if is_autor and not is_admin and not is_editor and not is_publisher:
         draft_articles = draft_articles.filter(autor=request.user)
         revision_articles = revision_articles.filter(autor=request.user)
         edited_articles = edited_articles.filter(autor=request.user)
