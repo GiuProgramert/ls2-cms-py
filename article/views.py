@@ -269,9 +269,17 @@ def article_list(request):
     if not request.user.tiene_permisos([PermissionEnum.VER_INICIO]):
         return redirect("forbidden")
 
-    articles = Article.objects.all()
     can_create = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
-
+    can_edit = request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS])
+    can_publish = request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
+    
+    articles = []
+    
+    if can_publish or can_edit:
+        articles = Article.objects.all()
+    elif can_create:
+        articles = Article.objects.filter(autor=request.user)
+    
     return render(
         request,
         "article/article_list.html",
