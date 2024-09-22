@@ -4,7 +4,14 @@ from django.urls import reverse
 from roles.models import Role
 from roles.utils import PermissionEnum
 from roles.models import Permission
-from article.models import Category, CategoryType, Article, ArticleContent,ArticleVote,ArticleStates
+from article.models import (
+    Category,
+    CategoryType,
+    Article,
+    ArticleContent,
+    ArticleVote,
+    ArticleStates,
+)
 from article.forms import CategoryForm
 
 
@@ -581,7 +588,9 @@ class CasoDePruebaVotoArticulo(TestCase):
         self.client = Client()
 
         # Crear usuario con el modelo CustomUser y asignarle un rol
-        self.user = User.objects.create_user(username="votante", password="password", phone="123456789")
+        self.user = User.objects.create_user(
+            username="votante", password="password", phone="123456789"
+        )
         self.user.roles.add(Role.objects.get(name="Administrador"))
 
         # Crear categoría
@@ -590,7 +599,7 @@ class CasoDePruebaVotoArticulo(TestCase):
             description="Esta es una categoría de prueba",
             type=CategoryType.FREE.value,
             state=True,
-            is_moderated=False
+            is_moderated=False,
         )
 
         # Crear artículo
@@ -599,9 +608,9 @@ class CasoDePruebaVotoArticulo(TestCase):
             autor=self.user,  # Usando el modelo CustomUser
             description="Esta es una descripción para el artículo de prueba",
             category=self.category,
-            state=ArticleStates.PUBLISHED.value  # Configurando el estado del artículo como publicado
+            state=ArticleStates.PUBLISHED.value,  # Configurando el estado del artículo como publicado
         )
-        
+
         ArticleContent.objects.create(
             article=self.article,
             body="Contenido del Artículo de Prueba",
@@ -621,7 +630,9 @@ class CasoDePruebaVotoArticulo(TestCase):
 
         self.assertEqual(self.article.likes_number, 1)
         self.assertEqual(vote.vote, ArticleVote.LIKE)
-        self.assertRedirects(response, reverse("article-detail", args=[self.article.pk]))
+        self.assertRedirects(
+            response, reverse("article-detail", args=[self.article.pk])
+        )
 
     def prueba_no_me_gusta_articulo(self):
         """
@@ -633,4 +644,6 @@ class CasoDePruebaVotoArticulo(TestCase):
 
         self.assertEqual(self.article.dislikes_number, 1)
         self.assertEqual(vote.vote, ArticleVote.DISLIKE)
-        self.assertRedirects(response, reverse("article-detail", args=[self.article.pk]))
+        self.assertRedirects(
+            response, reverse("article-detail", args=[self.article.pk])
+        )

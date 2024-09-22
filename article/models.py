@@ -74,6 +74,7 @@ class ArticleStates(Enum):
 
     DRAFT = "d"
     REVISION = "r"
+    EDITED = "e"
     PUBLISHED = "p"
     INACTIVE = "i"
 
@@ -107,6 +108,7 @@ class Article(models.Model):
         choices=[
             (ArticleStates.DRAFT.value, "Borrador"),
             (ArticleStates.REVISION.value, "En revisión"),
+            (ArticleStates.EDITED.value, "Editado"),
             (ArticleStates.PUBLISHED.value, "Publicado"),
             (ArticleStates.INACTIVE.value, "Inactivo"),
         ],

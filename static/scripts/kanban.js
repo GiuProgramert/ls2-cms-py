@@ -1,3 +1,13 @@
+const canDraggValues = {
+  draft: window.isAdmin || window.isAutor,
+  revision: window.isAdmin || window.isEditor,
+  edited: window.isAdmin || window.isPublisher || window.isEditor,
+  published: window.isAdmin || window.isPublisher,
+  inactive: false,
+};
+
+const defaultCanDrag = false;
+
 async function changeState(articleId, articleNewState) {
   const response = await fetch(
     `/article/${articleId}/update/state/${articleNewState}`,
@@ -35,7 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
   states.forEach((state) => {
     state.addEventListener("dragover", (e) => {
       e.preventDefault();
-      console.log("dragged");
     });
 
     state.addEventListener("drop", async (e) => {
@@ -49,10 +58,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (firstState !== articleNewState) {
           changeState(articleId, articleNewState).then(() => {
-            console.log("Article state updated", draggedItem);
             itemsContainer.appendChild(draggedItem);
+
+            const canDrag = canDraggValues[articleNewState] || defaultCanDrag;
+            draggedItem.setAttribute("draggable", canDrag ? "true" : "false");
+
             draggedItem = null;
             firstState = null;
+          }).catch(() => {
+            window.Toastify({
+              text: "No puedes modificar el estado de este artículo",
+              position: "center",
+              close: true,
+              className: "toast",
+              style: {
+                background: "#b90f29",
+              }
+            }).showToast();
           });
         }
       }
