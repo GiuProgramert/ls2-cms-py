@@ -1,4 +1,4 @@
-{% extends "base.html" %} 
+{% extends "base.html" %}
 
 {% block headblock %}
 {% load static %}
@@ -10,7 +10,11 @@
 
 <div class="list-container">
     {% for article in articles %}
-        <a href="{% url 'article-detail' article.id %}?from=article-list" class="category">{{ article.title }}</a>
+        <div class="article-entry">
+            <a href="{% url 'article-detail' article.id %}?from=article-list" class="category">{{ article.title }}</a>
+            <span> - Autor: {{ article.autor.username }}</span>
+            <span> - Estado: {{ article.get_state_display }}</span>
+        </div>
     {% endfor %}
 
     {% if can_create %}
