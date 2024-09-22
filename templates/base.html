@@ -58,10 +58,12 @@
             </li>
           {% endif %}
 
-          {% if "ver_inicio" in permisos %}
-            <li class="navbar-item">
-              <a href="{% url 'article-list' %}">Articulos</a>
-            </li>
+          {% if "ver_inicio" in permisos%}
+            {% if "editar_articulos" in permisos or "crear_articulos" in permisos or "moderar_articulos" in permisos %}
+              <li class="navbar-item">
+                <a href="{% url 'article-list' %}">Articulos</a>
+              </li>  
+            {% endif %}  
           {% endif %}
 
           {% if not user.is_authenticated %}
