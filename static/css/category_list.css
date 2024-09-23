@@ -122,3 +122,55 @@
 .category-details-container a[href*="list"]:hover {
   background-color: #718096; /* Fondo gris oscuro al pasar el mouse (similar a Tailwind's gray-600) */
 }
+
+/* Contenedor del formulario de búsqueda */
+.search-form {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem; /* Espacio entre los elementos */
+  margin-bottom: 1rem; /* Espacio inferior del formulario */
+  padding: 0.5rem;
+  background-color: #f7f7f7; /* Fondo claro */
+  border-radius: 4px; /* Bordes redondeados */
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+  flex-wrap: wrap; /* Permite que los elementos se ajusten en líneas múltiples si es necesario */
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 0.5rem; /* Espacio entre grupos */
+}
+
+.form-group label {
+  font-size: 0.9rem; /* Tamaño de fuente más pequeño */
+  font-weight: 600; /* Texto en negrita */
+  margin-bottom: 0.2rem; /* Espacio entre la etiqueta y el campo */
+}
+
+.search-input, .filter-select, .order-select, .search-button {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  width: 200px; /* Ancho fijo para todos los campos */
+  box-sizing: border-box; /* Asegura que el padding no afecte el ancho total */
+}
+
+/* Ajustar el tamaño y apariencia del botón */
+.search-button {
+  background-color: #3182ce; /* Azul claro */
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  text-align: center; /* Asegurar que el texto esté centrado */
+}
+
+.search-button:hover {
+  background-color: #2b6cb0; /* Azul más oscuro al pasar el mouse */
+}
+
+

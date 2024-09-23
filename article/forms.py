@@ -56,3 +56,44 @@ class ArticleForm(forms.ModelForm):
             "body": "Cuerpo",
             "category": "Categoría",
         }
+
+class CategorySearchForm(forms.Form):
+    """
+    Formulario para buscar y filtrar categorías.
+
+    Este formulario permite a los usuarios buscar categorías ingresando un término de búsqueda, 
+    así como filtrar y ordenar los resultados según los criterios seleccionados.
+
+    Campos:
+        search_term (CharField): Campo de texto opcional para ingresar el término de búsqueda por título.
+        order_by (ChoiceField): Campo de selección que permite ordenar los resultados 
+                                por nombre o fecha de creación en orden ascendente o descendente.
+        filter_type (ChoiceField): Campo de selección que permite filtrar las categorías por tipo 
+                                   (todos, gratis, suscripción o pago).
+    """
+    
+    search_term = forms.CharField(
+        max_length=255, required=False, label="Buscar categoría",
+        widget=forms.TextInput(attrs={"placeholder": "Ingrese el título, descripción o tag de la categoría"})
+    )
+    order_by = forms.ChoiceField(
+        choices=[
+            ('name', 'Nombre Ascendente'),
+            ('-name', 'Nombre Descendente')
+        ],
+        required=False,
+        label="Ordenar por",
+        widget=forms.Select
+    )
+    # Filtros adicionales
+    filter_type = forms.ChoiceField(
+        choices=[
+            ('all', 'Todos'),
+            ('free', 'Free'),
+            ('suscription', 'Suscripción'),
+            ('pay', 'Pago')
+        ],
+        required=False,
+        label="Filtrar por tipo",
+        widget=forms.Select
+    )

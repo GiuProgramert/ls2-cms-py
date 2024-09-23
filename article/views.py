@@ -12,7 +12,7 @@ from article.models import (
     CategoryType,
     ArticleVote,
 )
-from article.forms import CategoryForm, ArticleForm
+from article.forms import *
 from django.db.models import Avg
 
 
@@ -601,13 +601,37 @@ def article_to_inactive(request, pk):
 # =============================================================================
 
 
+# def category_list(request):
+#     """
+#     Vista que muestra la lista de categorías.
+
+#     Solo los usuarios autenticados y con el permiso `MANEJAR_CATEGORIAS` pueden
+#     acceder a esta vista. Si no se cumplen las condiciones, se redirige al
+#     usuario a la página de login o a la página de acceso prohibido.
+
+#     Args:
+#         request (HttpRequest): La solicitud HTTP.
+
+#     Returns:
+#         HttpResponse: Renderiza la plantilla 'article/category_list.html' o redirige.
+#     """
+
+#     if not request.user.is_authenticated:
+#         return redirect("login")
+
+#     if not request.user.tiene_permisos([PermissionEnum.MANEJAR_CATEGORIAS]):
+#         return redirect("forbidden")
+
+#     categories = Category.objects.all()
+
+#     return render(request, "article/category_list.html", {"categories": categories})
+
 def category_list(request):
     """
-    Vista que muestra la lista de categorías.
-
-    Solo los usuarios autenticados y con el permiso `MANEJAR_CATEGORIAS` pueden
-    acceder a esta vista. Si no se cumplen las condiciones, se redirige al
-    usuario a la página de login o a la página de acceso prohibido.
+    Vista que muestra la lista de categorías y permite buscar, filtrar y ordenar resultados.
+    
+    Muestra todas las categorías de manera predeterminada y actualiza los resultados según 
+    la entrada del formulario de búsqueda.
 
     Args:
         request (HttpRequest): La solicitud HTTP.
@@ -615,16 +639,32 @@ def category_list(request):
     Returns:
         HttpResponse: Renderiza la plantilla 'article/category_list.html' o redirige.
     """
-
-    if not request.user.is_authenticated:
-        return redirect("login")
-
-    if not request.user.tiene_permisos([PermissionEnum.MANEJAR_CATEGORIAS]):
-        return redirect("forbidden")
-
+    form = CategorySearchForm(request.GET or None)
     categories = Category.objects.all()
 
-    return render(request, "article/category_list.html", {"categories": categories})
+    if form.is_valid():
+        search_term = form.cleaned_data.get('search_term')
+        order_by = form.cleaned_data.get('order_by', 'name')
+        filter_type = form.cleaned_data.get('filter_type', 'all')
+
+        print("Valor de order_by:", order_by)
+
+        # Filtrar por título que contenga el término de búsqueda
+        if search_term:
+            categories = categories.filter(name__icontains=search_term)
+
+        # Filtrar por tipo de categoría
+        if filter_type != 'all':
+            categories = categories.filter(type=filter_type)
+
+        # Ordenar los resultados
+        categories = categories.order_by(order_by)
+
+        print("Lista de categorías ordenadas:")
+        for category in categories:
+            print(category.name)
+
+    return render(request, 'article/category_list.html', {'form': form, 'categories': categories})
 
 
 def category_detail(request, pk):
@@ -750,6 +790,9 @@ def category_delete(request, pk):
         request, "article/category_confirm_delete.html", {"category": category}
     )
 
+# =============================================================================
+# Calificaciones views
+# =============================================================================
 
 @login_required
 def like_article(request, pk):
