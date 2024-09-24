@@ -468,6 +468,8 @@ def article_detail(request, pk):
                 "avg_rating": avg_rating,
                 "user_vote": user_vote,  # Pass both vote and rating information to the template
                 "authenticated": authenticated,
+                "is_author": is_author,
+                "is_admin": is_admin,
             },
         )
 
@@ -514,16 +516,22 @@ def article_to_published(request, pk):
     article = get_object_or_404(Article, pk=pk)
 
     is_admin = request.user.roles.filter(name="Administrador").exists()
-    can_publish = is_admin or request.user.tiene_permisos(
-        [PermissionEnum.MODERAR_ARTICULOS]
-    )
+    can_publish = is_admin or request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
+    is_moderated = article.category.is_moderated
+    is_author = article.autor == request.user
 
-    # Solo el publicador o el admin puede cambiar a PUBLICADO, y el estado actual debe ser EDITED
-    if can_publish and article.state == ArticleStates.EDITED.value:
-        article.change_state(ArticleStates.PUBLISHED.value)
-        return redirect("article-detail", pk=pk)
-
+    # Solo el publicador o el admin puede cambiar a PUBLICADO
+    if is_moderated:
+        if can_publish and article.state == ArticleStates.EDITED.value:
+            article.change_state(ArticleStates.PUBLISHED.value)
+            return redirect("article-detail", pk=pk)
+    else:
+        if is_author or is_admin:
+            article.change_state(ArticleStates.PUBLISHED.value)
+            return redirect("article-detail", pk=pk)
+        
     return HttpResponseForbidden("No puedes editar este contenido")
+
 
 
 @login_required
