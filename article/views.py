@@ -526,7 +526,7 @@ def article_to_published(request, pk):
             article.change_state(ArticleStates.PUBLISHED.value)
             return redirect("article-detail", pk=pk)
     else:
-        if is_author or is_admin:
+        if is_author or is_admin or can_publish:
             article.change_state(ArticleStates.PUBLISHED.value)
             return redirect("article-detail", pk=pk)
         

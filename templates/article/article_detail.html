@@ -35,11 +35,9 @@
         <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
       {% elif article.state == 'e' and not is_author %}
         <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
+      {% elif not is_moderated_category and article.state != 'p' and is_admin %}
+        <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
       {% endif %}
-    {% endif %}
-
-    {% if not is_moderated_category and article.state != 'p' and is_admin %}
-      <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
     {% endif %}
 
     <!-- Display Inactivate option only for Admin or Author roles -->
