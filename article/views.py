@@ -229,7 +229,7 @@ def article_update_history(request, pk):
         return redirect("home")
 
     article = get_object_or_404(Article, pk=pk)
-    article_contents_ref = ArticleContent.objects.filter(article=article)
+    article_contents_ref = ArticleContent.objects.filter(article=article).order_by('-created_at')
 
     article_contents = [
         {
@@ -526,7 +526,7 @@ def article_to_published(request, pk):
             article.change_state(ArticleStates.PUBLISHED.value)
             return redirect("article-detail", pk=pk)
     else:
-        if is_author or is_admin:
+        if is_author or is_admin or can_publish:
             article.change_state(ArticleStates.PUBLISHED.value)
             return redirect("article-detail", pk=pk)
         
