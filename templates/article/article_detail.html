@@ -18,31 +18,66 @@
     {% endif %}
 
     {% if can_edit_as_author and article.state == 'i' or can_edit_as_editor and article.state == 'r' %}
-      <a href="{% url 'article-to-draft' pk=article.id %}" class="detail-link">Pasar a Borrador</a>
+      <form method="POST" action="{% url 'article-to-draft' pk=article.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">Pasar a Borrador</button>
+        <label for="custom_message">Mensaje personalizado (opcional):</label>
+        <textarea id="custom_message" name="custom_message" rows="4" cols="50"></textarea>
+      </form>
     {% endif %}
 
     {% if can_publish and article.state == 'e' or can_edit_as_author and article.state == 'd' %}
-      <a href="{% url 'article-to-revision' pk=article.id %}" class="detail-link">Pasar a Revisión</a>
+      <form method="POST" action="{% url 'article-to-revision' pk=article.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">Pasar a Revisión</button>
+        <label for="custom_message">Mensaje personalizado (opcional):</label>
+        <textarea id="custom_message" name="custom_message" rows="4" cols="50"></textarea>
+      </form>
     {% endif %}
 
     {% if can_edit_as_editor and article.state == 'r' %}
-      <a href="{% url 'article-to-edited' pk=article.id %}" class="detail-link">Pasar a Editado</a>
+      <form method="POST" action="{% url 'article-to-edited' pk=article.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">Pasar a Editado</button>
+        <label for="custom_message">Mensaje personalizado (opcional):</label>
+        <textarea id="custom_message" name="custom_message" rows="4" cols="50"></textarea>
+      </form>
     {% endif %}
 
     
     {% if can_publish or is_author %}
       {% if not is_moderated_category and article.state != 'p' and is_author %}
-        <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
+        <form method="POST" action="{% url 'article-to-published' pk=article.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">Publicar</button>
+          <label for="custom_message">Mensaje personalizado (opcional):</label>
+          <textarea id="custom_message" name="custom_message" rows="4" cols="50"></textarea>
+        </form>
       {% elif article.state == 'e' and not is_author %}
-        <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
+        <form method="POST" action="{% url 'article-to-published' pk=article.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">Publicar</button>
+          <label for="custom_message">Mensaje personalizado (opcional):</label>
+          <textarea id="custom_message" name="custom_message" rows="4" cols="50"></textarea>
+        </form>
       {% elif not is_moderated_category and article.state != 'p' and is_admin %}
-        <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
+        <form method="POST" action="{% url 'article-to-published' pk=article.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary">Publicar</button>
+          <label for="custom_message">Mensaje personalizado (opcional):</label>
+          <textarea id="custom_message" name="custom_message" rows="4" cols="50"></textarea>
+        </form>
       {% endif %}
     {% endif %}
 
     <!-- Display Inactivate option only for Admin or Author roles -->
     {% if can_inactivate and article.state != 'i' %}
-      <a href="{% url 'article-to-inactive' pk=article.id %}" class="detail-link">Inactivar</a>
+      <form method="POST" action="{% url 'article-to-inactive' pk=article.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Inactivar</button>
+        <label for="custom_message">Mensaje personalizado (opcional):</label>
+        <textarea id="custom_message" name="custom_message" rows="4" cols="50"></textarea>
+      </form>
     {% endif %}
     
   </div>

@@ -24,8 +24,8 @@ def send_email(to, subject, html):
     """
     try:
         params: resend.Emails.SendParams = {
-            "from": "Acme <onboarding@resend.dev>",
-            "to": [to],
+            "from": "androceomimo@fpuna.edu.py",
+            "to": "androceomimo@fpuna.edu.py",
             "subject": subject,
             "html": html,
         }

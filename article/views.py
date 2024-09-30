@@ -229,7 +229,9 @@ def article_update_history(request, pk):
         return redirect("home")
 
     article = get_object_or_404(Article, pk=pk)
-    article_contents_ref = ArticleContent.objects.filter(article=article).order_by('-created_at')
+    article_contents_ref = ArticleContent.objects.filter(article=article).order_by(
+        "-created_at"
+    )
 
     article_contents = [
         {
@@ -491,6 +493,9 @@ def article_to_revision(request, pk):
     is_autor = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
     is_editor = request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS])
     is_publisher = request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
+    
+    if request.method == "POST":
+        custom_message = request.POST.get("custom_message", "")
 
     # Solo el autor (cuando el estado es DRAFT) o el admin puede cambiar a REVISIÓN
     if (
@@ -498,7 +503,7 @@ def article_to_revision(request, pk):
         or (is_autor and article.state == ArticleStates.DRAFT.value)
         or ((is_editor or is_publisher) and article.state == ArticleStates.EDITED.value)
     ):
-        article.change_state(ArticleStates.REVISION.value)
+        article.change_state(ArticleStates.REVISION.value, changed_by_user=request.user, custom_message=custom_message)
         return redirect("article-detail", pk=pk)
 
     return HttpResponseForbidden("No puedes editar este contenido")
@@ -516,22 +521,30 @@ def article_to_published(request, pk):
     article = get_object_or_404(Article, pk=pk)
 
     is_admin = request.user.roles.filter(name="Administrador").exists()
-    can_publish = is_admin or request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
+    can_publish = is_admin or request.user.tiene_permisos(
+        [PermissionEnum.MODERAR_ARTICULOS]
+    )
     is_moderated = article.category.is_moderated
     is_author = article.autor == request.user
+    
+    if request.method == "POST":
+        custom_message = request.POST.get("custom_message", "")
 
     # Solo el publicador o el admin puede cambiar a PUBLICADO
     if is_moderated:
         if can_publish and article.state == ArticleStates.EDITED.value:
-            article.change_state(ArticleStates.PUBLISHED.value)
+            article.change_state(
+                ArticleStates.PUBLISHED.value, changed_by_user=request.user, custom_message=custom_message
+            )
             return redirect("article-detail", pk=pk)
     else:
         if is_author or is_admin or can_publish:
-            article.change_state(ArticleStates.PUBLISHED.value)
+            article.change_state(
+                ArticleStates.PUBLISHED.value, changed_by_user=request.user, custom_message=custom_message
+            )
             return redirect("article-detail", pk=pk)
-        
-    return HttpResponseForbidden("No puedes editar este contenido")
 
+    return HttpResponseForbidden("No puedes editar este contenido")
 
 
 @login_required
@@ -550,9 +563,12 @@ def article_to_edited(request, pk):
         [PermissionEnum.EDITAR_ARTICULOS]
     )
 
+    if request.method == "POST":
+        custom_message = request.POST.get("custom_message", "")
+
     # Solo el editor o el admin pueden cambiar a EDITADO y el estado actual debe ser REVISIÓN
     if is_editor and article.state == ArticleStates.REVISION.value:
-        article.change_state(ArticleStates.EDITED.value)
+        article.change_state(ArticleStates.EDITED.value, changed_by_user=request.user, custom_message=custom_message)
         return redirect("article-detail", pk=pk)
 
     return HttpResponseForbidden("No puedes editar este contenido")
@@ -574,9 +590,12 @@ def article_to_draft(request, pk):
         [PermissionEnum.EDITAR_ARTICULOS]
     )
 
+    if request.method == "POST":
+        custom_message = request.POST.get("custom_message", "")
+    
     # Solo el autor (cuando el estado es REVISION) o el admin puede cambiar a DRAFT
     if is_admin or (is_editor and article.state == ArticleStates.REVISION.value):
-        article.change_state(ArticleStates.DRAFT.value)
+        article.change_state(ArticleStates.DRAFT.value, changed_by_user=request.user, custom_message=custom_message)
         return redirect("article-detail", pk=pk)
 
     return HttpResponseForbidden("No puedes editar este contenido")
@@ -595,10 +614,13 @@ def article_to_inactive(request, pk):
 
     is_admin = request.user.roles.filter(name="Administrador").exists()
     is_autor = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
+    
+    if request.method == "POST":
+        custom_message = request.POST.get("custom_message", "")
 
     # Solo el autor o el admin puede cambiar a INACTIVO
     if is_admin or is_autor:
-        article.change_state(ArticleStates.INACTIVE.value)
+        article.change_state(ArticleStates.INACTIVE.value, changed_by_user=request.user, custom_message=custom_message)
         return redirect("article-detail", pk=pk)
 
     return HttpResponseForbidden("No puedes editar este contenido")
@@ -634,11 +656,12 @@ def article_to_inactive(request, pk):
 
 #     return render(request, "article/category_list.html", {"categories": categories})
 
+
 def category_list(request):
     """
     Vista que muestra la lista de categorías y permite buscar, filtrar y ordenar resultados.
-    
-    Muestra todas las categorías de manera predeterminada y actualiza los resultados según 
+
+    Muestra todas las categorías de manera predeterminada y actualiza los resultados según
     la entrada del formulario de búsqueda.
 
     Args:
@@ -651,9 +674,9 @@ def category_list(request):
     categories = Category.objects.all()
 
     if form.is_valid():
-        search_term = form.cleaned_data.get('search_term')
-        order_by = form.cleaned_data.get('order_by', 'name')
-        filter_type = form.cleaned_data.get('filter_type', 'all')
+        search_term = form.cleaned_data.get("search_term")
+        order_by = form.cleaned_data.get("order_by", "name")
+        filter_type = form.cleaned_data.get("filter_type", "all")
 
         print("Valor de order_by:", order_by)
 
@@ -662,7 +685,7 @@ def category_list(request):
             categories = categories.filter(name__icontains=search_term)
 
         # Filtrar por tipo de categoría
-        if filter_type != 'all':
+        if filter_type != "all":
             categories = categories.filter(type=filter_type)
 
         # Ordenar los resultados
@@ -672,7 +695,9 @@ def category_list(request):
         for category in categories:
             print(category.name)
 
-    return render(request, 'article/category_list.html', {'form': form, 'categories': categories})
+    return render(
+        request, "article/category_list.html", {"form": form, "categories": categories}
+    )
 
 
 def category_detail(request, pk):
@@ -798,9 +823,11 @@ def category_delete(request, pk):
         request, "article/category_confirm_delete.html", {"category": category}
     )
 
+
 # =============================================================================
 # Calificaciones views
 # =============================================================================
+
 
 @login_required
 def like_article(request, pk):

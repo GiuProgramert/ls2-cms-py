@@ -1,0 +1,16 @@
+<p>Hola {{ article.autor.username }},</p>
+
+<p>Tu artículo <strong>{{ article.title }}</strong> ha cambiado de estado.</p>
+
+<p>Estado anterior: <strong>{{ previous_state }}</strong></p>
+<p>Nuevo estado: <strong>{{ new_state }}</strong></p>
+
+{% if custom_message %}
+<p><strong>Mensaje personalizado de {{ changed_by_user.username }}:</strong></p>
+<p>{{ custom_message }}</p>
+{% endif %}
+
+<p>Este cambio fue realizado por {{ changed_by_user.username }}.</p>
+
+<p>Saludos cordiales,</p>
+<p>El equipo</p>
