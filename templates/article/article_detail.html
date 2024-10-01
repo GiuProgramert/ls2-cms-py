@@ -33,7 +33,9 @@
     {% if can_publish or is_author %}
       {% if not is_moderated_category and article.state != 'p' and is_author %}
         <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
-      {% elif article.state == 'e' and not is_author %}
+      {% elif article.state == 'e' and is_author and is_moderated_category %}
+        <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
+      {% elif article.state == 'e' and is_admin and is_moderated_category %}
         <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
       {% elif not is_moderated_category and article.state != 'p' and is_admin %}
         <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
