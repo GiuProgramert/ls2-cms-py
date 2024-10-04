@@ -1,99 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CMS PY</title>
 
-    <!-- Google fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
-      rel="stylesheet"
-    />
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CMS PY</title>
 
-    <!-- font awesome -->
-    <script
-      src="https://kit.fontawesome.com/b1bea53dfa.js"
-      crossorigin="anonymous"
-    ></script>
 
-    <!-- Our CSS -->
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'base.css' %}" />
+  <!-- Google fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
 
-    <!-- Custom head -->
-    {% block headblock %}{% endblock headblock %}
-  </head>
-  <body>
-    <nav class="navbar">
-      <div class="navbar-left">
-        <span class="navbar-title">
-          <a href="/">CMS PY</a>
-        </span>
-        <ul class="navbar-item-container">
-          
-          {% if "crear_articulos" in permisos %}
-            <li class="navbar-item">
-              <a href="/article/create">Crear artículo</a>
-            </li>
-          {% endif %}
+  <!-- font awesome -->
+  <script src="https://kit.fontawesome.com/b1bea53dfa.js" crossorigin="anonymous"></script>
+  <!-- Enlace para los íconos -->
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 
-          {% if "manejar_categorias" in permisos %}
-            <li class="navbar-item">
-              <a href="/categories">Categorías</a>
-            </li>
-          {% endif %}
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/menu.css' %}" />
+  <!-- Custom head -->
+  {% block headblock %}{% endblock headblock %}
+</head>
 
-          {% if "manejo_roles" in permisos %}
-            <li class="navbar-item">
-              <a href="{% url 'user-list' %}">Asignar Roles</a>
-            </li>
-          {% endif %}
-
-          {% if "manejo_roles" in permisos %}
-            <li class="navbar-item">
-              <a href="{% url 'role-list' %}">Roles</a>
-            </li>
-          {% endif %}
-
-          {% if "ver_inicio" in permisos%}
-            {% if "editar_articulos" in permisos or "crear_articulos" in permisos or "moderar_articulos" in permisos %}
-              <li class="navbar-item">
-                <a href="{% url 'article-list' %}">Articulos</a>
-              </li>  
-            {% endif %}  
-          {% endif %}
-
-          {% if not user.is_authenticated %}
-            <li class="navbar-item"><a href="{% url 'register' %}">Registrarse</a></li>
-            <li class="navbar-item"><a href="/login">Iniciar sesión</a></li>
-          {% else %}
-            <li class="navbar-item"><a href="/logout">Cerrar sesión</a></li>
-          {% endif %}
-        </ul>
-      </div>
-
-      <div class="navbar-user">
-        {% if user.is_authenticated %}
-        <span>{{ user.username }}</span>
-        <a href="{% url 'edit_profile' %}">
-          <i class="fa-solid fa-user"></i>
-        </a>
+<body>
+  <main>
+    <div class="sidebar" id="sidebar">
+      <ul class="space-y-4">
+        <button id="close"><i class="fas fa-bars"></i></button>
+        <h2 class="text-2xl font-bold mb-4">
+          <a href="/" class="text-white">CMS PY</a>
+        </h2>
+        {% if "crear_articulos" in permisos %}
+        <li class="navbar-item">
+          <a href="/article/create" class="text-white block"><i class="fa-solid fa-plus"></i> Crear artículo</a>
+        </li>
         {% endif %}
-      </div>
-    </nav>
+        <br>
+        {% if "manejar_categorias" in permisos %}
+        <li class="navbar-item">
+          <a href="/categories" class="text-white block"><i class="fa-solid fa-list"></i> Categorías</a>
+        </li>
+        {% endif %}
+        <br>
+        {% if "manejo_roles" in permisos %}
+        <li class="navbar-item">
+          <a href="{% url 'user-list' %}" class="text-white block"><i class="fa-solid fa-users-gear"></i> Asignar Roles</a>
+        </li>
+        {% endif %}
+        <br>
+        {% if "manejo_roles" in permisos %}
+        <li class="navbar-item">
+          <a href="{% url 'role-list' %}" class="text-white block"><i class="fa-solid fa-users-viewfinder"></i> Roles</a>
+        </li>
+        {% endif %}
+        <br>
+        {% if "ver_inicio" in permisos %}
+        {% if "editar_articulos" in permisos or "crear_articulos" in permisos or "moderar_articulos" in permisos %}
+        <li class="navbar-item">
+          <a href="{% url 'article-list' %}" class="text-white block"><i class="fa-solid fa-newspaper"></i> Artículos</a>
+        </li>
+        {% endif %}
+        {% endif %}
+        <br>
+        {% if user.is_authenticated %}
+        {% if "editar_articulos" in permisos or "crear_articulos" in permisos or "moderar_articulos" in permisos %}
+        <li class="navbar-item">
+          <a href="{% url 'edit_profile' %}" class="text-white">
+            <i class="fas fa-user"></i> Perfil
+          </a>
+        </li>
+        {% endif %}
+        {% endif %}
+        <br>
 
-    <main class="container">
-      {% block content %}
-      
-      {% endblock content %}
-    </main>
 
-    <!-- Optional footer -->
+        {% if not user.is_authenticated %}
+        <li class="navbar-item"><a href="{% url 'register' %}" class="text-white block"><i class="fa-regular fa-registered"></i> Registrarse</a></li>
+        <li class="navbar-item"><a href="/login" class="text-white block"><i class="fa-solid fa-door-open"></i> Iniciar sesión</a></li>
+        {% else %}
+        <li class="navbar-item"><a href="/logout" class="text-white block"><i class="fa-solid fa-door-closed"></i> Cerrar sesión</a></li>
+        {% endif %}
+        <br>
+      </ul>
+    </div>
+    <button id="open"><i class="fas fa-bars"></i></button>
+    <div>
+      <main class="container">
+        {% block content %}
+
+        {% endblock content %}
+      </main>
+    </div>
+
     <footer class="footer">
       <p>&copy; 2024 CMS PY. Todos los derechos reservados.</p>
     </footer>
-  </body>
+</body>
+<script>
+  const button = document.getElementById("open")
+  const sidebar = document.getElementById("sidebar")
+  const close = document.getElementById("close")
+
+  button.addEventListener("click", () => {
+    sidebar.classList.add("show")
+  })
+
+  close.addEventListener("click", () => {
+    sidebar.classList.remove("show")
+  })
+</script>
+
 </html>

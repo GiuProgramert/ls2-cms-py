@@ -1,9 +1,25 @@
-/* Importar el CSS existente para reutilizar estilos */
-@import url('home.css');
 
-/* Extensiones y modificaciones para el formulario extendido */
+.sidebar {
+  position: fixed;
+  left: -500px;
+  top: 0;
+  width: 380px;
+  height: 100dvh;
+  padding: 0px 40px;
+  background-color: #ffffff;
+  box-shadow: 8px 0px 24px 0px rgba(0, 0, 0, 0.4);
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+  transition: 0.25s;
+}
 
-/* Ajuste del contenedor del formulario para diferentes resoluciones */
+.sidebar.show {
+  left: 0px;
+}
+
+
+
+
 @media (min-width: 768px) {
   form {
     max-width: 700px; /* Aumentar el ancho máximo para pantallas más grandes */
@@ -30,70 +46,7 @@ body {
   padding: 20px;
 }
 
-/* Estilo para la barra de navegación */
-.navbar {
-  background-color: var(--primary-color);
-  padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
 
-.navbar-left {
-  display: flex;
-  align-items: center;
-}
-
-.navbar-title {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: white;
-  margin-right: 2rem;
-}
-
-.navbar-title a {
-  text-decoration: none;
-  color: inherit;
-}
-
-.navbar-item-container {
-  display: flex;
-  gap: 1.5rem;
-}
-
-.navbar-item a {
-  color: white;
-  text-decoration: none;
-  font-weight: 600;
-  padding: 0.5rem 1rem;
-  transition: background-color 0.3s ease;
-}
-
-.navbar-item a:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-}
-
-.navbar-user span {
-  color: white;
-  margin-right: 10px;
-}
-
-.navbar-user a {
-  display: flex;
-  align-items: center;
-  color: white;
-  text-decoration: none;
-}
-
-.navbar-user i {
-  background-color: white;
-  color: var(--primary-color);
-  padding: 0.5rem;
-  border-radius: 50%;
-  margin-left: 10px;
-}
 
 /* Estilo para el pie de página */
 .footer {
@@ -125,3 +78,228 @@ body {
   --primary-color: #4caf50;
   --primary-color-dark: #388e3c;
 }
+
+
+
+
+/* Fuente Global */
+body {
+  font-family: 'Inter', sans-serif;
+  color: #1a202c; /* Tailwind's gray-900 */
+  background-color: #f9fafb; /* Fondo general suave (Tailwind's gray-50) */
+  margin: 0;
+  padding: 0;
+}
+
+
+
+/* Estilos para los títulos */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700; /* Negrita */
+  color: #1e40af; /* Color azul oscuro (Tailwind's blue-800) */
+  margin-bottom: 1rem;
+}
+
+h1 {
+  font-size: 2.5rem; /* Tamaño para h1 */
+}
+
+h2 {
+  font-size: 2rem; /* Tamaño para h2 */
+}
+
+h3 {
+  font-size: 1.75rem; /* Tamaño para h3 */
+}
+
+/* Ajuste general para párrafos */
+p {
+  color: #4a5568; /* Tailwind's gray-700 */
+  line-height: 1.7; /* Mejora la legibilidad */
+  margin-bottom: 1.5rem; /* Espacio inferior */
+}
+
+/* Estilo para los botones */
+button, .btn {
+  background-color: #2563eb; /* Azul (Tailwind's blue-600) */
+  color: #ffffff; /* Texto blanco */
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover, .btn:hover {
+  background-color: #1d4ed8; /* Azul oscuro al hacer hover (Tailwind's blue-800) */
+}
+
+/* Navbar Styles */
+.navbar {
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Tailwind's shadow-md */
+  padding: 1rem 1.5rem; /* Tailwind's py-4 px-6 */
+  display: fixed;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-title a {
+  font-size: 1.75rem; /* Ajustamos a un tamaño mayor */
+  font-weight: bold;
+  color: #2563eb; /* Tailwind's blue-600 */
+  text-decoration: none;
+}
+
+.navbar-title a:hover {
+  color: #1d4ed8; /* Tailwind's blue-800 */
+}
+
+.navbar-item-container {
+  /*display: flex;*/
+  gap: 1rem; /* Tailwind's space-x-4 */
+  list-style: none;
+}
+
+.navbar-item a {
+  color: #374151; /* Tailwind's gray-700 */
+  text-decoration: none;
+}
+
+.navbar-item a:hover {
+  color: #2563eb; /* Tailwind's blue-600 */
+}
+
+.navbar-item a:last-child {
+  color: #dc2626; /* Tailwind's red-600 */
+}
+
+.navbar-item a:last-child:hover {
+  color: #b91c1c; /* Tailwind's red-800 */
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-user span {
+  color: #374151; /* Tailwind's gray-700 */
+  margin-right: 0.5rem;
+}
+
+/* Grid Styles */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* Tailwind's grid-cols-2 */
+  gap: 1.5rem; /* Ajustamos el gap para más espacio */
+}
+
+.grid p {
+  background-color: #ebf8ff; /* Tailwind's blue-100 */
+  color: #1e40af; /* Tailwind's blue-800 */
+  padding: 1rem; /* Tailwind's p-4 */
+  border-radius: 0.375rem; /* Tailwind's rounded */
+}
+
+/* Estilos generales para los párrafos de permisos */
+.permiso-parrafo {
+  background-color: #e2e8f0; /* Color de fondo suave (Tailwind's gray-200) */
+  color: #1a202c; /* Color de texto oscuro (Tailwind's gray-900) */
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  font-size: 1rem; /* Tamaño de fuente */
+  font-weight: 500; /* Peso de la fuente */
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+}
+
+/* Estilo para íconos opcionales */
+.permiso-parrafo i {
+  margin-right: 8px; /* Espaciado entre icono y texto */
+  color: #3182ce; /* Color de los íconos (Tailwind's blue-600) */
+}
+
+/* Hover effects */
+.permiso-parrafo:hover {
+  background-color: #cbd5e0; /* Color de fondo al pasar el mouse (Tailwind's gray-300) */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Sombra más intensa */
+  transform: translateY(-2px); /* Levantar ligeramente el párrafo */
+  transition: all 0.3s ease; /* Transición suave para efectos */
+}
+
+.main-container {
+  display: grid;
+  margin: 20px 0;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.main-container .articles {
+  grid-column: 1 / span 2;
+}
+
+.articles {
+  flex: 3;
+  margin-right: 20px;
+}
+
+.article-card {
+  background-color: #fff;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.article-card .author {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.article-card .title {
+  font-size: 1.5rem;
+  margin: 10px 0;
+}
+
+.article-card .description {
+  font-size: 1rem;
+  color: #333;
+}
+
+.article-actions {
+  margin-top: 10px;
+}
+
+.article-actions span {
+  margin-right: 20px;
+  font-size: 0.9rem;
+}
+
+.categories {
+  flex: 1;
+}
+
+.category-section {
+  background-color: #fff;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.category-section h3 {
+  margin-bottom: 10px;
+}
+
+.category-section p {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+
