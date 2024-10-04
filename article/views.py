@@ -12,7 +12,7 @@ from article.models import (
     CategoryType,
     ArticleVote,
 )
-from article.forms import CategoryForm, ArticleForm
+from article.forms import *
 from django.db.models import Avg
 
 
@@ -229,7 +229,7 @@ def article_update_history(request, pk):
         return redirect("home")
 
     article = get_object_or_404(Article, pk=pk)
-    article_contents_ref = ArticleContent.objects.filter(article=article)
+    article_contents_ref = ArticleContent.objects.filter(article=article).order_by('-created_at')
 
     article_contents = [
         {
@@ -468,6 +468,8 @@ def article_detail(request, pk):
                 "avg_rating": avg_rating,
                 "user_vote": user_vote,  # Pass both vote and rating information to the template
                 "authenticated": authenticated,
+                "is_author": is_author,
+                "is_admin": is_admin,
             },
         )
 
@@ -514,16 +516,22 @@ def article_to_published(request, pk):
     article = get_object_or_404(Article, pk=pk)
 
     is_admin = request.user.roles.filter(name="Administrador").exists()
-    can_publish = is_admin or request.user.tiene_permisos(
-        [PermissionEnum.MODERAR_ARTICULOS]
-    )
+    can_publish = is_admin or request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
+    is_moderated = article.category.is_moderated
+    is_author = article.autor == request.user
 
-    # Solo el publicador o el admin puede cambiar a PUBLICADO, y el estado actual debe ser EDITED
-    if can_publish and article.state == ArticleStates.EDITED.value:
-        article.change_state(ArticleStates.PUBLISHED.value)
-        return redirect("article-detail", pk=pk)
-
+    # Solo el publicador o el admin puede cambiar a PUBLICADO
+    if is_moderated:
+        if can_publish and article.state == ArticleStates.EDITED.value:
+            article.change_state(ArticleStates.PUBLISHED.value)
+            return redirect("article-detail", pk=pk)
+    else:
+        if is_author or is_admin or can_publish:
+            article.change_state(ArticleStates.PUBLISHED.value)
+            return redirect("article-detail", pk=pk)
+        
     return HttpResponseForbidden("No puedes editar este contenido")
+
 
 
 @login_required
@@ -601,13 +609,37 @@ def article_to_inactive(request, pk):
 # =============================================================================
 
 
+# def category_list(request):
+#     """
+#     Vista que muestra la lista de categorías.
+
+#     Solo los usuarios autenticados y con el permiso `MANEJAR_CATEGORIAS` pueden
+#     acceder a esta vista. Si no se cumplen las condiciones, se redirige al
+#     usuario a la página de login o a la página de acceso prohibido.
+
+#     Args:
+#         request (HttpRequest): La solicitud HTTP.
+
+#     Returns:
+#         HttpResponse: Renderiza la plantilla 'article/category_list.html' o redirige.
+#     """
+
+#     if not request.user.is_authenticated:
+#         return redirect("login")
+
+#     if not request.user.tiene_permisos([PermissionEnum.MANEJAR_CATEGORIAS]):
+#         return redirect("forbidden")
+
+#     categories = Category.objects.all()
+
+#     return render(request, "article/category_list.html", {"categories": categories})
+
 def category_list(request):
     """
-    Vista que muestra la lista de categorías.
-
-    Solo los usuarios autenticados y con el permiso `MANEJAR_CATEGORIAS` pueden
-    acceder a esta vista. Si no se cumplen las condiciones, se redirige al
-    usuario a la página de login o a la página de acceso prohibido.
+    Vista que muestra la lista de categorías y permite buscar, filtrar y ordenar resultados.
+    
+    Muestra todas las categorías de manera predeterminada y actualiza los resultados según 
+    la entrada del formulario de búsqueda.
 
     Args:
         request (HttpRequest): La solicitud HTTP.
@@ -615,16 +647,26 @@ def category_list(request):
     Returns:
         HttpResponse: Renderiza la plantilla 'article/category_list.html' o redirige.
     """
-
-    if not request.user.is_authenticated:
-        return redirect("login")
-
-    if not request.user.tiene_permisos([PermissionEnum.MANEJAR_CATEGORIAS]):
-        return redirect("forbidden")
-
+    form = CategorySearchForm(request.GET or None)
     categories = Category.objects.all()
 
-    return render(request, "article/category_list.html", {"categories": categories})
+    if form.is_valid():
+        search_term = form.cleaned_data.get('search_term')
+        order_by = form.cleaned_data.get('order_by', 'name')
+        filter_type = form.cleaned_data.get('filter_type', 'all')
+
+        # Filtrar por título que contenga el término de búsqueda
+        if search_term:
+            categories = categories.filter(name__icontains=search_term)
+
+        # Filtrar por tipo de categoría
+        if filter_type != 'all':
+            categories = categories.filter(type=filter_type)
+
+        # Ordenar los resultados
+        categories = categories.order_by(order_by)
+
+    return render(request, 'article/category_list.html', {'form': form, 'categories': categories})
 
 
 def category_detail(request, pk):
@@ -750,6 +792,9 @@ def category_delete(request, pk):
         request, "article/category_confirm_delete.html", {"category": category}
     )
 
+# =============================================================================
+# Calificaciones views
+# =============================================================================
 
 @login_required
 def like_article(request, pk):
