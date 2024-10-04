@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from enum import Enum
 from mdeditor.fields import MDTextField
+from notification.utils import send_email
 
 User = get_user_model()
 
@@ -115,13 +116,20 @@ class Article(models.Model):
         default=ArticleStates.DRAFT.value,
     )
 
-    def change_state(self, new_state):
+    def change_state(self, new_state, message = None):
         """
         Cambia el estado del artículo.
 
         Args:
             new_state (str): El nuevo estado del artículo.
         """
+
+        send_email(
+            to="giulidiazp@gmail.com",
+            subject="Cambio de estado de artículo",
+            html=f"El artículo {self.title} ha cambiado a estado {new_state}."
+        )
+
         self.state = new_state
         self.save()
 

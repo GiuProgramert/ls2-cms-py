@@ -27,6 +27,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const states = document.querySelectorAll(".state");
   const items = document.querySelectorAll(".item");
 
+  const modal = document.getElementById("modalMessage");
+  const closeBtn = document.getElementsByClassName("close")[0];
+  const sendMessageBtn = document.getElementById("send")
+  const dontSendMessageBtn = document.getElementById("dontSend")
+
   let draggedItem = null;
   let firstState = null;
 
@@ -56,28 +61,48 @@ document.addEventListener("DOMContentLoaded", () => {
         const articleId = draggedItem.getAttribute("data-id");
         const articleNewState = itemsContainer.getAttribute("data-state");
 
+        if (firstState === "revision" && articleNewState === "draft") {
+          modal.style.display = "block";
+        }
+
         if (firstState !== articleNewState) {
-          changeState(articleId, articleNewState).then(() => {
-            itemsContainer.appendChild(draggedItem);
+          changeState(articleId, articleNewState)
+            .then(() => {
+              itemsContainer.appendChild(draggedItem);
 
-            const canDrag = canDraggValues[articleNewState] || defaultCanDrag;
-            draggedItem.setAttribute("draggable", canDrag ? "true" : "false");
+              const canDrag = canDraggValues[articleNewState] || defaultCanDrag;
+              draggedItem.setAttribute("draggable", canDrag ? "true" : "false");
 
-            draggedItem = null;
-            firstState = null;
-          }).catch(() => {
-            window.Toastify({
-              text: "No puedes modificar el estado de este artículo",
-              position: "center",
-              close: true,
-              className: "toast",
-              style: {
-                background: "#b90f29",
-              }
-            }).showToast();
-          });
+              draggedItem = null;
+              firstState = null;
+            })
+            .catch(() => {
+              window
+                .Toastify({
+                  text: "No puedes modificar el estado de este artículo",
+                  position: "center",
+                  close: true,
+                  className: "toast",
+                  style: {
+                    background: "#b90f29",
+                  },
+                })
+                .showToast();
+            });
         }
       }
     });
+  });
+
+  closeBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+
+  sendMessageBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+
+  dontSendMessageBtn.addEventListener("click", () => {
+    modal.style.display = "none";
   });
 });

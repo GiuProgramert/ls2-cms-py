@@ -1,7 +1,14 @@
 import os
-import resend
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
-resend.api_key = os.environ["RESEND_API_KEY"]
+# Load email configuration from environment variables
+SMTP_SERVER = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
+SMTP_USERNAME = os.environ["SMTP_USERNAME"]
+SMTP_PASSWORD = os.environ["SMTP_PASSWORD"]
+DEFAULT_FROM = os.environ.get("DEFAULT_FROM", "CMS PY <cmspyls2@gmail.com>")
 
 
 def send_email(to, subject, html):
@@ -23,14 +30,25 @@ def send_email(to, subject, html):
         En caso de error, se captura la excepción y se imprime un mensaje de error.
     """
     try:
-        params: resend.Emails.SendParams = {
-            "from": "Acme <onboarding@resend.dev>",
-            "to": [to],
-            "subject": subject,
-            "html": html,
-        }
-        email = resend.Emails.send(params)
-        return email
-    except Exception as Error:
-        print("No se pudo enviar el mail")
-        print(Error)
+        # Create MIMEMultipart message
+        msg = MIMEMultipart()
+        msg['From'] = DEFAULT_FROM
+        msg['To'] = to
+        msg['Subject'] = subject
+
+        # Attach HTML content
+        msg.attach(MIMEText(html, 'html'))
+
+        # Create SMTP session
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()  # Enable TLS
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            
+            # Send email
+            server.send_message(msg)
+
+        return {"status": "success", "message": "Email sent successfully"}
+    except Exception as error:
+        print("Failed to send email")
+        print(error)
+        return {"status": "error", "message": str(error)}
