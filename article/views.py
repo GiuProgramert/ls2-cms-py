@@ -655,8 +655,6 @@ def category_list(request):
         order_by = form.cleaned_data.get('order_by', 'name')
         filter_type = form.cleaned_data.get('filter_type', 'all')
 
-        print("Valor de order_by:", order_by)
-
         # Filtrar por título que contenga el término de búsqueda
         if search_term:
             categories = categories.filter(name__icontains=search_term)
@@ -667,10 +665,6 @@ def category_list(request):
 
         # Ordenar los resultados
         categories = categories.order_by(order_by)
-
-        print("Lista de categorías ordenadas:")
-        for category in categories:
-            print(category.name)
 
     return render(request, 'article/category_list.html', {'form': form, 'categories': categories})
 
