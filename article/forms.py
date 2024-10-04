@@ -78,12 +78,12 @@ class CategorySearchForm(forms.Form):
     )
     order_by = forms.ChoiceField(
         choices=[
-            ('name', 'Nombre Ascendente'),
-            ('-name', 'Nombre Descendente')
+            ('name', 'A-Z'),
+            ('-name', 'Z-A')
         ],
         required=False,
         label="Ordenar por",
-        widget=forms.Select
+        widget=forms.Select(attrs={'class': 'form-group'}) 
     )
     # Filtros adicionales
     filter_type = forms.ChoiceField(

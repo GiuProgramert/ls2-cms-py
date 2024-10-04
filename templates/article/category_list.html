@@ -8,11 +8,12 @@
 {% block content %}
 <h2>Categorías</h2>
 
-<!-- Formulario de búsqueda más compacto -->
 <form method="get" action="{% url 'category-list' %}" class="search-form">
     <div class="form-group">
         <label for="search-input">Buscar por nombre:</label>
-        <input id="search-input" type="text" name="search_term" value="{{ form.search_term.value|stringformat:'s' }}" placeholder="Buscar categoría" class="search-input">
+        <input id="search-input" type="text" name="search_term" 
+        value="{{ form.search_term.value|default_if_none:'' }}" 
+        placeholder="Buscar categoría" class="search-input">
     </div>
     
     <div class="form-group">
@@ -20,18 +21,16 @@
         <select id="filter-select" name="filter_type" class="filter-select">
             <option value="all" {% if form.filter_type.value == 'all' %}selected{% endif %}>Todos</option>
             <option value="free" {% if form.filter_type.value == 'free' %}selected{% endif %}>Free</option>
-            <option value="subscription" {% if form.filter_type.value == 'subscription' %}selected{% endif %}>Suscripción</option>
+            <option value="suscription" {% if form.filter_type.value == 'suscription' %}selected{% endif %}>Suscripción</option>
             <option value="pay" {% if form.filter_type.value == 'pay' %}selected{% endif %}>Pago</option>
         </select>
     </div>
 
     <div class="form-group">
-        <label for="order-select">Ordenar por:</label>
-        <select id="order-select" name="order_by" class="order-select">
-            <option value="name" {% if form.order_by.value == 'name' %}selected{% endif %}>Nombre Ascendente</option>
-            <option value="-name" {% if form.order_by.value == '-name' %}selected{% endif %}>Nombre Descendente</option>
-        </select>
+        {{ form.order_by.label_tag }} 
+        {{ form.order_by }}            
     </div>
+    
 
     <button type="submit" class="search-button">Buscar</button>
 </form>
