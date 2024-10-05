@@ -13,6 +13,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700; /* Negrita */
   color: #1e40af; /* Color azul oscuro (Tailwind's blue-800) */
   margin-bottom: 1rem;
+  text-decoration: none;
 }
 
 h1 {
@@ -21,6 +22,7 @@ h1 {
 
 h2 {
   font-size: 2rem; /* Tamaño para h2 */
+  text-decoration: none;
 }
 
 h3 {
@@ -217,5 +219,3 @@ button:hover, .btn:hover {
   color: #333;
   margin-bottom: 5px;
 }
-
-
