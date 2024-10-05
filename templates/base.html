@@ -34,38 +34,46 @@
         <h2 class="text-2xl font-bold mb-4 title">
           <a href="/" class="text-white">CMS PY</a>
         </h2>
+        {% if user.is_authenticated %}
+          <li class="navbar-item">
+            <a href="{% url 'kanban' %}" class="text-white">
+              <i class="fa-regular fa-folder-open"></i> Kanban
+            </a>
+          </li>
+          <br>
+        {% endif %}
         {% if "crear_articulos" in permisos %}
         <li class="navbar-item">
           <a href="/article/create" class="text-white block"><i class="fa-solid fa-plus"></i> Crear artículo</a>
         </li>
-        {% endif %}
         <br>
+        {% endif %}
         {% if "manejar_categorias" in permisos %}
         <li class="navbar-item">
           <a href="/categories" class="text-white block"><i class="fa-solid fa-list"></i> Categorías</a>
         </li>
-        {% endif %}
         <br>
+        {% endif %}
         {% if "manejo_roles" in permisos %}
         <li class="navbar-item">
           <a href="{% url 'user-list' %}" class="text-white block"><i class="fa-solid fa-users-gear"></i> Asignar Roles</a>
         </li>
-        {% endif %}
         <br>
+        {% endif %}
         {% if "manejo_roles" in permisos %}
         <li class="navbar-item">
           <a href="{% url 'role-list' %}" class="text-white block"><i class="fa-solid fa-users-viewfinder"></i> Roles</a>
         </li>
-        {% endif %}
         <br>
+        {% endif %}
         {% if "ver_inicio" in permisos %}
         {% if "editar_articulos" in permisos or "crear_articulos" in permisos or "moderar_articulos" in permisos %}
         <li class="navbar-item">
           <a href="{% url 'article-list' %}" class="text-white block"><i class="fa-solid fa-newspaper"></i> Artículos</a>
         </li>
-        {% endif %}
-        {% endif %}
         <br>
+        {% endif %}
+        {% endif %}
         {% if user.is_authenticated %}
         {% if "editar_articulos" in permisos or "crear_articulos" in permisos or "moderar_articulos" in permisos %}
         <li class="navbar-item">
@@ -73,9 +81,9 @@
             <i class="fas fa-user"></i> Perfil
           </a>
         </li>
-        {% endif %}
-        {% endif %}
         <br>
+        {% endif %}
+        {% endif %}
 
 
         {% if not user.is_authenticated %}
@@ -88,7 +96,7 @@
       </ul>
     </div>
     <nav class="nav">
-      <h2 class="text-2xl font-bold mb-4 title">
+      <h2 class="text-2xl font-bold title">
         <a href="/" class="text-white">CMS PY</a>
       </h2>
       <button id="open"><i class="fas fa-bars"></i></button>
@@ -102,7 +110,8 @@
     </div>
 
     <footer class="footer">
-      <p>&copy; 2024 CMS PY. Todos los derechos reservados.</p>
+      <p>Todos los derechos reservados.</p>
+      <p>&copy; 2024 CMS PY</p>
     </footer>
 </body>
 <script>

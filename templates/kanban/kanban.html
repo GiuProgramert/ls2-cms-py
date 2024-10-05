@@ -17,12 +17,28 @@
         {% for article in draft_articles %}
           {% comment %} Solamente el autor o el admin pueden pasar a otro estado {% endcomment %}
           <div 
-            class="item {% if is_autor or is_admin %}clickable{% endif %}" 
-            draggable="{% if is_autor or is_admin %}true{% else %}false{% endif %}" 
+            class="item {% if is_autor or is_admin or not article.category.is_moderated  %}clickable{% endif %}" 
+            draggable="{% if is_autor or is_admin or not article.category.is_moderated %}true{% else %}false{% endif %}" 
             data-id="{{ article.id }}"
           >
             <p>{{ article.title }}</p>
-            <p>{{ article.autor.username }}</p>
+            <div class="line">
+              <i class="fa-regular fa-user"></i>
+              <p>{{ article.autor.username }}</p>
+            </div>
+            <div class="line">
+              <i class="fa-solid fa-layer-group"></i>
+              <p>
+                {{article.category.name}} - 
+                <b>
+                  {% if article.category.is_moderated %}
+                    Moderado
+                  {% else %}
+                    No moderado
+                  {% endif %}
+                </b>
+              </p>
+            </div>
           </div>
         {% endfor %}
       </div>
@@ -34,12 +50,28 @@
         {% for article in revision_articles %}
           {% comment %} Solamente el editor o el admin pueden pasar a otro estado {% endcomment %}
           <div 
-            class="item {% if is_editor or is_admin %}clickable{% endif %}" 
-            draggable="{% if is_editor or is_admin %}true{% else %}false{% endif %}" 
+            class="item {% if is_editor or is_admin or not article.category.is_moderated %}clickable{% endif %}" 
+            draggable="{% if is_editor or is_admin or not article.category.is_moderated %}true{% else %}false{% endif %}" 
             data-id="{{ article.id }}"
           >
-            <p>{{ article.title }}</p>
+          <p>{{ article.title }}</p>
+          <div class="line">
+            <i class="fa-regular fa-user"></i>
             <p>{{ article.autor.username }}</p>
+          </div>
+          <div class="line">
+            <i class="fa-solid fa-layer-group"></i>
+            <p>
+              {{article.category.name}} - 
+              <b>
+                {% if article.category.is_moderated %}
+                  Moderado
+                {% else %}
+                  No moderado
+                {% endif %}
+              </b>
+            </p>
+          </div>
           </div>
         {% endfor %}
       </div>
@@ -52,12 +84,28 @@
         {% for article in edited_articles %}
           {% comment %} Solamente el editor o el admin pueden pasar a otro estado {% endcomment %}
           <div 
-            class="item {% if is_admin or is_publisher or is_editor %}clickable{% endif %}" 
-            draggable="{% if is_admin or is_publisher or is_editor %}true{% else %}false{% endif %}" 
+            class="item {% if is_admin or is_publisher or is_editor or not article.category.is_moderated %}clickable{% endif %}" 
+            draggable="{% if is_admin or is_publisher or is_editor or not article.category.is_moderated %}true{% else %}false{% endif %}" 
             data-id="{{ article.id }}"
           >
             <p>{{ article.title }}</p>
-            <p>{{ article.autor.username }}</p>
+            <div class="line">
+              <i class="fa-regular fa-user"></i>
+              <p>{{ article.autor.username }}</p>
+            </div>
+            <div class="line">
+              <i class="fa-solid fa-layer-group"></i>
+              <p>
+                {{article.category.name}} - 
+                <b>
+                  {% if article.category.is_moderated %}
+                    Moderado
+                  {% else %}
+                    No moderado
+                  {% endif %}
+                </b>
+              </p>
+            </div>
           </div>
         {% endfor %}
       </div>
@@ -69,12 +117,28 @@
       <div class="items" data-state="published">
         {% for article in published_articles %}
           <div 
-            class="item {% if is_admin or is_autor %}clickable{% endif %}" 
-            draggable="{% if is_admin or is_autor %}true{% else %}false{% endif %}" 
+            class="item {% if is_admin or is_autor or not article.category.is_moderated %}clickable{% endif %}" 
+            draggable="{% if is_admin or is_autor or not article.category.is_moderated %}true{% else %}false{% endif %}" 
             data-id="{{ article.id }}"
           >
             <p>{{ article.title }}</p>
-            <p>{{ article.autor.username }}</p>
+            <div class="line">
+              <i class="fa-regular fa-user"></i>
+              <p>{{ article.autor.username }}</p>
+            </div>
+            <div class="line">
+              <i class="fa-solid fa-layer-group"></i>
+              <p>
+                {{article.category.name}} - 
+                <b>
+                  {% if article.category.is_moderated %}
+                    Moderado
+                  {% else %}
+                    No moderado
+                  {% endif %}
+                </b>
+              </p>
+            </div>
           </div>
         {% endfor %}
       </div>
@@ -90,7 +154,23 @@
             data-id="{{ article.id }}"
           >
             <p>{{ article.title }}</p>
-            <p>{{ article.autor.username }}</p>
+            <div class="line">
+              <i class="fa-regular fa-user"></i>
+              <p>{{ article.autor.username }}</p>
+            </div>
+            <div class="line">
+              <i class="fa-solid fa-layer-group"></i>
+              <p>
+                {{article.category.name}} - 
+                <b>
+                  {% if article.category.is_moderated %}
+                    Moderado
+                  {% else %}
+                    No moderado
+                  {% endif %}
+                </b>
+              </p>
+            </div>
           </div>
         {% endfor %}
       </div>

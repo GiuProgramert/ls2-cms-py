@@ -27,7 +27,6 @@ form {
   h2 {
     text-align: center; /* Centrar el texto del título */
     color: #1a202c; /* Color del texto (similar a Tailwind's gray-900) */
-    margin-bottom: 1rem; /* Margen inferior para separar del formulario */
   }
   
   /* Estilo para los campos del formulario */
@@ -79,7 +78,6 @@ form {
   /* Estilo para el enlace de cancelar */
   a {
     display: inline-block; /* Mostrar como bloque en línea */
-    margin-top: 1rem; /* Margen superior para separar del botón */
     text-decoration: none; /* Quitar subrayado */
     color: #e53e3e; /* Color del texto rojo (similar a Tailwind's red-600) */
     font-weight: 600; /* Texto en negrita */
