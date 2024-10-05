@@ -142,21 +142,18 @@
   flex-direction: column;
   align-items: flex-start;
   margin-bottom: 0.5rem; /* Espacio entre grupos */
+  width: 400px;       /* Cambia esto para ajustar el ancho del campo */
+  max-width: 100%;    /* Evita que se expanda más allá del contenedor */
+  padding: 10px;      /* Añade espacio interno (opcional) */
+  font-size: 16px;    /* Ajusta el tamaño de la fuente */
+  border-radius: 5px; /* Bordes redondeados, opcional */
+  border: 1px solid #ccc;  /* Estilo de borde */
 }
 
 .form-group label {
   font-size: 0.9rem; /* Tamaño de fuente más pequeño */
   font-weight: 600; /* Texto en negrita */
   margin-bottom: 0.2rem; /* Espacio entre la etiqueta y el campo */
-}
-
-.search-input, .filter-select, .order-select, .search-button {
-  padding: 0.4rem 0.6rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  width: 200px; /* Ancho fijo para todos los campos */
-  box-sizing: border-box; /* Asegura que el padding no afecte el ancho total */
 }
 
 /* Ajustar el tamaño y apariencia del botón */
