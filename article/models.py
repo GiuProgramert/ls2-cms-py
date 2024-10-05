@@ -22,6 +22,31 @@ class CategoryType(Enum):
     SUSCRIPTION = "suscription"
 
 
+def get_state_name(state):
+    """
+    Obtiene el nombre del estado de un artículo.
+
+    Args:
+        state (str): El estado del artículo.
+
+    Returns:
+        str: El nombre del estado del artículo.
+    """
+
+    if state == ArticleStates.DRAFT.value:
+        return "Borrador"
+    if state == ArticleStates.REVISION.value:
+        return "En revisión"
+    if state == ArticleStates.EDITED.value:
+        return "Editado"
+    if state == ArticleStates.PUBLISHED.value:
+        return "Publicado"
+    if state == ArticleStates.INACTIVE.value:
+        return "Inactivo"
+
+    return "Desconocido"
+
+
 class Category(models.Model):
     """
     Modelo que representa una categoría de artículos.
@@ -116,7 +141,7 @@ class Article(models.Model):
         default=ArticleStates.DRAFT.value,
     )
 
-    def change_state(self, new_state, message = None):
+    def change_state(self, new_state):
         """
         Cambia el estado del artículo.
 
@@ -125,9 +150,17 @@ class Article(models.Model):
         """
 
         send_email(
-            to="giulidiazp@gmail.com",
-            subject="Cambio de estado de artículo",
-            html=f"El artículo {self.title} ha cambiado a estado {new_state}."
+            to=self.autor.email,
+            subject="CMS PY: Cambio de estado de artículo",
+            html=f"""
+                <h3>Hola, {self.autor.username}</h3>
+                <p>
+                    El esta de tu articulo <strong>{self.title}</strong> ha sido cambiado
+                </p>
+                <p>
+                    <strong>{get_state_name(self.state)}</strong> → <strong>{get_state_name(new_state)}</strong>
+                </p>
+            """,
         )
 
         self.state = new_state

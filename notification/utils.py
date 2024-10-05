@@ -51,4 +51,4 @@ def send_email(to, subject, html):
     except Exception as error:
         print("Failed to send email")
         print(error)
-        return {"status": "error", "message": str(error)}
+        raise {"status": "error", "message": str(error)}
