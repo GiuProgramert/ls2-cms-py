@@ -3,13 +3,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.views.generic import ListView
 from .models import CustomUser, Role
-from .forms import CustomUserCreationForm
+from .forms import *
 from django.contrib.auth.mixins import UserPassesTestMixin
 from roles.utils import PermissionEnum
 from django.contrib.auth.decorators import login_required
-from .forms import ProfileForm
 from django.contrib.auth import update_session_auth_hash
-from .forms import CustomPasswordChangeForm
 
 
 def login_view(request):
@@ -51,7 +49,7 @@ def logout_view(request):
 
 class UserListView(UserPassesTestMixin, ListView):
     """
-    Vista para listar usuarios que no son administradores.
+    Vista para listar usuarios que no son administradores, con funcionalidad de búsqueda y filtrado.
 
     Muestra una lista de usuarios, excluyendo aquellos que tienen el rol de 'Administrador'.
 
@@ -59,9 +57,6 @@ class UserListView(UserPassesTestMixin, ListView):
         model (Model): El modelo `CustomUser` que se va a listar.
         template_name (str): La plantilla que se renderiza para esta vista.
         context_object_name (str): El nombre de la variable de contexto que contendrá la lista de usuarios en la plantilla.
-
-    Methods:
-        get_queryset(): Filtra los usuarios para excluir aquellos con el rol de 'Administrador'.
     """
 
     model = CustomUser
@@ -70,13 +65,50 @@ class UserListView(UserPassesTestMixin, ListView):
 
     def get_queryset(self):
         """
-        Filtra los usuarios excluyendo aquellos que tienen el rol de 'Administrador'.
+        Filtra los usuarios excluyendo aquellos que tienen el rol de 'Administrador' y aplica filtros
+        de búsqueda y ordenamiento según el formulario.
 
         Returns:
             QuerySet: El conjunto de usuarios filtrado.
         """
+        queryset = super().get_queryset()
+        form = UserSearchForm(self.request.GET or None) 
+
         administradores = Role.objects.filter(name="Administrador")
-        return CustomUser.objects.exclude(roles__in=administradores)
+        queryset = queryset.exclude(roles__in=administradores)
+
+        if form.is_valid():
+            search_term = form.cleaned_data.get('search_term', '')
+            order_by = form.cleaned_data.get('order_by', 'username')
+            filter_role = form.cleaned_data.get('filter_role', 'all')
+
+            # Filtrar por nombre de usuario o email que contenga el término de búsqueda
+            if search_term:
+                queryset = queryset.filter(username__icontains=search_term) | queryset.filter(email__icontains=search_term)
+
+            # Filtrar por rol si no es 'all'
+            if filter_role != 'all':
+                queryset = queryset.filter(roles__name=filter_role)
+
+            # Ordenar los resultados
+            queryset = queryset.order_by(order_by)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        """
+        Añade el formulario de búsqueda al contexto.
+
+        Args:
+            **kwargs: Argumentos adicionales del contexto.
+
+        Returns:
+            dict: El contexto actualizado con el formulario.
+        """
+        context = super().get_context_data(**kwargs)
+        form = UserSearchForm(self.request.GET or None)
+        context['form'] = form
+        return context
 
     def test_func(self):
         """
