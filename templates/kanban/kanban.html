@@ -15,7 +15,12 @@
 
       <div class="items" data-state="draft">
         {% for article in draft_articles %}
-          <div class="item" draggable="true" data-id="{{ article.id }}">
+          {% comment %} Solamente el autor o el admin pueden pasar a otro estado {% endcomment %}
+          <div 
+            class="item {% if is_autor or is_admin %}clickable{% endif %}" 
+            draggable="{% if is_autor or is_admin %}true{% else %}false{% endif %}" 
+            data-id="{{ article.id }}"
+          >
             <p>{{ article.title }}</p>
             <p>{{ article.autor.username }}</p>
           </div>
@@ -27,19 +32,47 @@
 
       <div class="items" data-state="revision">
         {% for article in revision_articles %}
-          <div class="item" draggable="true" data-id="{{ article.id }}">
+          {% comment %} Solamente el editor o el admin pueden pasar a otro estado {% endcomment %}
+          <div 
+            class="item {% if is_editor or is_admin %}clickable{% endif %}" 
+            draggable="{% if is_editor or is_admin %}true{% else %}false{% endif %}" 
+            data-id="{{ article.id }}"
+          >
             <p>{{ article.title }}</p>
             <p>{{ article.autor.username }}</p>
           </div>
         {% endfor %}
       </div>
     </div>
+
+    <div class="state edited">
+      <h4>Editado</h4>
+
+      <div class="items" data-state="edited">
+        {% for article in edited_articles %}
+          {% comment %} Solamente el editor o el admin pueden pasar a otro estado {% endcomment %}
+          <div 
+            class="item {% if is_admin or is_publisher or is_editor %}clickable{% endif %}" 
+            draggable="{% if is_admin or is_publisher or is_editor %}true{% else %}false{% endif %}" 
+            data-id="{{ article.id }}"
+          >
+            <p>{{ article.title }}</p>
+            <p>{{ article.autor.username }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
     <div class="state published">
       <h4>Publicado</h4>
 
       <div class="items" data-state="published">
         {% for article in published_articles %}
-          <div class="item" draggable="true" data-id="{{ article.id }}">
+          <div 
+            class="item {% if is_admin or is_autor %}clickable{% endif %}" 
+            draggable="{% if is_admin or is_autor %}true{% else %}false{% endif %}" 
+            data-id="{{ article.id }}"
+          >
             <p>{{ article.title }}</p>
             <p>{{ article.autor.username }}</p>
           </div>
@@ -51,7 +84,11 @@
 
       <div class="items" data-state="inactive">
         {% for article in inactive_articles %}
-          <div class="item" draggable="true" data-id="{{ article.id }}">
+          <div 
+            class="item"  
+            draggable="false" 
+            data-id="{{ article.id }}"
+          >
             <p>{{ article.title }}</p>
             <p>{{ article.autor.username }}</p>
           </div>
@@ -60,5 +97,13 @@
     </div>
   </div>
 
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+  var isAdmin = {{ is_admin|yesno:"true,false" }};
+  var isAutor = {{ is_autor|yesno:"true,false" }};
+  var isEditor = {{ is_editor|yesno:"true,false" }};
+  var isPublisher = {{ is_publisher|yesno:"true,false" }};
+</script>
 <script src="{% static 'scripts/kanban.js' %}" defer></script>
 {% endblock %}

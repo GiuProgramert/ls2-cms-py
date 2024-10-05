@@ -14,5 +14,5 @@ urlpatterns = [
         "<int:pk>/delete/",
         views.category_delete,
         name="category-delete",
-    )
+    ),
 ]

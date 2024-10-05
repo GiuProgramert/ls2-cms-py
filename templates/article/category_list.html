@@ -3,18 +3,51 @@
 {% block headblock %}
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/category_list.css' %}">
-
 {% endblock headblock %}
 
 {% block content %}
 <h2>Categorías</h2>
 
+<form method="get" action="{% url 'category-list' %}" class="search-form">
+    <div class="form-group">
+        <label for="search-input">Buscar por nombre:</label>
+        <input id="search-input" type="text" name="search_term" 
+        value="{{ form.search_term.value|default_if_none:'' }}" 
+        placeholder="Buscar categoría" class="search-input">
+    </div>
+    
+    <div class="form-group">
+        <label for="filter-select">Filtrar por tipo:</label>
+        <select id="filter-select" name="filter_type" class="filter-select">
+            <option value="all" {% if form.filter_type.value == 'all' %}selected{% endif %}>Todos</option>
+            <option value="free" {% if form.filter_type.value == 'free' %}selected{% endif %}>Free</option>
+            <option value="suscription" {% if form.filter_type.value == 'suscription' %}selected{% endif %}>Suscripción</option>
+            <option value="pay" {% if form.filter_type.value == 'pay' %}selected{% endif %}>Pago</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        {{ form.order_by.label_tag }} 
+        {{ form.order_by }}            
+    </div>
+    
+
+    <button type="submit" class="search-button">Buscar</button>
+</form>
+
 <div class="list-container">
-    {% for category in categories %}
-        <a href="{% url 'category-detail' category.id %}" class="category">{{ category.name }}</a>
-    {% endfor %}
+    {% if categories %}
+        {% for category in categories %}
+            <div class="category-item">
+                <a href="{% url 'category-detail' category.id %}" class="category">{{ category.name }}</a>
+                <p>Tipo: {{ category.get_type_display }}</p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No se encontraron categorías que coincidan con la búsqueda.</p>
+    {% endif %}
 
     <a href="{% url 'category-create' %}" class="button">Crear nueva categoría</a>
-</div>   
+</div>
 
 {% endblock content %}

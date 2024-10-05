@@ -17,18 +17,27 @@
       <a href="{% url 'article-update' article.id %}" class="detail-link">Editar como autor</a>
     {% endif %}
 
-    {% if can_edit and article.state == 'i' or can_edit and article.state == 'r' %}
+    {% if can_edit_as_author and article.state == 'i' or can_edit_as_editor and article.state == 'r' %}
       <a href="{% url 'article-to-draft' pk=article.id %}" class="detail-link">Pasar a Borrador</a>
     {% endif %}
 
-    {% if can_edit and article.state == 'p' or can_edit and article.state == 'd' %}
+    {% if can_publish and article.state == 'e' or can_edit_as_author and article.state == 'd' %}
       <a href="{% url 'article-to-revision' pk=article.id %}" class="detail-link">Pasar a Revisión</a>
     {% endif %}
+
+    {% if can_edit_as_editor and article.state == 'r' %}
+      <a href="{% url 'article-to-edited' pk=article.id %}" class="detail-link">Pasar a Editado</a>
+    {% endif %}
+
     
-    {% if can_publish %}
-      {% if not is_moderated_category and article.state != 'p' %}
+    {% if can_publish or is_author %}
+      {% if not is_moderated_category and article.state != 'p' and is_author %}
         <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
-      {% elif article.state == 'r' %}
+      {% elif article.state == 'e' and is_author and is_moderated_category %}
+        <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
+      {% elif article.state == 'e' and is_admin and is_moderated_category %}
+        <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
+      {% elif not is_moderated_category and article.state != 'p' and is_admin %}
         <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
       {% endif %}
     {% endif %}
@@ -64,15 +73,7 @@
           <tr>
             <th class="text-left p-4">Estado</th>
             <td class="p-4">
-              {% if article.state == 'd' %}
-                Borrador
-              {% elif article.state == 'p' %}
-                Publicado
-              {% elif article.state == 'i' %}
-                Inactivo
-              {% elif article.state == 'r' %}
-                Revisión
-              {% endif %}
+              {{ article.get_state_display }}
             </td>
           </tr>
           <tr class="bg-gray-100">
