@@ -609,31 +609,6 @@ def article_to_inactive(request, pk):
 # =============================================================================
 
 
-# def category_list(request):
-#     """
-#     Vista que muestra la lista de categorías.
-
-#     Solo los usuarios autenticados y con el permiso `MANEJAR_CATEGORIAS` pueden
-#     acceder a esta vista. Si no se cumplen las condiciones, se redirige al
-#     usuario a la página de login o a la página de acceso prohibido.
-
-#     Args:
-#         request (HttpRequest): La solicitud HTTP.
-
-#     Returns:
-#         HttpResponse: Renderiza la plantilla 'article/category_list.html' o redirige.
-#     """
-
-#     if not request.user.is_authenticated:
-#         return redirect("login")
-
-#     if not request.user.tiene_permisos([PermissionEnum.MANEJAR_CATEGORIAS]):
-#         return redirect("forbidden")
-
-#     categories = Category.objects.all()
-
-#     return render(request, "article/category_list.html", {"categories": categories})
-
 def category_list(request):
     """
     Vista que muestra la lista de categorías y permite buscar, filtrar y ordenar resultados.
