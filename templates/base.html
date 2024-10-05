@@ -28,8 +28,10 @@
   <main>
     <div class="sidebar" id="sidebar">
       <ul class="space-y-4">
-        <button id="close"><i class="fas fa-bars"></i></button>
-        <h2 class="text-2xl font-bold mb-4">
+        <div class="close">
+          <button id="close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <h2 class="text-2xl font-bold mb-4 title">
           <a href="/" class="text-white">CMS PY</a>
         </h2>
         {% if "crear_articulos" in permisos %}
@@ -85,7 +87,12 @@
         <br>
       </ul>
     </div>
-    <button id="open"><i class="fas fa-bars"></i></button>
+    <nav class="nav">
+      <h2 class="text-2xl font-bold mb-4 title">
+        <a href="/" class="text-white">CMS PY</a>
+      </h2>
+      <button id="open"><i class="fas fa-bars"></i></button>
+    </nav>
     <div>
       <main class="container">
         {% block content %}

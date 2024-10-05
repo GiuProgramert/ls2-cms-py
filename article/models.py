@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from enum import Enum
 from mdeditor.fields import MDTextField
+from notification.utils import send_email
 
 User = get_user_model()
 
@@ -19,6 +20,31 @@ class CategoryType(Enum):
     FREE = "free"
     PAY = "pay"
     SUSCRIPTION = "suscription"
+
+
+def get_state_name(state):
+    """
+    Obtiene el nombre del estado de un artículo.
+
+    Args:
+        state (str): El estado del artículo.
+
+    Returns:
+        str: El nombre del estado del artículo.
+    """
+
+    if state == ArticleStates.DRAFT.value:
+        return "Borrador"
+    if state == ArticleStates.REVISION.value:
+        return "En revisión"
+    if state == ArticleStates.EDITED.value:
+        return "Editado"
+    if state == ArticleStates.PUBLISHED.value:
+        return "Publicado"
+    if state == ArticleStates.INACTIVE.value:
+        return "Inactivo"
+
+    return "Desconocido"
 
 
 class Category(models.Model):
@@ -122,6 +148,21 @@ class Article(models.Model):
         Args:
             new_state (str): El nuevo estado del artículo.
         """
+
+        send_email(
+            to=self.autor.email,
+            subject="CMS PY: Cambio de estado de artículo",
+            html=f"""
+                <h3>Hola, {self.autor.username}</h3>
+                <p>
+                    El esta de tu articulo <strong>{self.title}</strong> ha sido cambiado
+                </p>
+                <p>
+                    <strong>{get_state_name(self.state)}</strong> → <strong>{get_state_name(new_state)}</strong>
+                </p>
+            """,
+        )
+
         self.state = new_state
         self.save()
 

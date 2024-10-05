@@ -1,7 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponseNotAllowed, HttpResponse
 from django.contrib.auth.decorators import login_required
 from article.models import Article, ArticleStates
 from roles.utils import PermissionEnum
+from notification.utils import send_email
 
 
 @login_required
@@ -34,21 +36,6 @@ def kanban_view(request):
         published_articles = published_articles.filter(autor=request.user)
         inactive_articles = inactive_articles.filter(autor=request.user)
 
-    print(
-        {
-            "draft_articles": draft_articles,
-            "revision_articles": revision_articles,
-            "edited_articles": edited_articles,
-            "published_articles": published_articles,
-            "inactive_articles": inactive_articles,
-            "is_admin": is_admin,
-            "is_editor": is_editor,
-            "is_publisher": is_publisher,
-            "is_autor": is_autor,
-            "ArticleStates": ArticleStates,
-        }
-    )
-
     return render(
         request,
         "kanban/kanban.html",
@@ -65,3 +52,50 @@ def kanban_view(request):
             "ArticleStates": ArticleStates,
         },
     )
+
+@login_required
+def kanban_send_message(request):
+    """
+    Función que envía un mensaje a un usuario.
+
+    Args:
+        request (HttpRequest): La petición HTTP.
+
+    Returns:
+        HttpResponse: La respuesta HTTP.
+    """
+    if request.method == "POST":
+        is_admin = request.user.roles.filter(name="Administrador").exists()
+
+        is_editor = is_admin or request.user.tiene_permisos(
+            [PermissionEnum.EDITAR_ARTICULOS]
+        )
+
+        if not is_editor or not is_admin:
+            return HttpResponse(status=403)
+        
+        articleId = request.POST.get("articleId")
+        message = request.POST.get("message")
+
+        article = get_object_or_404(Article, pk=articleId)
+
+        try:
+            send_email(
+                to=request.user.email,
+                subject="CMS PY: Mensaje al modificar el estado del articulo",
+                html=f"""
+                    <h3>Hola, {article.autor.username}</h3>
+                    <p>
+                        {request.user.username} ha enviado un mensaje al modificar el estado del articulo <strong>{article.title}</strong>
+                    </p>
+                    <p>
+                        {message}
+                    </p>
+                """,
+            )
+        except Exception:
+            return HttpResponse(status=500)
+
+        return HttpResponse(status=204)
+
+    return HttpResponseNotAllowed(["POST"])
