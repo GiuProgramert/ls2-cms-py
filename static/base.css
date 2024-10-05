@@ -46,7 +46,9 @@ body {
   padding: 20px;
 }
 
-
+.navbar-item {
+  list-style: none;
+}
 
 /* Estilo para el pie de página */
 .footer {
