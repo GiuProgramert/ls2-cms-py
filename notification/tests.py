@@ -1,4 +1,5 @@
 from django.test import TestCase
+from unittest import TestCase, mock
 from unittest.mock import patch
 from notification.utils import send_email
 from io import StringIO
@@ -10,51 +11,41 @@ class SendEmailTestCase(TestCase):
     Casos de prueba para la función `send_email` de notification.utils.
     """
 
-    @patch("notification.utils.resend.Emails.send")
-    def test_send_email_success(self, mock_send):
+    @mock.patch('smtplib.SMTP.sendmail')  # Mock the sendmail method
+    def test_send_email_success(self, mock_sendmail):
         """
-        Test para verificar el envío exitoso de un correo electrónico.
-
-        Este test simula que el envío del correo es exitoso y verifica que la función `send_email`
-        llama correctamente a la API con los parámetros esperados y que el valor retornado es el correcto.
+        Test to verify successful email sending using send_message.
         """
-        to = "test@example.com"
-        subject = "Test Email"
-        html = "<strong>Test message</strong>"
+        # Mock sendmail to simulate successful sending
+        mock_sendmail.return_value = True
 
-        mock_send.return_value = {"success": True}
-        response = send_email(to, subject, html)
+        # Call the send_email function
+        response = send_email("test@example.com", "Test Subject", "<p>Test HTML content</p>")
 
-        mock_send.assert_called_once_with(
-            {
-                "from": "Acme <onboarding@resend.dev>",
-                "to": [to],
-                "subject": subject,
-                "html": html,
-            }
-        )
-        self.assertEqual(response, {"success": True})
+        # Assert the response is successful
+        self.assertEqual(response['status'], 'success')
 
-    @patch("notification.utils.resend.Emails.send")
-    def test_send_email_failure(self, mock_send):
+        # Ensure sendmail was called once (through send_message)
+        mock_sendmail.assert_called_once()
+
+        # Additional debug information
+        print(f"sendmail call count: {mock_sendmail.call_count}")
+
+
+    @mock.patch('smtplib.SMTP.sendmail')  # Mock the sendmail method
+    def test_send_email_failure(self, mock_sendmail):
         """
-        Test para verificar el comportamiento ante el fallo en el envío de un correo electrónico.
-
-        Simula un error en el envío y captura la salida estándar para verificar que
-        se imprimen los mensajes de error adecuados.
+        Test to verify email sending failure.
         """
-        to = "test@example.com"
-        subject = "Test Email"
-        html = "<strong>Test message</strong>"
+        # Simulate an exception being raised when sendmail is called
+        mock_sendmail.side_effect = Exception("SMTP Error")
 
-        mock_send.side_effect = Exception("Error al enviar correo")
+        # Expect an exception to be raised and check the message content
+        with self.assertRaises(Exception) as context:
+            send_email("test@example.com", "Test Subject", "<p>Test HTML content</p>")
 
-        captured_output = StringIO()
-        sys.stdout = captured_output
+        # Check that the raised exception contains the correct message
+        self.assertIn("SMTP Error", str(context.exception))
 
-        send_email(to, subject, html)
-
-        sys.stdout = sys.__stdout__
-
-        self.assertIn("No se pudo enviar el mail", captured_output.getvalue())
-        self.assertIn("Error al enviar correo", captured_output.getvalue())
+        # Ensure sendmail was called once before the exception occurred
+        mock_sendmail.assert_called_once()
