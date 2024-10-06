@@ -1,5 +1,7 @@
 import mistune
 
+from zoneinfo import ZoneInfo
+from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
@@ -11,6 +13,7 @@ from article.models import (
     ArticleStates,
     CategoryType,
     ArticleVote,
+    ArticlesToPublish,
 )
 from article.forms import *
 from django.db.models import Avg
@@ -229,7 +232,9 @@ def article_update_history(request, pk):
         return redirect("home")
 
     article = get_object_or_404(Article, pk=pk)
-    article_contents_ref = ArticleContent.objects.filter(article=article).order_by('-created_at')
+    article_contents_ref = ArticleContent.objects.filter(article=article).order_by(
+        "-created_at"
+    )
 
     article_contents = [
         {
@@ -310,6 +315,8 @@ def article_detail(request, pk):
     article = get_object_or_404(Article, pk=pk)
     article_content = ArticleContent.objects.filter(article=article).last()
 
+    to_publish_date = ArticlesToPublish.objects.filter(article=article).first()
+
     if not article_content:
         return HttpResponse("No content for this article", status=404)
 
@@ -342,6 +349,7 @@ def article_detail(request, pk):
                     "article": article,
                     "article_render_content": article_render_content,
                     "avg_rating": avg_rating,
+                    "to_publish_date": None,
                     # Unauthenticated users cannot edit, like, dislike, or publish
                     "can_edit_as_editor": False,
                     "can_edit_as_author": False,
@@ -453,6 +461,8 @@ def article_detail(request, pk):
         # Convert article content body using mistune
         article_render_content = mistune.html(article_content.body)
 
+        print(to_publish_date.to_publish_at)
+
         return render(
             request,
             "article/article_detail.html",
@@ -460,6 +470,7 @@ def article_detail(request, pk):
                 "article": article,
                 "article_render_content": article_render_content,
                 "can_edit_as_editor": can_edit_as_editor,
+                "to_publish_date": to_publish_date,
                 "can_edit_as_author": can_edit_as_author,
                 "can_edit": can_edit,
                 "can_publish": can_publish,
@@ -516,7 +527,9 @@ def article_to_published(request, pk):
     article = get_object_or_404(Article, pk=pk)
 
     is_admin = request.user.roles.filter(name="Administrador").exists()
-    can_publish = is_admin or request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
+    can_publish = is_admin or request.user.tiene_permisos(
+        [PermissionEnum.MODERAR_ARTICULOS]
+    )
     is_moderated = article.category.is_moderated
     is_author = article.autor == request.user
 
@@ -529,9 +542,51 @@ def article_to_published(request, pk):
         if is_author or is_admin or can_publish:
             article.change_state(ArticleStates.PUBLISHED.value)
             return redirect("article-detail", pk=pk)
-        
+
     return HttpResponseForbidden("No puedes editar este contenido")
 
+
+@login_required
+def article_to_publish_schedule(request, pk):
+    """
+    Vista que programa una publicación de un archivo.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID del artículo.
+    """
+
+    if request.method != "POST":
+        return HttpResponseForbidden("No puedes editar este contenido")
+
+    to_publish_date = request.POST.get("to_publish_date")
+
+    article = get_object_or_404(Article, pk=pk)
+
+    ArticlesToPublish.objects.filter(article=article).delete()
+
+    is_admin = request.user.roles.filter(name="Administrador").exists()
+    can_publish = is_admin or request.user.tiene_permisos(
+        [PermissionEnum.MODERAR_ARTICULOS]
+    )
+    is_moderated = article.category.is_moderated
+    is_author = article.autor == request.user
+
+    # Solo el publicador o el admin puede cambiar a PUBLICADO
+    if is_moderated:
+        if can_publish and article.state == ArticleStates.EDITED.value:
+            ArticlesToPublish.objects.create(
+                article=article, to_publish_at=to_publish_date
+            )
+            return redirect("article-detail", pk=pk)
+    else:
+        if is_author or is_admin or can_publish:
+            ArticlesToPublish.objects.create(
+                article=article, to_publish_at=to_publish_date
+            )
+            return redirect("article-detail", pk=pk)
+
+    return HttpResponseForbidden("No puedes editar este contenido")
 
 
 @login_required
@@ -612,8 +667,8 @@ def article_to_inactive(request, pk):
 def category_list(request):
     """
     Vista que muestra la lista de categorías y permite buscar, filtrar y ordenar resultados.
-    
-    Muestra todas las categorías de manera predeterminada y actualiza los resultados según 
+
+    Muestra todas las categorías de manera predeterminada y actualiza los resultados según
     la entrada del formulario de búsqueda.
 
     Args:
@@ -626,22 +681,24 @@ def category_list(request):
     categories = Category.objects.all()
 
     if form.is_valid():
-        search_term = form.cleaned_data.get('search_term')
-        order_by = form.cleaned_data.get('order_by', 'name')
-        filter_type = form.cleaned_data.get('filter_type', 'all')
+        search_term = form.cleaned_data.get("search_term")
+        order_by = form.cleaned_data.get("order_by", "name")
+        filter_type = form.cleaned_data.get("filter_type", "all")
 
         # Filtrar por título que contenga el término de búsqueda
         if search_term:
             categories = categories.filter(name__icontains=search_term)
 
         # Filtrar por tipo de categoría
-        if filter_type != 'all':
+        if filter_type != "all":
             categories = categories.filter(type=filter_type)
 
         # Ordenar los resultados
         categories = categories.order_by(order_by)
 
-    return render(request, 'article/category_list.html', {'form': form, 'categories': categories})
+    return render(
+        request, "article/category_list.html", {"form": form, "categories": categories}
+    )
 
 
 def category_detail(request, pk):
@@ -767,9 +824,11 @@ def category_delete(request, pk):
         request, "article/category_confirm_delete.html", {"category": category}
     )
 
+
 # =============================================================================
 # Calificaciones views
 # =============================================================================
+
 
 @login_required
 def like_article(request, pk):
