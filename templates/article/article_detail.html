@@ -10,6 +10,18 @@
 {% block content %}
 
 <div class="article-details-container">
+
+  <!-- Modal Structure -->
+  <div id="modalMessage" class="modal">
+      <div class="modal-content">
+          <span class="close">&times;</span>
+          <h3>Agrega el motivo por el que será modificado el estado de esta tarea</h3>
+          <textarea name="message" id="message" class="message" rows="15" cols="150" placeholder="Esta parte está bien pero podrías mejorarla..."></textarea>
+          <button id="send">Enviar mensaje</button>
+          <button id="dontSend">No enviar mensaje</button>
+      </div>
+  </div>
+
   <div class="article-actions">
     {% if article.state == 'r' and can_edit_as_editor %}
       <a href="{% url 'article-update' article.id %}" class="detail-link">Editar como editor</a>
@@ -17,8 +29,8 @@
       <a href="{% url 'article-update' article.id %}" class="detail-link">Editar como autor</a>
     {% endif %}
 
-    {% if can_edit_as_author and article.state == 'i' or can_edit_as_editor and article.state == 'r' %}
-      <a href="{% url 'article-to-draft' pk=article.id %}" class="detail-link">Pasar a Borrador</a>
+    {% if can_edit_as_editor and article.state == 'r' %}
+      <a href="{% url 'article-to-draft' pk=article.id %}" class="detail-link pasar-borrador">Pasar a Borrador</a>
     {% endif %}
 
     {% if can_publish and article.state == 'e' or can_edit_as_author and article.state == 'd' %}
@@ -31,13 +43,13 @@
 
     
     {% if can_publish or is_author %}
-      {% if not is_moderated_category and article.state != 'p' and is_author %}
+      {% if not is_moderated_category and article.state != 'p' and is_author and article.state != 'i' %}
         <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
-      {% elif article.state == 'e' and is_author and is_moderated_category %}
+      {% elif article.state == 'e' and is_author and is_moderated_category and article.state != 'i' %}
         <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
-      {% elif article.state == 'e' and is_admin and is_moderated_category %}
+      {% elif article.state == 'e' and is_admin and is_moderated_category and article.state != 'i' %}
         <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
-      {% elif not is_moderated_category and article.state != 'p' and is_admin %}
+      {% elif not is_moderated_category and article.state != 'p' and is_admin and article.state != 'i' %}
         <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
       {% endif %}
     {% endif %}
@@ -174,4 +186,5 @@
     
 </div>
 <script id="dsq-count-scr" src="//cmspy.disqus.com/count.js" async></script>
+<script src="{% static 'scripts/article_actions.js' %}"></script>
 {% endblock content %}

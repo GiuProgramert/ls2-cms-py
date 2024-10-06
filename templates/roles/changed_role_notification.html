@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Role Updated</title>
+</head>
+<body>
+    <p>Hola {{ user.username }},</p>
+    <p>Tus roles actuales ahora son:</p>
+    <p>
+        {% for role in new_roles %}
+            {% if forloop.last %}
+                {{ role.name }}.
+            {% else %}
+                {{ role.name }},
+            {% endif %}
+        {% endfor %}
+    </p>
+    <p>Muchas gracias,</p>
+    <p>CMS PY</p>
+</body>
+</html>
