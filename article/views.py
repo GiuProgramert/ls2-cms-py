@@ -677,6 +677,13 @@ def category_list(request):
     Returns:
         HttpResponse: Renderiza la plantilla 'article/category_list.html' o redirige.
     """
+    
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    if not request.user.tiene_permisos([PermissionEnum.MANEJAR_CATEGORIAS]):
+        return redirect("forbidden")
+    
     form = CategorySearchForm(request.GET or None)
     categories = Category.objects.all()
 
