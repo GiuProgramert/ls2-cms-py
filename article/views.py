@@ -315,7 +315,7 @@ def article_detail(request, pk):
     article = get_object_or_404(Article, pk=pk)
     article_content = ArticleContent.objects.filter(article=article).last()
 
-    to_publish_date = ArticlesToPublish.objects.get(article=article)
+    to_publish_date = ArticlesToPublish.objects.filter(article=article).first()
 
     if not article_content:
         return HttpResponse("No content for this article", status=404)
