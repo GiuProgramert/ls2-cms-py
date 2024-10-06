@@ -9,6 +9,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from roles.models import Role, Permission
 from roles.forms import RoleForm
+from notification.utils import send_email  # Import the send_email function from your utils
+from django.template.loader import render_to_string
 
 
 class RoleAssignmentView(UserPassesTestMixin, UpdateView):
@@ -32,6 +34,24 @@ class RoleAssignmentView(UserPassesTestMixin, UpdateView):
     form_class = RoleAssignmentForm
     template_name = "roles/assign_roles.html"
     success_url = reverse_lazy("user-list")
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)  # Save the updated form
+
+        # Fetch the user whose roles were updated
+        user = self.object
+
+        # Compose the email content using a template (or hardcode it if needed)
+        subject = "Tu rol ha sido cambiado"
+        html_content = render_to_string('roles/changed_role_notification.html', {
+            'user': user,
+            'new_roles': user.roles.all(),  # Fetch the new roles assigned to the user
+        })
+
+        # Send email notification
+        send_email(user.email, subject, html_content)
+
+        return response
 
     def test_func(self):
         """
