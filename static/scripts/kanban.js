@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const items = document.querySelectorAll(".item");
 
   const modal = document.getElementById("modalMessage");
-  const closeBtn = document.getElementsByClassName("close")[0];
+  const closeBtn = document.getElementById("closeModal");
   const sendMessageBtn = document.getElementById("send");
   const dontSendMessageBtn = document.getElementById("dontSend");
   const messageInput = document.getElementById("message");

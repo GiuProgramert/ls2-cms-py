@@ -22,6 +22,11 @@ urlpatterns = [
         name="article-to-published",
     ),
     path(
+        "<int:pk>/update/state/published/schedule/",
+        views.article_to_publish_schedule,
+        name="article-to-published-schedule",
+    ),
+    path(
         "<int:pk>/update/state/draft/", views.article_to_draft, name="article-to-draft"
     ),
     path(

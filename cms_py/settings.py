@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "notification",
     # Third party apps
     "mdeditor",
+    "django_crontab"
 ]
 
 MIDDLEWARE = [
@@ -222,3 +223,7 @@ MDEDITOR_CONFIGS = {
         "language": "en",  # zh / en / es
     }
 }
+
+CRONJOBS = [
+    ('*/1 * * * *', 'article.cron.publish_schedule_articles', '>> /tmp/cms_py.log')
+]

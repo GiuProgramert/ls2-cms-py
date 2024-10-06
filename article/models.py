@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from enum import Enum
 from mdeditor.fields import MDTextField
 from notification.utils import send_email
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -71,6 +72,7 @@ class Category(models.Model):
     type = models.CharField(choices=type_choices, default=CategoryType.FREE)
     state = models.BooleanField(default=True)
     is_moderated = models.BooleanField(default=False)
+    price = models.FloatField(default=0.0, null=True)
 
     def has_purchased_category(self, user):
         """
@@ -129,6 +131,7 @@ class Article(models.Model):
     likes_number = models.IntegerField(default=0)
     dislikes_number = models.IntegerField(default=0)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    published_at = models.DateTimeField(auto_now_add=False, auto_now=False, null=True, default=None)
     state = models.CharField(
         max_length=1,
         choices=[
@@ -163,8 +166,25 @@ class Article(models.Model):
             """,
         )
 
+        if new_state == ArticleStates.PUBLISHED.value:
+            self.published_at = timezone.now()
+
         self.state = new_state
         self.save()
+
+
+class ArticlesToPublish(models.Model):
+    """
+    Modelo que representa los artículos que están pendientes de publicación.
+
+    Attributes:
+        article (ForeignKey): Referencia al artículo que está pendiente de publicación.
+        created_at (DateTimeField): Fecha de creación del registro.
+    """
+
+    article = models.ForeignKey(Article, on_delete=models.CASCADE)
+    to_publish_at = models.DateTimeField(null=False)
+    published = models.BooleanField(default=False)
 
 
 class ArticleContent(models.Model):
