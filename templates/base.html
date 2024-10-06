@@ -96,10 +96,19 @@
       </ul>
     </div>
     <nav class="nav">
-      <h2 class="text-2xl font-bold title">
-        <a href="/" class="text-white">CMS PY</a>
-      </h2>
-      <button id="open"><i class="fas fa-bars"></i></button>
+      <div class="nav-logo">
+        <h2 class="text-2xl font-bold title">
+          <a href="/" class="text-white">CMS PY</a>
+        </h2>
+        <button id="open"><i class="fas fa-bars"></i></button>
+      </div>
+      <div class="nav-user">
+        {% if user.is_authenticated %}
+        <span>{{ user.username }}</span>
+        <a href="{% url 'edit_profile' %}">
+          <i class="fa-solid fa-user"></i>
+        </a>
+        {% endif %}
     </nav>
     <div>
       <main class="container">

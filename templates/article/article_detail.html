@@ -14,7 +14,7 @@
   <!-- Modal Structure -->
   <div id="modalMessage" class="modal">
       <div class="modal-content">
-          <span class="close">&times;</span>
+          <span class="close" id="closeModal">&times;</span>
           <h3>Agrega el motivo por el que será modificado el estado de esta tarea</h3>
           <textarea name="message" id="message" class="message" rows="15" cols="150" placeholder="Esta parte está bien pero podrías mejorarla..."></textarea>
           <button id="send">Enviar mensaje</button>
@@ -59,6 +59,74 @@
       <a href="{% url 'article-to-inactive' pk=article.id %}" class="detail-link">Inactivar</a>
     {% endif %}
     
+    <br>
+    <br>
+    <br>
+
+    {% if can_publish or is_author %}
+      {% if not is_moderated_category and article.state != 'p' and is_author and article.state != 'i' %}
+        <form method="POST" action="{% url 'article-to-published-schedule' pk=article.id %}" placeholder="Fecha de publicación">
+          {% csrf_token %}
+          <div>
+            {% if to_publish_date %}
+              <p>Fecha a publicar {{to_publish_date.to_publish_at}}</p>
+              <label for="to_publish_date">Cambiar fecha publicación : </label>
+              <input type="datetime-local" name="to_publish_date" id="to_publish_date" required>
+            {% else %}
+              <label for="to_publish_date">Fecha: </label>
+              <input type="datetime-local" name="to_publish_date" id="to_publish_date" required>
+            {% endif %}
+          </div>
+          <button type="submit" class="btn btn-primary">Programar publicación</button>
+        </form>
+      {% elif article.state == 'e' and is_author and is_moderated_category and article.state != 'i' %}
+      <form method="POST" action="{% url 'article-to-published-schedule' pk=article.id %}" placeholder="Fecha de publicación">
+        {% csrf_token %}
+        <div>
+          {% if to_publish_date %}
+            <p>Fecha a publicar {{to_publish_date.to_publish_at}}</p>
+            <label for="to_publish_date">Cambiar fecha publicación : </label>
+            <input type="datetime-local" name="to_publish_date" id="to_publish_date" required>
+          {% else %}
+            <label for="to_publish_date">Fecha: </label>
+            <input type="datetime-local" name="to_publish_date" id="to_publish_date" required>
+          {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary">Programar publicación</button>
+      </form>
+      {% elif article.state == 'e' and is_admin and is_moderated_category and article.state != 'i' %}
+        <form method="POST" action="{% url 'article-to-published-schedule' pk=article.id %}" placeholder="Fecha de publicación">
+          {% csrf_token %}
+          <div>
+            {% if to_publish_date %}
+              <p>Fecha a publicar {{to_publish_date.to_publish_at}}</p>
+              <label for="to_publish_date">Cambiar fecha publicación : </label>
+              <input type="datetime-local" name="to_publish_date" id="to_publish_date" required>
+            {% else %}
+              <label for="to_publish_date">Fecha: </label>
+              <input type="datetime-local" name="to_publish_date" id="to_publish_date" required>
+            {% endif %}
+          </div>
+          <button type="submit" class="btn btn-primary">Programar publicación</button>
+        </form>
+      {% elif not is_moderated_category and article.state != 'p' and is_admin and article.state != 'i' %}
+        <form method="POST" action="{% url 'article-to-published-schedule' pk=article.id %}" placeholder="Fecha de publicación">
+          {% csrf_token %}
+          <div>
+            {% if to_publish_date %}
+              <p>Fecha a publicar {{to_publish_date.to_publish_at}}</p>
+              <label for="to_publish_date">Cambiar fecha publicación : </label>
+              <input type="datetime-local" name="to_publish_date" id="to_publish_date" required>
+            {% else %}
+              <label for="to_publish_date">Fecha: </label>
+              <input type="datetime-local" name="to_publish_date" id="to_publish_date" required>
+            {% endif %}
+          </div>
+          <button type="submit" class="btn btn-primary">Programar publicación</button>
+        </form>
+      {% endif %}
+    {% endif %}
+
   </div>
   <br>
   <br>
@@ -92,6 +160,12 @@
             <th class="text-left p-4">Visualizaciones</th>
             <td class="p-4">{{ article.views_number }}</td>
           </tr>
+          {% if article.published_at %}
+          <tr class="bg-gray-100">
+            <th class="text-left p-4">Fecha de publicación</th>
+            <td class="p-4">{{ article.published_at }}</td>
+          </tr>
+          {% endif %}
         </tbody>
       </table>
 

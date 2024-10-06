@@ -23,7 +23,7 @@ async function sendMessage(articleId, message) {
 
 document.addEventListener("DOMContentLoaded", function () {
   const modal = document.getElementById("modalMessage");
-  const closeBtn = document.getElementById("close");
+  const closeBtn = document.getElementById("closeModal");
   const sendMessageBtn = document.getElementById("send");
   const dontSendMessageBtn = document.getElementById("dontSend");
   const messageInput = document.getElementById("message");
