@@ -253,3 +253,11 @@ class ArticleVote(models.Model):
         return (
             f"{self.user.username} rated {self.article.title} with {self.rating} stars"
         )
+
+class Payment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    price = models.FloatField(default=0.00, null=True)
+    date_paid = models.DateTimeField(default=timezone.now)
+    stripe_payment_id = models.CharField(max_length=255, null=True, blank=True)
+    status = models.CharField(max_length=20, default="pending")  # Agregar este campo

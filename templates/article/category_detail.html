@@ -12,9 +12,11 @@
 <p>Tipo: {{ category.get_type_display }}</p>
 <p>Estado: {{ category.state|yesno:"Activo,Inactivo" }}</p>
 <p>Moderado: {{ category.is_moderated|yesno:"Sí,No" }}</p>
+<p>Precio $: {{ category.price }}</p>
 
 <a href="{% url 'category-update' category.id %}">Editar</a>
 <a href="{% url 'category-delete' category.id %}">Eliminar</a>
+<a href="{% url 'checkout_page' category.id %}">Comprar</a>
 <a href="{% url 'category-list' %}">Volver a la lista</a>
 </div>
 {% endblock content %}
