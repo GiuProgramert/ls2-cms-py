@@ -274,6 +274,7 @@ class CreateArticleTestCase(TestCase):
             "type": CategoryType.FREE.value,
             "state": True,
             "is_moderated": False,
+            "price": 0.0
         }
 
         self.client.login(username="testuser", password="testpassword")
@@ -326,6 +327,7 @@ class CreateArticleTestCase(TestCase):
             "type": CategoryType.FREE.value,
             "state": True,
             "is_moderated": False,
+            "price": 0.0
         }
 
         self.client.login(username="testuser", password="testpassword")
