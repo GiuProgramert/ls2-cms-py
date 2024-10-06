@@ -17,6 +17,7 @@ from article.models import (
 )
 from article.forms import *
 from django.db.models import Avg
+from collections import defaultdict
 
 
 def home(request):
@@ -42,6 +43,16 @@ def home(request):
             if category.type != CategoryType.FREE.value
         ]
     else:
+        
+        # Obtener todos los pagos del usuario en una sola consulta
+        user_payments = Payment.objects.filter(user=request.user)
+
+        # Crear un diccionario que mapea categorías a su estado de pago
+        payment_status_by_category = defaultdict(lambda: None)
+        for payment in user_payments:
+            payment_status_by_category[payment.category_id] = payment.status
+
+
         permissions = [
             permiso.name
             for rol in request.user.roles.all()
@@ -53,12 +64,17 @@ def home(request):
             for category in categories
             if category.type
             in (CategoryType.FREE.value, CategoryType.SUSCRIPTION.value)
+            or Payment.objects.filter(category=category, user=request.user, status="completed").exists()
+
         ]
 
         not_permited_categories = [
             {"name": category.name, "type": category.type}
             for category in categories
             if category.type == CategoryType.PAY.value
+            and not Payment.objects.filter(category=category, user=request.user, status="completed").exists()
+
+
         ]
 
     # Fetch all articles for the home page
@@ -461,7 +477,7 @@ def article_detail(request, pk):
         # Convert article content body using mistune
         article_render_content = mistune.html(article_content.body)
 
-        print(to_publish_date.to_publish_at)
+        #print(to_publish_date.to_publish_at)
 
         return render(
             request,
@@ -906,3 +922,126 @@ def dislike_article(request, pk):
 
     article.save()
     return redirect("article-detail", pk=pk)
+
+
+#stripe
+# views.py
+from django.conf import settings
+from django.http import JsonResponse
+from django.shortcuts import render
+import stripe
+import os
+from article.models import Payment
+
+# Configura Stripe con la clave secreta
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+def stripe_checkout(request, pk):
+    # Obtener la categoría o devolver 404 si no existe
+    category = get_object_or_404(Category, id=pk)
+
+    # Asignar el precio basado en la categoría (esto depende de tu lógica)
+    # Aquí suponemos que la categoría tiene un campo "price" (precio)
+    price_in_cents = int(category.price * 100)  # Convertir a centavos si es necesario
+
+    # Crear el ítem para Stripe Checkout con base en la categoría
+    line_items = [{
+        'price_data': {
+            'currency': 'usd',
+            'product_data': {
+                'name': category.name,  # Usamos el nombre de la categoría
+            },
+            'unit_amount': price_in_cents,  # Precio en centavos
+        },
+        'quantity': 1,  # Se asume una cantidad de 1 categoría a pagar
+    }]
+
+     # Crear un nuevo registro de pago con estado 'pending'
+
+
+    # Crear la sesión de Stripe Checkout
+    session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        line_items=line_items,  # Enviamos el ítem con la categoría
+        mode='payment',
+        success_url=f'{os.environ.get("URL")}/categories/{category.pk}/success/',
+        cancel_url=f'{os.environ.get("URL")}/categories/{category.pk}/cancel/',
+    )
+
+    #print(session)
+
+
+    # Crear un nuevo registro de pago con estado 'pending'
+    Payment.objects.create(
+            user=request.user,
+            category=category,
+            price=5.00,  # Ajustar el monto según sea necesario
+            stripe_payment_id=session.id,  # Almacenar el PaymentIntent ID
+            status="pending",  # Inicialmente en 'pending'
+        )
+
+    return JsonResponse({'id': session.id})
+
+
+
+from django.core.exceptions import ObjectDoesNotExist
+
+
+def checkout_page(request, pk):
+    try:
+        payment = Payment.objects.filter(user=request.user, category=pk, status="completed").latest("date_paid")
+        # Si se encuentra el pago y tiene estado "completed", ir a exists
+        return render(request, 'article/exists.html')
+    except ObjectDoesNotExist:  
+        return render(request, 'article/checkout.html', {
+            'STRIPE_PUBLISHABLE_KEY': settings.STRIPE_PUBLIC_KEY,
+            'category_id': pk  # Pasar el ID de la categoría
+        })
+
+def payment_success(request, pk):
+    category = get_object_or_404(Category, id=pk)
+    user = request.user
+
+    try:
+        # Recuperar el PaymentIntent desde la base de datos
+        payment = Payment.objects.filter(user=user, category=category).latest(
+            "date_paid"
+        )
+        intent = stripe.checkout.Session.retrieve(payment.stripe_payment_id)
+        print(intent)
+        print(intent.status)
+
+        if intent.status == "complete":
+            # Actualizar el estado del pago en la base de datos
+            payment.status = "completed"
+            payment.save()
+
+            # Redirigir a la página de éxito
+            return render(request, "article/success.html", {"category": category})
+        else:
+            return render(
+                request,
+                "article/cancel.html",
+                {
+                    "error": f"El pago no se completó correctamente. Estado: {intent.status}"
+                },
+            )
+
+    except Payment.DoesNotExist:
+        return render(
+            request,
+            "article/cancel.html",
+            {"error": "No se encontró el pago en la base de datos."},
+        )
+
+def payment_cancel(request, pk):
+    
+    category = get_object_or_404(Category, id=pk)
+    user = request.user
+    payment = Payment.objects.filter(user=user, category=category).latest(
+            "date_paid"
+        )
+    payment.status = "cancelled"
+    payment.save()
+    return render(request, 'article/cancel.html')

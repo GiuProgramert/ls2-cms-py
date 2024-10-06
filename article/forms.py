@@ -19,7 +19,7 @@ class CategoryForm(forms.ModelForm):
 
     class Meta:
         model = Category
-        fields = ["name", "description", "type", "state", "is_moderated"]
+        fields = ["name", "description", "type", "state", "is_moderated","price"]
 
         labels = {
             "name": "Nombre",
@@ -27,6 +27,7 @@ class CategoryForm(forms.ModelForm):
             "type": "Tipo",
             "state": "Estado",
             "is_moderated": "Moderado",
+            "price": "Precio en Dolares",
         }
 
 

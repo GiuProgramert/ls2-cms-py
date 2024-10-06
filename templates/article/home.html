@@ -16,7 +16,7 @@
         <a href="{% url 'article-detail' article.id %}?from=home">
           <h2 class="article-title">{{ article.title }}</h2>
         </a>        
-        <p class="author">{{ article.autor.username }}</p>
+        <p class="author">Autor: {{ article.autor.username }}</p>
         <p class="description">{{ article.description }}</p>
         <div class="article-actions">
           <span><i class="fas fa-eye"></i> {{ article.views_number }}</span>
