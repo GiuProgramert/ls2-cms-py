@@ -54,7 +54,7 @@
     <!-- Campo para ordenar por fecha, visualizaciones, etc. -->
     <select name="order_by" onchange="this.form.submit()">
         <option value="published_at" {% if order_by == 'published_at' %}selected{% endif %}>Fecha</option>
-        <option value="avg_rating" {% if order_by == 'avg_rating' %}selected{% endif %}>Calificación</option>
+        <option value="likes_number" {% if order_by == 'likes_number' %}selected{% endif %}>Likes</option>
         <option value="views_number" {% if order_by == 'views_number' %}selected{% endif %}>Visualizaciones</option>
     </select>
     
