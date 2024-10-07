@@ -67,7 +67,6 @@ def home(request):
             if category.type
             in (CategoryType.FREE.value, CategoryType.SUSCRIPTION.value)
             or Payment.objects.filter(category=category, user=request.user, status="completed").exists()
-
         ]
 
         not_permited_categories = [
@@ -75,8 +74,6 @@ def home(request):
             for category in categories
             if category.type == CategoryType.PAY.value
             and not Payment.objects.filter(category=category, user=request.user, status="completed").exists()
-
-
         ]
 
     # Fetch all articles for the home page
@@ -133,7 +130,7 @@ def home(request):
             article.avg_rating = round(avg_rating, 1)
         else:
             article.avg_rating = None  # Or set it to 0 if you prefer
-
+    
     # Ordenar los resultados
     if order_direction == 'desc':
         order_by = f'-{order_by}'
