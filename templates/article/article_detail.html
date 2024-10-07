@@ -166,6 +166,18 @@
             <td class="p-4">{{ article.published_at }}</td>
           </tr>
           {% endif %}
+          <tr>
+            <th class="text-left p-4">Tags</th>
+            <td class="p-4">
+              {% if article.tags.all %}
+                {% for tag in article.tags.all %}
+                  <span class="tag">{{ tag.name }}</span>{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+              {% else %}
+                No hay tags asignados
+              {% endif %}
+            </td>
+          </tr>
         </tbody>
       </table>
 

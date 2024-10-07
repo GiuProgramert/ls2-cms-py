@@ -1,5 +1,4 @@
 import mistune
-
 from zoneinfo import ZoneInfo
 from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
@@ -18,6 +17,9 @@ from article.models import (
 from article.forms import *
 from django.db.models import Avg
 from collections import defaultdict
+from django.db.models import Q
+from datetime import timedelta
+from django.utils import timezone
 
 
 def home(request):
@@ -79,6 +81,47 @@ def home(request):
 
     # Fetch all articles for the home page
     articles = Article.objects.filter(state=ArticleStates.PUBLISHED.value)
+    form = ArticleFilterForm(request.GET or None)
+    search_query = request.GET.get('search', '')
+    order_by = request.GET.get('order_by', 'published_at')  # Ordenar por fecha de publicación por defecto
+    order_direction = request.GET.get('order_direction', 'asc')  # Dirección de orden ascendente por defecto
+    time_range = request.GET.get('time_range', 'all')  # Rango de tiempo por defecto (sin límite)
+
+    if form.is_valid():
+        # Filtrar por tag
+        selected_tag = form.cleaned_data.get('tags')
+        if selected_tag:
+            articles = articles.filter(tags__name__in=[selected_tag])
+
+        # Filtrar por categoría
+        selected_category = form.cleaned_data.get('category')
+        if selected_category:
+            articles = articles.filter(category=selected_category)
+        
+        # Filtrar por tipo de categoría
+        selected_category_type = form.cleaned_data.get('category_type')
+        if selected_category_type and selected_category_type != 'all':
+            articles = articles.filter(category__type=selected_category_type)
+    
+    # Filtrar por rango de tiempo
+    if time_range != 'all':
+        now = timezone.now()
+        if time_range == '1h':
+            articles = articles.filter(published_at__gte=now - timedelta(hours=1))
+        elif time_range == '24h':
+            articles = articles.filter(published_at__gte=now - timedelta(hours=24))
+        elif time_range == '7d':
+            articles = articles.filter(published_at__gte=now - timedelta(days=7))
+        elif time_range == '30d':
+            articles = articles.filter(published_at__gte=now - timedelta(days=30))
+        elif time_range == '365d':
+            articles = articles.filter(published_at__gte=now - timedelta(days=365))
+    
+    # Filtrar por búsqueda
+    if search_query:
+        articles = articles.filter(
+            Q(title__icontains=search_query) | Q(description__icontains=search_query)
+        )
 
     # Add average rating for each article
     for article in articles:
@@ -91,6 +134,12 @@ def home(request):
         else:
             article.avg_rating = None  # Or set it to 0 if you prefer
 
+    # Ordenar los resultados
+    if order_direction == 'desc':
+        order_by = f'-{order_by}'
+    articles = articles.order_by(order_by)
+
+
     authenticated = request.user.is_authenticated
 
     return render(
@@ -102,6 +151,11 @@ def home(request):
             "not_permited_categories": not_permited_categories,
             "articles": articles,
             "authenticated": authenticated,
+            "form": form,
+            "search_query": search_query,
+            "order_by": order_by,
+            "order_direction": order_direction,
+            "time_range": time_range,
         },
     )
 
@@ -152,6 +206,7 @@ def article_create(request):
             article = form.save(commit=False)
             article.autor = request.user
             article.save()
+            form.save_m2m()
 
             ArticleContent.objects.create(
                 body=request.POST.get("body"), autor=request.user, article=article
@@ -193,6 +248,7 @@ def article_update(request, pk):
         if form.is_valid():
             article = form.save(commit=False)
             article.save()
+            form.save_m2m()
 
             ArticleContent.objects.create(
                 body=request.POST.get("body"), autor=request.user, article=article
