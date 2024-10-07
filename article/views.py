@@ -81,7 +81,7 @@ def home(request):
     form = ArticleFilterForm(request.GET or None)
     search_query = request.GET.get('search', '')
     order_by = request.GET.get('order_by', 'published_at')  # Ordenar por fecha de publicación por defecto
-    order_direction = request.GET.get('order_direction', 'asc')  # Dirección de orden ascendente por defecto
+    order_direction = request.GET.get('order_direction', 'desc')  # Dirección de orden ascendente por defecto
     time_range = request.GET.get('time_range', 'all')  # Rango de tiempo por defecto (sin límite)
 
     if form.is_valid():
@@ -132,7 +132,13 @@ def home(request):
             article.avg_rating = None  # Or set it to 0 if you prefer
     
     # Ordenar los resultados
-    if order_direction == 'desc':
+    if order_by == 'published_at':
+        # Asegurarse de que los más nuevos se muestren primero cuando está en descendente
+        if order_direction == 'desc':
+            order_by = '-published_at'
+        else:
+            order_by = 'published_at'
+    elif order_direction == 'desc':
         order_by = f'-{order_by}'
     articles = articles.order_by(order_by)
 
