@@ -45,11 +45,9 @@
     {% if can_publish or is_author %}
       {% if not is_moderated_category and article.state != 'p' and is_author and article.state != 'i' %}
         <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
-      {% elif article.state == 'e' and is_author and is_moderated_category and article.state != 'i' %}
+      {% elif article.state == 'e' and can_publish and is_moderated_category and article.state != 'i' %}
         <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
-      {% elif article.state == 'e' and is_admin and is_moderated_category and article.state != 'i' %}
-        <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
-      {% elif not is_moderated_category and article.state != 'p' and is_admin and article.state != 'i' %}
+      {% elif not is_moderated_category and article.state != 'p' and can_publish and article.state != 'i' %}
         <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
       {% endif %}
     {% endif %}
@@ -166,6 +164,18 @@
             <td class="p-4">{{ article.published_at }}</td>
           </tr>
           {% endif %}
+          <tr>
+            <th class="text-left p-4">Tags</th>
+            <td class="p-4">
+              {% if article.tags.all %}
+                {% for tag in article.tags.all %}
+                  <span class="tag">{{ tag.name }}</span>{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+              {% else %}
+                No hay tags asignados
+              {% endif %}
+            </td>
+          </tr>
         </tbody>
       </table>
 
