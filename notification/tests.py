@@ -29,7 +29,7 @@ class SendEmailTestCase(TestCase):
         mock_sendmail.assert_called_once()
 
         # Additional debug information
-        print(f"sendmail call count: {mock_sendmail.call_count}")
+        # print(f"sendmail call count: {mock_sendmail.call_count}")
 
 
     @mock.patch('smtplib.SMTP.sendmail')  # Mock the sendmail method

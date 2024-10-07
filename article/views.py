@@ -1069,8 +1069,6 @@ def payment_success(request, pk):
             "date_paid"
         )
         intent = stripe.checkout.Session.retrieve(payment.stripe_payment_id)
-        print(intent)
-        print(intent.status)
 
         if intent.status == "complete":
             # Actualizar el estado del pago en la base de datos
