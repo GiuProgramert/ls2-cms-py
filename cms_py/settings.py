@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     "notification",
     # Third party apps
     "mdeditor",
-    "django_crontab"
+    "django_crontab",
+    "taggit", 
 ]
 
 MIDDLEWARE = [

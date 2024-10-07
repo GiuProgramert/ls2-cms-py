@@ -4,6 +4,7 @@ from enum import Enum
 from mdeditor.fields import MDTextField
 from notification.utils import send_email
 from django.utils import timezone
+from taggit.managers import TaggableManager
 
 User = get_user_model()
 
@@ -115,6 +116,7 @@ class Article(models.Model):
         title (str): Título del artículo.
         description (str): Descripción del articulo
         autor (ForeignKey): Referencia al usuario autor del artículo.
+        tags (TaggableManager): Campo para manejar los etiquetas (tags)
         views_number (int): Número de visualizaciones del artículo.
         shares_number (int): Número de veces que se ha compartido el artículo.
         likes_number (int): Número de 'me gusta' que ha recibido el artículo.
@@ -125,6 +127,7 @@ class Article(models.Model):
     title = models.CharField(max_length=100)
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
     description = models.TextField(max_length=300, null=True)
+    tags = TaggableManager()
 
     views_number = models.IntegerField(default=0)
     shares_number = models.IntegerField(default=0)

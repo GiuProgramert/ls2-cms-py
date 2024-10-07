@@ -1,6 +1,8 @@
 from django import forms
 from article.models import Category, Article
 from mdeditor.fields import MDTextFormField
+from taggit.forms import TagWidget
+from taggit.models import Tag
 
 
 class CategoryForm(forms.ModelForm):
@@ -49,13 +51,16 @@ class ArticleForm(forms.ModelForm):
 
     class Meta:
         model = Article
-        fields = ["title", "description", "category"]
+        fields = ["title", "description", "category", "tags"]
 
         labels = {
             "title": "Titulo",
             "description": "Descripción",
             "body": "Cuerpo",
             "category": "Categoría",
+        }
+        widgets = {
+            'tags': TagWidget(),
         }
 
 class CategorySearchForm(forms.Form):
@@ -97,4 +102,37 @@ class CategorySearchForm(forms.Form):
         required=False,
         label="Filtrar por tipo",
         widget=forms.Select
+    )
+
+class ArticleFilterForm(forms.Form):
+    """
+    Formulario para filtrar artículos por tags, categoría y tipo de categoría.
+    """
+    # Filtro de tags
+    tags = forms.ModelChoiceField(
+        queryset=Tag.objects.all(),
+        required=False,
+        label="Filtrar por tag",
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
+    
+    # Filtro de categorías
+    category = forms.ModelChoiceField(
+        queryset=Category.objects.all(),
+        required=False,
+        label="Filtrar por categoría",
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
+    
+    # Filtro de tipo de categoría
+    category_type = forms.ChoiceField(
+        choices=[
+            ('all', 'Todos'),
+            ('free', 'Gratis'),
+            ('subscription', 'Suscripción'),
+            ('pay', 'Pago'),
+        ],
+        required=False,
+        label="Filtrar por tipo de categoría",
+        widget=forms.Select(attrs={"class": "form-control"})
     )
