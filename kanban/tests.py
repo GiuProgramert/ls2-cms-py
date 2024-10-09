@@ -24,11 +24,10 @@ from article.models import (
 from article.forms import CategoryForm
 
 
-User =  get_user_model()
+User = get_user_model()
 
 
 class ArticleStatusChangeTest(TestCase):
-    
     def setUp(self):
         # Crear un usuario para las pruebas
         self.user = User.objects.create_user(
@@ -46,41 +45,39 @@ class ArticleStatusChangeTest(TestCase):
             is_moderated=False,
         )
 
-        
         # Crear un artículo en estado Borrador
         self.article = Article.objects.create(
-            title='Artículo de Prueba',
-            description='Este es el contenido del artículo.',
-            category= self.category,
+            title="Artículo de Prueba",
+            description="Este es el contenido del artículo.",
+            category=self.category,
             state=ArticleStates.DRAFT.value,
-            autor=self.user
+            autor=self.user,
         )
 
-    
     def test_change_state_to_revision(self):
         """Probar el cambio de estado de 'Borrador' a 'Revisión'."""
         self.article.change_state(ArticleStates.REVISION.value)
         self.assertEqual(self.article.state, ArticleStates.REVISION.value)
 
-
     def test_change_state_to_edicion(self):
         """Probar el cambio de estado de 'Revisión' a 'Edición'."""
-        self.article.change_state(ArticleStates.REVISION.value)  # Primero debe pasar a revisión
+        self.article.change_state(
+            ArticleStates.REVISION.value
+        )  # Primero debe pasar a revisión
         self.article.change_state(ArticleStates.EDITED.value)  # Luego a edición
         self.assertEqual(self.article.state, ArticleStates.EDITED.value)
-
 
     def test_change_state_to_publicado(self):
         """Probar el cambio de estado de 'Edición' a 'Publicado'."""
         self.article.change_state(ArticleStates.REVISION.value)
         self.article.change_state(ArticleStates.EDITED.value)
-        self.article.change_state(ArticleStates.PUBLISHED.value)  # Finalmente, el estado Publicado
+        self.article.change_state(
+            ArticleStates.PUBLISHED.value
+        )  # Finalmente, el estado Publicado
         self.assertEqual(self.article.state, ArticleStates.PUBLISHED.value)
 
 
 class StripeCheckoutTests(TestCase):
-
-
     def setUp(self):
         # Crear un usuario para las pruebas
         self.user = User.objects.create_user(
@@ -98,103 +95,100 @@ class StripeCheckoutTests(TestCase):
             is_moderated=False,
         )
 
-
-    @patch('article.views.stripe.checkout.Session.create')
+    @patch("article.views.stripe.checkout.Session.create")
     def test_stripe_checkout(self, mock_stripe_session_create):
         """
         Test para la vista stripe_checkout.
         Simula la creación de una sesión de pago de Stripe y verifica la respuesta.
         """
         # Simular respuesta de Stripe
-        mock_stripe_session = MagicMock(id='test_session_id')
+        mock_stripe_session = MagicMock(id="test_session_id")
         mock_stripe_session_create.return_value = mock_stripe_session
 
         # Llamar a la vista stripe_checkout
-        response = self.client.get(reverse('stripe_checkout', args=[self.category.id]))
+        response = self.client.get(reverse("stripe_checkout", args=[self.category.id]))
 
         # Verificar que la sesión de Stripe fue creada con los parámetros correctos
         mock_stripe_session_create.assert_called_once()
         self.assertEqual(response.status_code, 200)
-        self.assertJSONEqual(response.content, {'id': 'test_session_id'})
+        self.assertJSONEqual(response.content, {"id": "test_session_id"})
 
         # Verificar que se creó un Payment en la base de datos con estado 'pending'
         payment = Payment.objects.get(user=self.user, category=self.category)
-        self.assertEqual(payment.status, 'pending')
-        self.assertEqual(payment.stripe_payment_id, 'test_session_id')
-
+        self.assertEqual(payment.status, "pending")
+        self.assertEqual(payment.stripe_payment_id, "test_session_id")
 
     def test_checkout_page_completed_payment(self):
         """
         Test para verificar si un usuario ya ha completado un pago.
         """
         # Crear un pago completado
-        Payment.objects.create(user=self.user, category=self.category, status='completed')
+        Payment.objects.create(
+            user=self.user, category=self.category, status="completed"
+        )
 
         # Llamar a la vista checkout_page
-        response = self.client.get(reverse('checkout_page', args=[self.category.id]))
+        response = self.client.get(reverse("checkout_page", args=[self.category.id]))
 
         # Verificar que redirige a la página 'exists.html'
-        self.assertTemplateUsed(response, 'article/exists.html')
-
-
+        self.assertTemplateUsed(response, "article/exists.html")
 
     def test_checkout_page_no_payment(self):
         """
         Test para verificar que se muestra el formulario de pago si no se ha completado ningún pago.
         """
         # Llamar a la vista checkout_page cuando no hay pagos
-        response = self.client.get(reverse('checkout_page', args=[self.category.id]))
+        response = self.client.get(reverse("checkout_page", args=[self.category.id]))
 
         # Verificar que se muestra la página 'checkout.html'
-        self.assertTemplateUsed(response, 'article/checkout.html')
-        self.assertEqual(response.context['STRIPE_PUBLISHABLE_KEY'], settings.STRIPE_PUBLIC_KEY)
+        self.assertTemplateUsed(response, "article/checkout.html")
+        self.assertEqual(
+            response.context["STRIPE_PUBLISHABLE_KEY"], settings.STRIPE_PUBLIC_KEY
+        )
 
-
-
-
-    @patch('article.views.stripe.checkout.Session.retrieve')
+    @patch("article.views.stripe.checkout.Session.retrieve")
     def test_payment_success(self, mock_stripe_session_retrieve):
         """
         Test para verificar que el pago se complete correctamente.
         """
         # Crear un pago pendiente
-        payment = Payment.objects.create(user=self.user, category=self.category, status='pending', stripe_payment_id='test_session_id')
+        payment = Payment.objects.create(
+            user=self.user,
+            category=self.category,
+            status="pending",
+            stripe_payment_id="test_session_id",
+        )
 
         # Simular respuesta de Stripe con estado 'complete'
-        mock_stripe_intent = MagicMock(status='complete')
+        mock_stripe_intent = MagicMock(status="complete")
         mock_stripe_session_retrieve.return_value = mock_stripe_intent
 
         # Llamar a la vista payment_success
-        response = self.client.get(reverse('payment_success', args=[self.category.id]))
+        response = self.client.get(reverse("payment_success", args=[self.category.id]))
 
         # Verificar que el pago se completó
         payment.refresh_from_db()
-        self.assertEqual(payment.status, 'completed')
-        self.assertTemplateUsed(response, 'article/success.html')
-
-
-    
+        self.assertEqual(payment.status, "completed")
+        self.assertTemplateUsed(response, "article/success.html")
 
     def test_payment_cancel(self):
         """
         Test para verificar que un pago cancelado actualiza correctamente el estado.
         """
         # Crear un pago pendiente
-        payment = Payment.objects.create(user=self.user, category=self.category, status='pending')
+        payment = Payment.objects.create(
+            user=self.user, category=self.category, status="pending"
+        )
 
         # Llamar a la vista payment_cancel
-        response = self.client.get(reverse('payment_cancel', args=[self.category.id]))
+        response = self.client.get(reverse("payment_cancel", args=[self.category.id]))
 
         # Verificar que el estado del pago se actualizó a 'cancelled'
         payment.refresh_from_db()
-        self.assertEqual(payment.status, 'cancelled')
-        self.assertTemplateUsed(response, 'article/cancel.html')
+        self.assertEqual(payment.status, "cancelled")
+        self.assertTemplateUsed(response, "article/cancel.html")
 
-
-
-
-
-    #Verificar esta parte he'i
+    # Verificar esta parte he'i
     # @patch('article.views.stripe.checkout.Session.create')
     # def test_stripe_checkout_unauthenticated(self, mock_stripe_session_create):
     #     """
@@ -212,7 +206,6 @@ class StripeCheckoutTests(TestCase):
     #     self.assertRedirects(response, reverse('login'))  # Asegúrate de que la URL de inicio de sesión es correcta
     #     # Verificar que no se creó un Payment en la base de datos
     #     self.assertEqual(Payment.objects.count(), 0)
-
 
     # def test_checkout_page_unauthenticated(self):
     #     """
@@ -249,7 +242,6 @@ class StripeCheckoutTests(TestCase):
 
 
 class ArticleLikeDislikeTest(TestCase):
-
     def setUp(self):
         # Crear usuario y categoría para los tests
         self.client = Client()
@@ -290,11 +282,11 @@ class ArticleLikeDislikeTest(TestCase):
 
         # Crear artículo
         self.article = Article.objects.create(
-            title='Artículo de Prueba',
+            title="Artículo de Prueba",
             autor=self.user_can_manage_articles,
-            description='Descripción del artículo de prueba.',
+            description="Descripción del artículo de prueba.",
             category=self.category,
-            state=ArticleStates.PUBLISHED.value
+            state=ArticleStates.PUBLISHED.value,
         )
 
     # def test_like_article(self):
@@ -307,7 +299,7 @@ class ArticleLikeDislikeTest(TestCase):
 
     #     # Refresca el artículo para obtener el valor actualizado
     #     self.article.refresh_from_db()
-        
+
     #     # Verifica que el número de 'me gusta' se ha incrementado
     #     self.assertEqual(self.article.likes_number, 1)
     #     self.assertEqual(self.article.dislikes_number, 0)

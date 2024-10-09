@@ -45,7 +45,6 @@ def home(request):
             if category.type != CategoryType.FREE.value
         ]
     else:
-        
         # Obtener todos los pagos del usuario en una sola consulta
         user_payments = Payment.objects.filter(user=request.user)
 
@@ -53,7 +52,6 @@ def home(request):
         payment_status_by_category = defaultdict(lambda: None)
         for payment in user_payments:
             payment_status_by_category[payment.category_id] = payment.status
-
 
         permissions = [
             permiso.name
@@ -66,60 +64,77 @@ def home(request):
             for category in categories
             if category.type
             in (CategoryType.FREE.value, CategoryType.SUSCRIPTION.value)
-            or Payment.objects.filter(category=category, user=request.user, status="completed").exists()
+            or Payment.objects.filter(
+                category=category, user=request.user, status="completed"
+            ).exists()
         ]
 
         not_permited_categories = [
             {"name": category.name, "type": category.type}
             for category in categories
             if category.type == CategoryType.PAY.value
-            and not Payment.objects.filter(category=category, user=request.user, status="completed").exists()
+            and not Payment.objects.filter(
+                category=category, user=request.user, status="completed"
+            ).exists()
         ]
 
     # Fetch all articles for the home page
     articles = Article.objects.filter(state=ArticleStates.PUBLISHED.value)
     form = ArticleFilterForm(request.GET or None)
-    search_query = request.GET.get('search', '')
-    order_by = request.GET.get('order_by', 'published_at')  # Ordenar por fecha de publicación por defecto
-    order_direction = request.GET.get('order_direction', 'asc')  # Dirección de orden ascendente por defecto
-    time_range = request.GET.get('time_range', 'all')  # Rango de tiempo por defecto (sin límite)
+    search_query = request.GET.get("search", "")
+    order_by = request.GET.get(
+        "order_by", "published_at"
+    )  # Ordenar por fecha de publicación por defecto
+    order_direction = request.GET.get(
+        "order_direction", "asc"
+    )  # Dirección de orden ascendente por defecto
+    time_range = request.GET.get(
+        "time_range", "all"
+    )  # Rango de tiempo por defecto (sin límite)
 
     if form.is_valid():
         # Filtrar por tag
-        selected_tag = form.cleaned_data.get('tags')
+        selected_tag = form.cleaned_data.get("tags")
         if selected_tag:
             articles = articles.filter(tags__name__in=[selected_tag])
 
         # Filtrar por categoría
-        selected_category = form.cleaned_data.get('category')
+        selected_category = form.cleaned_data.get("category")
         if selected_category:
             articles = articles.filter(category=selected_category)
-        
+
         # Filtrar por tipo de categoría
-        selected_category_type = form.cleaned_data.get('category_type')
-        if selected_category_type and selected_category_type != 'all':
+        selected_category_type = form.cleaned_data.get("category_type")
+        if selected_category_type and selected_category_type != "all":
             articles = articles.filter(category__type=selected_category_type)
-    
+
     # Filtrar por rango de tiempo
-    if time_range != 'all':
+    if time_range != "all":
         now = timezone.now()
-        if time_range == '1h':
+        if time_range == "1h":
             articles = articles.filter(published_at__gte=now - timedelta(hours=1))
-        elif time_range == '24h':
+        elif time_range == "24h":
             articles = articles.filter(published_at__gte=now - timedelta(hours=24))
-        elif time_range == '7d':
+        elif time_range == "7d":
             articles = articles.filter(published_at__gte=now - timedelta(days=7))
-        elif time_range == '30d':
+        elif time_range == "30d":
             articles = articles.filter(published_at__gte=now - timedelta(days=30))
-        elif time_range == '365d':
+        elif time_range == "365d":
             articles = articles.filter(published_at__gte=now - timedelta(days=365))
-    
+
     # Filtrar por búsqueda
     if search_query:
         articles = articles.filter(
             Q(title__icontains=search_query) | Q(description__icontains=search_query)
         )
 
+    # Ordenar los resultados
+    if order_direction == "desc":
+        order_by = f"-{order_by}"
+    articles = articles.order_by(order_by)
+
+    authenticated = request.user.is_authenticated
+    
     # Add average rating for each article
     for article in articles:
         ratings = ArticleVote.objects.filter(article=article)
@@ -130,14 +145,6 @@ def home(request):
             article.avg_rating = round(avg_rating, 1)
         else:
             article.avg_rating = None  # Or set it to 0 if you prefer
-    
-    # Ordenar los resultados
-    if order_direction == 'desc':
-        order_by = f'-{order_by}'
-    articles = articles.order_by(order_by)
-
-
-    authenticated = request.user.is_authenticated
 
     return render(
         request,
@@ -397,8 +404,9 @@ def article_detail(request, pk):
     if not authenticated:
         if is_free:
             # Unknown user can only view the article without interactions
-            article.views_number += 1
-            article.save()
+            if article.state == ArticleStates.PUBLISHED.value:
+                article.views_number += 1
+                article.save()
 
             # Calculate the average rating for the article
             ratings = ArticleVote.objects.filter(article=article)
@@ -441,56 +449,63 @@ def article_detail(request, pk):
             return redirect("forbidden")
 
         # Increment view count
-        article.views_number += 1
-        article.save()
+        if article.state == ArticleStates.PUBLISHED.value:
+            article.views_number += 1
+            article.save()
 
         # Fetch the user's vote and rating for the article
         user_vote = ArticleVote.objects.filter(
             article=article, user=request.user
         ).first()
+        
+        if article.state == ArticleStates.PUBLISHED.value:
 
-        # Handle like/dislike and rating submissions
-        if request.method == "POST":
-            if "rating" in request.POST:
-                # Rating submission logic
-                rating_value = int(request.POST.get("rating"))
-                if user_vote:
-                    user_vote.rating = rating_value
-                    user_vote.save()
-                else:
-                    ArticleVote.objects.create(
-                        user=request.user, article=article, rating=rating_value
-                    )
-
-            elif "like" in request.POST or "dislike" in request.POST:
-                # Handle like/dislike submission
-                if "like" in request.POST:
-                    if user_vote and user_vote.vote != ArticleVote.LIKE:
-                        if user_vote.vote == ArticleVote.DISLIKE:
-                            article.dislikes_number -= 1
-                        user_vote.vote = ArticleVote.LIKE
-                        article.likes_number += 1
+            # Handle like/dislike and rating submissions
+            if request.method == "POST":
+                if "rating" in request.POST:
+                    # Rating submission logic
+                    rating_value = int(request.POST.get("rating"))
+                    if user_vote:
+                        user_vote.rating = rating_value
                         user_vote.save()
-                    elif not user_vote:
+                    else:
                         ArticleVote.objects.create(
-                            user=request.user, article=article, vote=ArticleVote.LIKE
+                            user=request.user, article=article, rating=rating_value
                         )
-                        article.likes_number += 1
 
-                elif "dislike" in request.POST:
-                    if user_vote and user_vote.vote != ArticleVote.DISLIKE:
-                        if user_vote.vote == ArticleVote.LIKE:
-                            article.likes_number -= 1
-                        user_vote.vote = ArticleVote.DISLIKE
-                        article.dislikes_number += 1
-                        user_vote.save()
-                    elif not user_vote:
-                        ArticleVote.objects.create(
-                            user=request.user, article=article, vote=ArticleVote.DISLIKE
-                        )
-                        article.dislikes_number += 1
+                elif "like" in request.POST or "dislike" in request.POST:
+                    # Handle like/dislike submission
+                    if "like" in request.POST:
+                        if user_vote and user_vote.vote != ArticleVote.LIKE:
+                            if user_vote.vote == ArticleVote.DISLIKE:
+                                article.dislikes_number -= 1
+                            user_vote.vote = ArticleVote.LIKE
+                            article.likes_number += 1
+                            user_vote.save()
+                        elif not user_vote:
+                            ArticleVote.objects.create(
+                                user=request.user,
+                                article=article,
+                                vote=ArticleVote.LIKE,
+                            )
+                            article.likes_number += 1
 
-                article.save()
+                    elif "dislike" in request.POST:
+                        if user_vote and user_vote.vote != ArticleVote.DISLIKE:
+                            if user_vote.vote == ArticleVote.LIKE:
+                                article.likes_number -= 1
+                            user_vote.vote = ArticleVote.DISLIKE
+                            article.dislikes_number += 1
+                            user_vote.save()
+                        elif not user_vote:
+                            ArticleVote.objects.create(
+                                user=request.user,
+                                article=article,
+                                vote=ArticleVote.DISLIKE,
+                            )
+                            article.dislikes_number += 1
+
+                    article.save()
 
         # Calculate the average rating for the article
         ratings = ArticleVote.objects.filter(article=article)
@@ -530,7 +545,7 @@ def article_detail(request, pk):
         # Convert article content body using mistune
         article_render_content = mistune.html(article_content.body)
 
-        #print(to_publish_date.to_publish_at)
+        # print(to_publish_date.to_publish_at)
 
         return render(
             request,
@@ -746,13 +761,13 @@ def category_list(request):
     Returns:
         HttpResponse: Renderiza la plantilla 'article/category_list.html' o redirige.
     """
-    
+
     if not request.user.is_authenticated:
         return redirect("login")
 
     if not request.user.tiene_permisos([PermissionEnum.MANEJAR_CATEGORIAS]):
         return redirect("forbidden")
-    
+
     form = CategorySearchForm(request.GET or None)
     categories = Category.objects.all()
 
@@ -984,7 +999,7 @@ def dislike_article(request, pk):
     return redirect("article-detail", pk=pk)
 
 
-#stripe
+# stripe
 # views.py
 from django.conf import settings
 from django.http import JsonResponse
@@ -1006,43 +1021,42 @@ def stripe_checkout(request, pk):
     price_in_cents = int(category.price * 100)  # Convertir a centavos si es necesario
 
     # Crear el ítem para Stripe Checkout con base en la categoría
-    line_items = [{
-        'price_data': {
-            'currency': 'usd',
-            'product_data': {
-                'name': category.name,  # Usamos el nombre de la categoría
+    line_items = [
+        {
+            "price_data": {
+                "currency": "usd",
+                "product_data": {
+                    "name": category.name,  # Usamos el nombre de la categoría
+                },
+                "unit_amount": price_in_cents,  # Precio en centavos
             },
-            'unit_amount': price_in_cents,  # Precio en centavos
-        },
-        'quantity': 1,  # Se asume una cantidad de 1 categoría a pagar
-    }]
+            "quantity": 1,  # Se asume una cantidad de 1 categoría a pagar
+        }
+    ]
 
-     # Crear un nuevo registro de pago con estado 'pending'
-
+    # Crear un nuevo registro de pago con estado 'pending'
 
     # Crear la sesión de Stripe Checkout
     session = stripe.checkout.Session.create(
-        payment_method_types=['card'],
+        payment_method_types=["card"],
         line_items=line_items,  # Enviamos el ítem con la categoría
-        mode='payment',
+        mode="payment",
         success_url=f'{os.environ.get("URL")}/categories/{category.pk}/success/',
         cancel_url=f'{os.environ.get("URL")}/categories/{category.pk}/cancel/',
     )
 
-    #print(session)
-
+    # print(session)
 
     # Crear un nuevo registro de pago con estado 'pending'
     Payment.objects.create(
-            user=request.user,
-            category=category,
-            price=5.00,  # Ajustar el monto según sea necesario
-            stripe_payment_id=session.id,  # Almacenar el PaymentIntent ID
-            status="pending",  # Inicialmente en 'pending'
-        )
+        user=request.user,
+        category=category,
+        price=5.00,  # Ajustar el monto según sea necesario
+        stripe_payment_id=session.id,  # Almacenar el PaymentIntent ID
+        status="pending",  # Inicialmente en 'pending'
+    )
 
-    return JsonResponse({'id': session.id})
-
+    return JsonResponse({"id": session.id})
 
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -1050,14 +1064,21 @@ from django.core.exceptions import ObjectDoesNotExist
 
 def checkout_page(request, pk):
     try:
-        payment = Payment.objects.filter(user=request.user, category=pk, status="completed").latest("date_paid")
+        payment = Payment.objects.filter(
+            user=request.user, category=pk, status="completed"
+        ).latest("date_paid")
         # Si se encuentra el pago y tiene estado "completed", ir a exists
-        return render(request, 'article/exists.html')
-    except ObjectDoesNotExist:  
-        return render(request, 'article/checkout.html', {
-            'STRIPE_PUBLISHABLE_KEY': settings.STRIPE_PUBLIC_KEY,
-            'category_id': pk  # Pasar el ID de la categoría
-        })
+        return render(request, "article/exists.html")
+    except ObjectDoesNotExist:
+        return render(
+            request,
+            "article/checkout.html",
+            {
+                "STRIPE_PUBLISHABLE_KEY": settings.STRIPE_PUBLIC_KEY,
+                "category_id": pk,  # Pasar el ID de la categoría
+            },
+        )
+
 
 def payment_success(request, pk):
     category = get_object_or_404(Category, id=pk)
@@ -1093,13 +1114,11 @@ def payment_success(request, pk):
             {"error": "No se encontró el pago en la base de datos."},
         )
 
+
 def payment_cancel(request, pk):
-    
     category = get_object_or_404(Category, id=pk)
     user = request.user
-    payment = Payment.objects.filter(user=user, category=category).latest(
-            "date_paid"
-        )
+    payment = Payment.objects.filter(user=user, category=category).latest("date_paid")
     payment.status = "cancelled"
     payment.save()
-    return render(request, 'article/cancel.html')
+    return render(request, "article/cancel.html")
