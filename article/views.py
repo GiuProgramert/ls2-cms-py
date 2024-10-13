@@ -13,6 +13,7 @@ from article.models import (
     CategoryType,
     ArticleVote,
     ArticlesToPublish,
+    Payment
 )
 from article.forms import *
 from django.db.models import Avg
@@ -20,7 +21,7 @@ from collections import defaultdict
 from django.db.models import Q
 from datetime import timedelta
 from django.utils import timezone
-
+from django.db.models import Count
 
 def home(request):
     """
@@ -1122,3 +1123,29 @@ def payment_cancel(request, pk):
     payment.status = "cancelled"
     payment.save()
     return render(request, "article/cancel.html")
+
+@login_required
+def sold_categories(request):
+    if not request.user.tiene_permisos([PermissionEnum.VER_CATEGORIAS_PAGO]):
+        return redirect('forbidden')
+
+    # Get the categories and count the number of payments associated with each category
+    categories_sales = (
+        Payment.objects.filter(status="completed")  # Ensure only completed payments are counted
+        .values('category__name')  # Group by category name
+        .annotate(total_sales=Count('category'))  # Count the number of purchases per category
+        .order_by('-total_sales')  # Order from most sold to least sold
+    )
+
+    # Extract category names and corresponding sales for the graph
+    categories = [item['category__name'] for item in categories_sales]
+    sales = [item['total_sales'] for item in categories_sales]
+
+    return render(
+        request,
+        "article/sold_categories.html",
+        {
+            'categories': categories,
+            'sales': sales
+        }
+    )

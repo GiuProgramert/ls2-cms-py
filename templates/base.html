@@ -42,6 +42,15 @@
           </li>
           <br>
         {% endif %}
+
+        {% if user.is_authenticated and "ver_categorias_pago" in permisos %}
+          <li class="navbar-item">
+          <a href="{% url 'sold-categories' %}" class="text-white block"><i class="fa-solid fa-chart-bar"></i> Categorías Vendidas</a>
+          </li>
+          <br>
+        {% endif %}
+
+
         {% if "crear_articulos" in permisos %}
         <li class="navbar-item">
           <a href="/article/create" class="text-white block"><i class="fa-solid fa-plus"></i> Crear artículo</a>
