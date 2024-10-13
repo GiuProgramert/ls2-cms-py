@@ -1,0 +1,40 @@
+<canvas id="categoriesChart" style="max-width: 100%; height: 400px;"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    var ctx = document.getElementById('categoriesChart').getContext('2d');
+    var categoriesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ categories|safe }},
+            datasets: [{
+                label: 'numero de ventas',
+                data: {{ sales|safe }},
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,  // Enable responsiveness
+            maintainAspectRatio: false,  // Allow the chart to resize based on the container
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Número de Compradores'  // Y-axis label
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',  // You can change this position if necessary
+                },
+                title: {
+                    display: true,
+                    text: 'Grafico de las categorias vendidas'
+                }
+            }
+        }
+    });
+</script>
