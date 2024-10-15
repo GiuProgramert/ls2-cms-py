@@ -21,7 +21,7 @@ from collections import defaultdict
 from django.db.models import Q
 from datetime import timedelta
 from django.utils import timezone
-from django.db.models import Count
+from django.db.models import Count,F
 
 def home(request):
     """
@@ -1129,9 +1129,26 @@ def sold_categories(request):
     if not request.user.tiene_permisos([PermissionEnum.VER_CATEGORIAS_PAGO]):
         return redirect('forbidden')
 
-    # Get the categories and count the number of payments associated with each category
+    # Get the selected date range from the request (default is 'all')
+    date_range = request.GET.get('date_range', 'all')
+
+    # Set the filter for the date range
+    filter_kwargs = {}
+    if date_range == '24h':
+        filter_kwargs['date_paid__gte'] = timezone.now() - timedelta(hours=24)
+    elif date_range == '7d':
+        filter_kwargs['date_paid__gte'] = timezone.now() - timedelta(days=7)
+    elif date_range == '30d':
+        filter_kwargs['date_paid__gte'] = timezone.now() - timedelta(days=30)
+    elif date_range == '365d':
+        filter_kwargs['date_paid__gte'] = timezone.now() - timedelta(days=365)
+
+    # Filter payments based on the selected date range and status 'completed'
+    payments = Payment.objects.filter(status="completed", **filter_kwargs)
+
+    # Group by category name and count the number of payments associated with each category
     categories_sales = (
-        Payment.objects.filter(status="completed")  # Ensure only completed payments are counted
+        payments
         .values('category__name')  # Group by category name
         .annotate(total_sales=Count('category'))  # Count the number of purchases per category
         .order_by('-total_sales')  # Order from most sold to least sold
@@ -1141,11 +1158,22 @@ def sold_categories(request):
     categories = [item['category__name'] for item in categories_sales]
     sales = [item['total_sales'] for item in categories_sales]
 
+    # Get the list of users who bought each category
+    buyers_per_category = {
+        category['category__name']: list(
+            payments.filter(category__name=category['category__name'])
+            .values_list('user__username', flat=True)
+        )
+        for category in categories_sales
+    }
+
     return render(
         request,
         "article/sold_categories.html",
         {
             'categories': categories,
-            'sales': sales
+            'sales': sales,
+            'buyers_per_category': buyers_per_category,
+            'date_range': date_range  # Pass the selected date range to the template
         }
     )
