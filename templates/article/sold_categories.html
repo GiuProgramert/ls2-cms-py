@@ -2,23 +2,23 @@
 <div class="button-container">
     <form method="GET" action="{% url 'sold-categories' %}">
         <input type="hidden" name="date_range" value="24h">
-        <button type="submit" {% if date_range == '24h' %}class="active"{% endif %}>Last 24 hours</button>
+        <button type="submit" {% if date_range == '24h' %}class="active"{% endif %}>Ultimas 24 Horas</button>
     </form>
     <form method="GET" action="{% url 'sold-categories' %}">
         <input type="hidden" name="date_range" value="7d">
-        <button type="submit" {% if date_range == '7d' %}class="active"{% endif %}>Last Week</button>
+        <button type="submit" {% if date_range == '7d' %}class="active"{% endif %}>Ultima Semana</button>
     </form>
     <form method="GET" action="{% url 'sold-categories' %}">
         <input type="hidden" name="date_range" value="30d">
-        <button type="submit" {% if date_range == '30d' %}class="active"{% endif %}>Last Month</button>
+        <button type="submit" {% if date_range == '30d' %}class="active"{% endif %}>Ultimo Mes</button>
     </form>
     <form method="GET" action="{% url 'sold-categories' %}">
         <input type="hidden" name="date_range" value="365d">
-        <button type="submit" {% if date_range == '365d' %}class="active"{% endif %}>Last Year</button>
+        <button type="submit" {% if date_range == '365d' %}class="active"{% endif %}>Ultimo Año</button>
     </form>
     <form method="GET" action="{% url 'sold-categories' %}">
         <input type="hidden" name="date_range" value="all">
-        <button type="submit" {% if date_range == 'all' %}class="active"{% endif %}>All Time</button>
+        <button type="submit" {% if date_range == 'all' %}class="active"{% endif %}>Todas</button>
     </form>
 </div>
 
