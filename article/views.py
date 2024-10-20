@@ -22,6 +22,7 @@ from django.db.models import Q
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count,F
+from notification.utils import send_email
 
 def home(request):
     """
@@ -1096,6 +1097,22 @@ def payment_success(request, pk):
             # Actualizar el estado del pago en la base de datos
             payment.status = "completed"
             payment.save()
+            
+            # Send confirmation email to the purchaser
+            subject = f"Confirmacion de compra por la categoria: {category.name}"
+            html_content = f"""
+            <h3>Querido {user.username},</h3>
+            <p>Gracias por tu compra de:  <strong>{category.name}</strong>.</p>
+            <p>La compra fue realizada el:  {payment.date_paid.strftime('%Y-%m-%d %H:%M')}.</p>
+            <p>Esperamos disfrutes del contenido!</p>
+            """
+
+            # Send the email using the send_email function
+            send_email(
+                to=user.email,
+                subject=subject,
+                html=html_content
+            )
 
             # Redirigir a la página de éxito
             return render(request, "article/success.html", {"category": category})
