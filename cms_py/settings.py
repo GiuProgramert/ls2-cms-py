@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     # Third party apps
     "mdeditor",
     "django_crontab",
-    "taggit", 
+    "taggit",
 ]
 
 MIDDLEWARE = [
@@ -150,7 +150,6 @@ else:
 AUTH_USER_MODEL = "user.CustomUser"
 
 
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -228,7 +227,7 @@ MDEDITOR_CONFIGS = {
 }
 
 CRONJOBS = [
-    ('*/1 * * * *', 'article.cron.publish_schedule_articles', '>> /tmp/cms_py.log')
+    ("*/1 * * * *", "article.cron.publish_schedule_articles", ">> /tmp/cms_py.log")
 ]
-STRIPE_PUBLIC_KEY = 'pk_test_51Q3IEOFWDLOQpTHGvvQ2a6Kpf2z9JdbMp5NpnMtBFtzUqTNRjLPVxWl1bbd2kvDRslXnEhtI2oCNOHCdktGdW6Zm00fnnxrBgX'
-STRIPE_SECRET_KEY = 'sk_test_51Q3IEOFWDLOQpTHGSIl5aIIdgXNzbHsLLKwcOCWYW93Xi48zval6iIPDoWTGRRSm8o89MOHANtDUwn10FVMfGAGS008xqK2zw9'
+STRIPE_PUBLIC_KEY = "pk_test_51Q3IEOFWDLOQpTHGvvQ2a6Kpf2z9JdbMp5NpnMtBFtzUqTNRjLPVxWl1bbd2kvDRslXnEhtI2oCNOHCdktGdW6Zm00fnnxrBgX"
+STRIPE_SECRET_KEY = "sk_test_51Q3IEOFWDLOQpTHGSIl5aIIdgXNzbHsLLKwcOCWYW93Xi48zval6iIPDoWTGRRSm8o89MOHANtDUwn10FVMfGAGS008xqK2zw9"

@@ -179,52 +179,54 @@
         </tbody>
       </table>
 
-      <!-- Votos -->
-      <div class="mt-8">
+      {% if article.state == 'p' %}
+        <!-- Votos -->
+        <div class="mt-8">
+          {% if authenticated %}
+            <h2 class="text-2xl font-semibold mb-4">Votos del artículo</h2>
+            <div class="flex items-center space-x-4">
+              <span class="text-lg">Me gusta: {{ article.likes_number }}</span>
+              <a href="{% url 'like-article' article.id %}" class="btn btn-success">👍</a>
+              <span class="text-lg">No me gusta: {{ article.dislikes_number }}</span>
+              <a href="{% url 'dislike-article' article.id %}" class="btn btn-danger">👎</a>
+            </div>
+            <br>
+          {% endif %}
+        </div>
+
+        <!-- Votar artículo -->
         {% if authenticated %}
-          <h2 class="text-2xl font-semibold mb-4">Votos del artículo</h2>
-          <div class="flex items-center space-x-4">
-            <span class="text-lg">Me gusta: {{ article.likes_number }}</span>
-            <a href="{% url 'like-article' article.id %}" class="btn btn-success">👍</a>
-            <span class="text-lg">No me gusta: {{ article.dislikes_number }}</span>
-            <a href="{% url 'dislike-article' article.id %}" class="btn btn-danger">👎</a>
+          <div class="mt-8">
+            <h2 class="text-2xl font-semibold mb-4">Votar artículo</h2>
+            {% if user_rating %}
+              <p>Has calificado este artículo con {{ user_rating.rating }} estrellas.</p>
+              <form method="POST" class="mt-4">
+                {% csrf_token %}
+                <label for="rating">Cambiar calificación:</label>
+                <select name="rating" id="rating" class="border border-gray-300 rounded px-3 py-2">
+                  {% for i in "12345" %}
+                    <option value="{{ i }}" {% if user_rating.rating == i %}selected{% endif %}>{{ i }} Estrella{{ i|pluralize }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary ml-4">Actualizar</button>
+              </form>
+            {% else %}
+              <form method="POST" class="mt-4">
+                {% csrf_token %}
+                <label for="rating">Calificar:</label>
+                <select name="rating" id="rating" class="border border-gray-300 rounded px-3 py-2">
+                  {% for i in "12345" %}
+                    <option value="{{ i }}">{{ i }} Estrella{{ i|pluralize }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary ml-4">Enviar</button>
+              </form>
+            {% endif %}
           </div>
           <br>
         {% endif %}
-      </div>
-
-      <!-- Votar artículo -->
-      {% if authenticated %}
-        <div class="mt-8">
-          <h2 class="text-2xl font-semibold mb-4">Votar artículo</h2>
-          {% if user_rating %}
-            <p>Has calificado este artículo con {{ user_rating.rating }} estrellas.</p>
-            <form method="POST" class="mt-4">
-              {% csrf_token %}
-              <label for="rating">Cambiar calificación:</label>
-              <select name="rating" id="rating" class="border border-gray-300 rounded px-3 py-2">
-                {% for i in "12345" %}
-                  <option value="{{ i }}" {% if user_rating.rating == i %}selected{% endif %}>{{ i }} Estrella{{ i|pluralize }}</option>
-                {% endfor %}
-              </select>
-              <button type="submit" class="btn btn-primary ml-4">Actualizar</button>
-            </form>
-          {% else %}
-            <form method="POST" class="mt-4">
-              {% csrf_token %}
-              <label for="rating">Calificar:</label>
-              <select name="rating" id="rating" class="border border-gray-300 rounded px-3 py-2">
-                {% for i in "12345" %}
-                  <option value="{{ i }}">{{ i }} Estrella{{ i|pluralize }}</option>
-                {% endfor %}
-              </select>
-              <button type="submit" class="btn btn-primary ml-4">Enviar</button>
-            </form>
-          {% endif %}
-        </div>
-        <br>
       {% endif %}
-
+      
       <!-- Promedio de calificación -->
       <div class="mt-8">
         <h2 class="text-2xl font-semibold mb-4">Promedio de calificación</h2>

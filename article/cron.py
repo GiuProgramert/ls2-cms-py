@@ -1,9 +1,10 @@
 from article.models import ArticlesToPublish, ArticleStates
 from django.utils import timezone
 
+
 def publish_schedule_articles():
     """
-        Publica los articulos que estan en estado de programados.
+    Publica los articulos que estan en estado de programados.
     """
     print("Iniciando publicación de articulos programados")
 
@@ -13,7 +14,9 @@ def publish_schedule_articles():
 
     for article_to_publish in articles_to_publish:
         print(f"Publicando articulo {article_to_publish.article.title}")
-        print(f"Fecha de publicación: {article_to_publish.to_publish_at}, Fecha actual: {timezone.now()}")
+        print(
+            f"Fecha de publicación: {article_to_publish.to_publish_at}, Fecha actual: {timezone.now()}"
+        )
         article_to_publish.article.change_state(ArticleStates.PUBLISHED.value)
         article_to_publish.published = True
         article_to_publish.save()

@@ -134,7 +134,9 @@ class Article(models.Model):
     likes_number = models.IntegerField(default=0)
     dislikes_number = models.IntegerField(default=0)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    published_at = models.DateTimeField(auto_now_add=False, auto_now=False, null=True, default=None)
+    published_at = models.DateTimeField(
+        auto_now_add=False, auto_now=False, null=True, default=None
+    )
     state = models.CharField(
         max_length=1,
         choices=[
@@ -256,6 +258,7 @@ class ArticleVote(models.Model):
         return (
             f"{self.user.username} rated {self.article.title} with {self.rating} stars"
         )
+
 
 class Payment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
