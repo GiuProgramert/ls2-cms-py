@@ -83,6 +83,7 @@ def home(request):
     # Fetch all articles for the home page
     articles = Article.objects.filter(state=ArticleStates.PUBLISHED.value)
     form = ArticleFilterForm(request.GET or None)
+
     search_query = request.GET.get("search", "")
     order_by = request.GET.get(
         "order_by", "published_at"
@@ -147,6 +148,20 @@ def home(request):
             article.avg_rating = round(avg_rating, 1)
         else:
             article.avg_rating = None  # Or set it to 0 if you prefer
+    
+    # Ordenar los resultados
+    if order_by == 'published_at':
+        # Asegurarse de que los más nuevos se muestren primero cuando está en descendente
+        if order_direction == 'desc':
+            order_by = '-published_at'
+        else:
+            order_by = 'published_at'
+    elif order_direction == 'desc':
+        order_by = f'-{order_by}'
+    articles = articles.order_by(order_by)
+
+
+    authenticated = request.user.is_authenticated
 
     return render(
         request,
