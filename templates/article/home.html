@@ -36,7 +36,7 @@
           {{ form.category_type }}
         </div>
 
-        <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+        <button type="submit" class="btn btn-primary" onclick="applyFilters()">Aplicar Filtros</button>
       </form>
     </div>
   </section>
@@ -53,9 +53,9 @@
     
     <!-- Campo para ordenar por fecha, visualizaciones, etc. -->
     <select name="order_by" onchange="this.form.submit()">
-        <option value="published_at" {% if order_by == 'published_at' %}selected{% endif %}>Fecha</option>
-        <option value="likes_number" {% if order_by == 'likes_number' %}selected{% endif %}>Likes</option>
-        <option value="views_number" {% if order_by == 'views_number' %}selected{% endif %}>Visualizaciones</option>
+      <option value="published_at" {% if order_by == 'published_at' or order_by == '-published_at' %}selected{% endif %}>Fecha</option>
+      <option value="likes_number" {% if order_by == 'likes_number' or order_by == '-likes_number' %}selected{% endif %}>Likes</option>
+      <option value="views_number" {% if order_by == 'views_number' or order_by == '-views_number' %}selected{% endif %}>Visualizaciones</option>
     </select>
     
     <!-- Campo para filtrar por rango de tiempo -->
@@ -70,7 +70,7 @@
 
     <!-- Se ejecuta cuando se seleccionan las opciones -->
     <noscript>
-        <button type="submit">Aplicar</button>
+        <button type="submit" onclick="applyFilters()">Aplicar</button>
     </noscript>
 </form>
 
@@ -188,7 +188,7 @@
   });
 
   // Función que actualiza los parámetros de la URL al cambiar filtros
-  function applyFilters(orderDirection = "asc") {
+  function applyFilters(orderDirection = "desc") {
     const url = new URL(window.location.href);
     const searchInput = document.querySelector('input[name="search"]').value;
     const orderBy = document.querySelector('select[name="order_by"]').value;
@@ -210,9 +210,6 @@
     url.searchParams.set('tag', tag);
     url.searchParams.set('category_type', categoryType);
 
-    console.log("orderBy",orderBy);
-    console.log("time",timeRange);
-
     // Redirige con los nuevos parámetros
     window.location.href = url;
   }
@@ -220,7 +217,7 @@
   // Función para alternar entre ascendente y descendente
   function toggleOrderDirection() {
     const url = new URL(window.location.href);
-    const currentOrderDirection = url.searchParams.get('order_direction') || 'asc';
+    const currentOrderDirection = url.searchParams.get('order_direction') || 'desc';
     const newOrderDirection = currentOrderDirection === 'asc' ? 'desc' : 'asc';
 
     // Luego aplica los filtros manteniendo el nuevo valor de order_direction
