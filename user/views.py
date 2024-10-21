@@ -72,22 +72,24 @@ class UserListView(UserPassesTestMixin, ListView):
             QuerySet: El conjunto de usuarios filtrado.
         """
         queryset = super().get_queryset()
-        form = UserSearchForm(self.request.GET or None) 
+        form = UserSearchForm(self.request.GET or None)
 
         administradores = Role.objects.filter(name="Administrador")
         queryset = queryset.exclude(roles__in=administradores)
 
         if form.is_valid():
-            search_term = form.cleaned_data.get('search_term', '')
-            order_by = form.cleaned_data.get('order_by', 'username')
-            filter_role = form.cleaned_data.get('filter_role', 'all')
+            search_term = form.cleaned_data.get("search_term", "")
+            order_by = form.cleaned_data.get("order_by", "username")
+            filter_role = form.cleaned_data.get("filter_role", "all")
 
             # Filtrar por nombre de usuario o email que contenga el término de búsqueda
             if search_term:
-                queryset = queryset.filter(username__icontains=search_term) | queryset.filter(email__icontains=search_term)
+                queryset = queryset.filter(
+                    username__icontains=search_term
+                ) | queryset.filter(email__icontains=search_term)
 
             # Filtrar por rol si no es 'all'
-            if filter_role != 'all':
+            if filter_role != "all":
                 queryset = queryset.filter(roles__name=filter_role)
 
             # Ordenar los resultados
@@ -107,7 +109,7 @@ class UserListView(UserPassesTestMixin, ListView):
         """
         context = super().get_context_data(**kwargs)
         form = UserSearchForm(self.request.GET or None)
-        context['form'] = form
+        context["form"] = form
         return context
 
     def test_func(self):

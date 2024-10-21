@@ -274,7 +274,7 @@ class CreateArticleTestCase(TestCase):
             "type": CategoryType.FREE.value,
             "state": True,
             "is_moderated": False,
-            "price": 0.0
+            "price": 0.0,
         }
 
         self.client.login(username="testuser", password="testpassword")
@@ -327,7 +327,7 @@ class CreateArticleTestCase(TestCase):
             "type": CategoryType.FREE.value,
             "state": True,
             "is_moderated": False,
-            "price": 0.0
+            "price": 0.0,
         }
 
         self.client.login(username="testuser", password="testpassword")
@@ -462,6 +462,7 @@ class PruebasGestionArticulo(TestCase):
             "description": "This is a new article",
             "category": self.category.id,  # ID de categoría válido
             "body": "This is the content of the new article",
+            "tags": "tag1, tag2, tag3",
         }
 
         response = self.client.post(reverse("article-create"), data)
@@ -492,6 +493,7 @@ class PruebasGestionArticulo(TestCase):
             "description": "Updated description",
             "category": self.category.id,
             "body": "Updated article content",
+            "tags": "tag1, tag2, tag3",
         }
 
         response = self.client.post(

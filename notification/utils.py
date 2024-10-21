@@ -32,23 +32,23 @@ def send_email(to, subject, html):
     try:
         # Create MIMEMultipart message
         msg = MIMEMultipart()
-        msg['From'] = DEFAULT_FROM
-        msg['To'] = to
-        msg['Subject'] = subject
+        msg["From"] = DEFAULT_FROM
+        msg["To"] = to
+        msg["Subject"] = subject
 
         # Attach HTML content
-        msg.attach(MIMEText(html, 'html'))
+        msg.attach(MIMEText(html, "html"))
 
         # Create SMTP session
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             server.starttls()  # Enable TLS
             server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            
+
             # Send email
             server.send_message(msg)
 
         return {"status": "success", "message": "Email sent successfully"}
     except Exception as error:
-        print("Failed to send email")
-        print(error)
+        # print("Failed to send email")
+        # print(error)
         raise Exception(f"Email sending failed: {str(error)}")
