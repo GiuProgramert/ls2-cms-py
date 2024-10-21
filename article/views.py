@@ -47,6 +47,7 @@ def home(request):
             if category.type != CategoryType.FREE.value
         ]
     else:
+        
         # Obtener todos los pagos del usuario en una sola consulta
         user_payments = Payment.objects.filter(user=request.user)
 
@@ -54,6 +55,7 @@ def home(request):
         payment_status_by_category = defaultdict(lambda: None)
         for payment in user_payments:
             payment_status_by_category[payment.category_id] = payment.status
+
 
         permissions = [
             permiso.name
@@ -66,78 +68,60 @@ def home(request):
             for category in categories
             if category.type
             in (CategoryType.FREE.value, CategoryType.SUSCRIPTION.value)
-            or Payment.objects.filter(
-                category=category, user=request.user, status="completed"
-            ).exists()
+            or Payment.objects.filter(category=category, user=request.user, status="completed").exists()
         ]
 
         not_permited_categories = [
             {"name": category.name, "type": category.type}
             for category in categories
             if category.type == CategoryType.PAY.value
-            and not Payment.objects.filter(
-                category=category, user=request.user, status="completed"
-            ).exists()
+            and not Payment.objects.filter(category=category, user=request.user, status="completed").exists()
         ]
 
     # Fetch all articles for the home page
     articles = Article.objects.filter(state=ArticleStates.PUBLISHED.value)
     form = ArticleFilterForm(request.GET or None)
-
-    search_query = request.GET.get("search", "")
-    order_by = request.GET.get(
-        "order_by", "published_at"
-    )  # Ordenar por fecha de publicación por defecto
-    order_direction = request.GET.get(
-        "order_direction", "asc"
-    )  # Dirección de orden ascendente por defecto
-    time_range = request.GET.get(
-        "time_range", "all"
-    )  # Rango de tiempo por defecto (sin límite)
+    search_query = request.GET.get('search', '')
+    order_by = request.GET.get('order_by', 'published_at')  # Ordenar por fecha de publicación por defecto
+    order_direction = request.GET.get('order_direction', 'desc')  # Dirección de orden ascendente por defecto
+    time_range = request.GET.get('time_range', 'all')  # Rango de tiempo por defecto (sin límite)
 
     if form.is_valid():
         # Filtrar por tag
-        selected_tag = form.cleaned_data.get("tags")
+        selected_tag = form.cleaned_data.get('tags')
         if selected_tag:
             articles = articles.filter(tags__name__in=[selected_tag])
 
         # Filtrar por categoría
-        selected_category = form.cleaned_data.get("category")
+        selected_category = form.cleaned_data.get('category')
         if selected_category:
             articles = articles.filter(category=selected_category)
-
+        
         # Filtrar por tipo de categoría
-        selected_category_type = form.cleaned_data.get("category_type")
-        if selected_category_type and selected_category_type != "all":
+        selected_category_type = form.cleaned_data.get('category_type')
+        if selected_category_type and selected_category_type != 'all':
             articles = articles.filter(category__type=selected_category_type)
-
+    
     # Filtrar por rango de tiempo
-    if time_range != "all":
+    if time_range != 'all':
         now = timezone.now()
-        if time_range == "1h":
+        if time_range == '1h':
             articles = articles.filter(published_at__gte=now - timedelta(hours=1))
-        elif time_range == "24h":
+        elif time_range == '24h':
             articles = articles.filter(published_at__gte=now - timedelta(hours=24))
-        elif time_range == "7d":
+        elif time_range == '7d':
             articles = articles.filter(published_at__gte=now - timedelta(days=7))
-        elif time_range == "30d":
+        elif time_range == '30d':
             articles = articles.filter(published_at__gte=now - timedelta(days=30))
-        elif time_range == "365d":
+        elif time_range == '365d':
             articles = articles.filter(published_at__gte=now - timedelta(days=365))
-
+    
     # Filtrar por búsqueda
     if search_query:
         articles = articles.filter(
             Q(title__icontains=search_query) | Q(description__icontains=search_query)
         )
 
-    # Ordenar los resultados
-    if order_direction == "desc":
-        order_by = f"-{order_by}"
-    articles = articles.order_by(order_by)
-
-    authenticated = request.user.is_authenticated
-    
     # Add average rating for each article
     for article in articles:
         ratings = ArticleVote.objects.filter(article=article)
@@ -179,6 +163,7 @@ def home(request):
             "time_range": time_range,
         },
     )
+
 
 
 def forbidden(request):
