@@ -81,10 +81,17 @@ def home(request):
     # Fetch all articles for the home page
     articles = Article.objects.filter(state=ArticleStates.PUBLISHED.value)
     form = ArticleFilterForm(request.GET or None)
-    search_query = request.GET.get('search', '')
-    order_by = request.GET.get('order_by', 'published_at')  # Ordenar por fecha de publicación por defecto
-    order_direction = request.GET.get('order_direction', 'desc')  # Dirección de orden ascendente por defecto
-    time_range = request.GET.get('time_range', 'all')  # Rango de tiempo por defecto (sin límite)
+
+    search_query = request.GET.get("search", "")
+    order_by = request.GET.get(
+        "order_by", "published_at"
+    )  # Ordenar por fecha de publicación por defecto
+    order_direction = request.GET.get(
+        "order_direction", "asc"
+    )  # Dirección de orden ascendente por defecto
+    time_range = request.GET.get(
+        "time_range", "all"
+    )  # Rango de tiempo por defecto (sin límite)
 
     if form.is_valid():
         # Filtrar por tag
