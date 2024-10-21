@@ -56,7 +56,9 @@
             draggable="{% if is_editor or is_admin or not article.category.is_moderated %}true{% else %}false{% endif %}" 
             data-id="{{ article.id }}"
           >
-          <p>{{ article.title }}</p>
+          <a href="{% url 'article-detail' article.id %}?from=article-list" target="_blank">
+            <p>{{ article.title }}</p>
+          </a>
           <div class="line">
             <i class="fa-regular fa-user"></i>
             <p>{{ article.autor.username }}</p>
@@ -90,7 +92,9 @@
             draggable="{% if is_admin or is_publisher or is_editor or not article.category.is_moderated %}true{% else %}false{% endif %}" 
             data-id="{{ article.id }}"
           >
-            <p>{{ article.title }}</p>
+            <a href="{% url 'article-detail' article.id %}?from=article-list" target="_blank">
+              <p>{{ article.title }}</p>
+            </a>
             <div class="line">
               <i class="fa-regular fa-user"></i>
               <p>{{ article.autor.username }}</p>
@@ -123,7 +127,9 @@
             draggable="{% if is_admin or is_autor or not article.category.is_moderated %}true{% else %}false{% endif %}" 
             data-id="{{ article.id }}"
           >
-            <p>{{ article.title }}</p>
+            <a href="{% url 'article-detail' article.id %}?from=article-list" target="_blank">
+              <p>{{ article.title }}</p>
+            </a>
             <div class="line">
               <i class="fa-regular fa-user"></i>
               <p>{{ article.autor.username }}</p>
@@ -155,7 +161,9 @@
             draggable="false" 
             data-id="{{ article.id }}"
           >
-            <p>{{ article.title }}</p>
+            <a href="{% url 'article-detail' article.id %}?from=article-list" target="_blank">
+              <p>{{ article.title }}</p>
+            </a>
             <div class="line">
               <i class="fa-regular fa-user"></i>
               <p>{{ article.autor.username }}</p>
