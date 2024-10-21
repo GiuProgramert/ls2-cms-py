@@ -72,7 +72,7 @@ def kanban_send_message(request):
             [PermissionEnum.EDITAR_ARTICULOS]
         )
 
-        if not is_editor or not is_admin:
+        if not is_editor and not is_admin:
             return HttpResponse(status=403)
 
         articleId = request.POST.get("articleId")
