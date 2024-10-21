@@ -8,6 +8,9 @@ const canDraggValues = {
 
 const defaultCanDrag = false;
 
+/**
+ * Obtiene el valor de una cookie
+ */
 function getCookie(name) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== "") {
@@ -23,6 +26,13 @@ function getCookie(name) {
   return cookieValue;
 }
 
+/**
+ * Cambia el estado de un artículo
+ * @param {number} articleId Id del artículo
+ * @param {string} articleNewState Nuevo estado del artículo
+ * @returns {Promise<Response>}
+ * @throws {Error}
+ */
 async function changeState(articleId, articleNewState) {
   const response = await fetch(
     `/article/${articleId}/update/state/${articleNewState}`,
@@ -38,6 +48,13 @@ async function changeState(articleId, articleNewState) {
   return response;
 }
 
+/**
+ * Envia un mensaje a un artículo
+ * @param {number} articleId Id del artículo
+ * @param {string} message Mensaje a enviar
+ * @returns {Promise<Response>}
+ * @throws {Error}
+ */
 async function sendMessage(articleId, message) {
   const csrftoken = getCookie("csrftoken");
 
@@ -60,21 +77,69 @@ async function sendMessage(articleId, message) {
   return response;
 }
 
+function showSuccessToast(text) {
+  window
+    .Toastify({
+      text,
+      position: "center",
+      close: true,
+      className: "toast",
+      style: {
+        background: "#0f9d58",
+      },
+    })
+    .showToast();
+}
+
+function showErrorToast(text) {
+  window
+    .Toastify({
+      text,
+      position: "center",
+      close: true,
+      className: "toast",
+      style: {
+        background: "#b90f29",
+      },
+    })
+    .showToast();
+}
+
+function showModal(modal) {
+  modal.style.display = "block";
+}
+
+function closeModal(modal) {
+  modal.style.display = "none";
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const states = document.querySelectorAll(".state");
   const items = document.querySelectorAll(".item");
 
-  const modal = document.getElementById("modalMessage");
-  const closeBtn = document.getElementById("closeModal");
+  const modalMessage = document.getElementById("modalMessage");
+  const closeBtnMessage = document.getElementById("closeModal");
   const sendMessageBtn = document.getElementById("send");
   const dontSendMessageBtn = document.getElementById("dontSend");
   const messageInput = document.getElementById("message");
+
+  const modalConfirmation = document.getElementById("modalConfirmation");
+  const closeBtnConfirmation = document.getElementById(
+    "closeModalConfirmation"
+  );
+  const confirmBtn = document.getElementById("confirm");
+  const dontConfirmBtn = document.getElementById("dontConfirm");
 
   let draggedItem = null;
   let firstState = null;
   let firstItemContainer = null;
   let lastArticleToSend = null;
 
+  let itemsContainer = null;
+  let articleId = null;
+  let articleNewState = null;
+
+  // Add draggable attribute to items
   items.forEach((item) => {
     item.addEventListener("dragstart", () => {
       draggedItem = item;
@@ -83,103 +148,84 @@ document.addEventListener("DOMContentLoaded", () => {
       item.classList.add("dragging");
     });
 
-    item.addEventListener("dragend", () => {
-      item.classList.remove("dragging");
-    });
+    item.addEventListener("dragend", () => item.classList.remove("dragging"));
   });
 
+  // Add event listeners to states
   states.forEach((state) => {
-    state.addEventListener("dragover", (e) => {
-      e.preventDefault();
-    });
+    // Prevent default behavior
+    state.addEventListener("dragover", (e) => e.preventDefault());
 
+    // Save the necessary data to change the state of the article
     state.addEventListener("drop", async (e) => {
       e.preventDefault();
 
       if (draggedItem) {
-        const itemsContainer = state.querySelector(".items");
+        itemsContainer = state.querySelector(".items");
 
-        const articleId = draggedItem.getAttribute("data-id");
-        const articleNewState = itemsContainer.getAttribute("data-state");
+        articleId = draggedItem.getAttribute("data-id");
+        articleNewState = itemsContainer.getAttribute("data-state");
 
         itemsContainer.appendChild(draggedItem);
 
-        if (firstState === "revision" && articleNewState === "draft") {
-          lastArticleToSend = articleId;
-          modal.style.display = "block";
-        }
-
-        if (firstState !== articleNewState) {
-          changeState(articleId, articleNewState)
-            .then(() => {
-              const canDrag = canDraggValues[articleNewState] || defaultCanDrag;
-              draggedItem.setAttribute("draggable", canDrag ? "true" : "false");
-            })
-            .catch(() => {
-              itemsContainer.removeChild(draggedItem);
-              firstItemContainer.appendChild(draggedItem);
-
-              window
-                .Toastify({
-                  text: "No puedes modificar el estado de este artículo",
-                  position: "center",
-                  close: true,
-                  className: "toast",
-                  style: {
-                    background: "#b90f29",
-                  },
-                })
-                .showToast();
-            })
-            .finally(() => {
-              draggedItem = null;
-              firstState = null;
-              firstItemContainer = null;
-            });
-        }
+        if (firstState !== articleNewState) showModal(modalConfirmation);
       }
     });
   });
 
-  closeBtn.addEventListener("click", () => {
-    modal.style.display = "none";
+  // To close modal when click on close button
+  closeBtnMessage.addEventListener("click", () => closeModal(modalMessage));
+
+  closeBtnConfirmation.addEventListener("click", () => {
+    itemsContainer.removeChild(draggedItem);
+    firstItemContainer.appendChild(draggedItem);
+    closeModal(modalConfirmation);
   });
 
   sendMessageBtn.addEventListener("click", () => {
     sendMessage(lastArticleToSend, messageInput.value)
-      .then(() => {
-        window
-          .Toastify({
-            text: "Mensaje enviado correctamente",
-            position: "center",
-            close: true,
-            className: "toast",
-            style: {
-              background: "#0f9d58",
-            },
-          })
-          .showToast();
-      })
-      .catch(() => {
-        window
-          .Toastify({
-            text: "Error al enviar el mensaje",
-            position: "center",
-            close: true,
-            className: "toast",
-            style: {
-              background: "#b90f29",
-            },
-          })
-          .showToast();
-      })
+      .then(() => showSuccessToast("Mensaje enviado correctamente"))
+      .catch(() => showErrorToast("Error al enviar el mensaje"))
       .finally(() => {
         lastArticleToSend = null;
-        modal.style.display = "none";
+        closeModal(modalMessage);
       });
   });
 
-  dontSendMessageBtn.addEventListener("click", () => {
-    modal.style.display = "none";
+  confirmBtn.addEventListener("click", () => {
+    // If the article is in revision state and the new state is draft, show modal to send message
+    if (firstState === "revision" && articleNewState === "draft") {
+      lastArticleToSend = articleId;
+      showModal(modalMessage);
+    }
+
+    if (firstState === articleNewState) return;
+
+    changeState(articleId, articleNewState)
+      .then(() => {
+        const canDrag = canDraggValues[articleNewState] || defaultCanDrag;
+        draggedItem.setAttribute("draggable", canDrag ? "true" : "false");
+        showSuccessToast("Estado del artículo actualizado correctamente");
+      })
+      .catch(() => {
+        itemsContainer.removeChild(draggedItem);
+        firstItemContainer.appendChild(draggedItem);
+        showErrorToast("No puedes modificar el estado de este artículo");
+      })
+      .finally(() => {
+        draggedItem = null;
+        firstState = null;
+        firstItemContainer = null;
+      });
+
+    closeModal(modalConfirmation);
   });
+
+  dontConfirmBtn.addEventListener("click", () => {
+    itemsContainer.removeChild(draggedItem);
+    firstItemContainer.appendChild(draggedItem);
+    closeModal(modalConfirmation);
+  });
+
+  dontSendMessageBtn.addEventListener("click", () => closeModal(modalMessage));
 });

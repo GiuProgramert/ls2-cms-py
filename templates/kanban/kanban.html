@@ -21,7 +21,9 @@
             draggable="{% if is_autor or is_admin or not article.category.is_moderated %}true{% else %}false{% endif %}" 
             data-id="{{ article.id }}"
           >
-            <p>{{ article.title }}</p>
+            <a href="{% url 'article-detail' article.id %}?from=article-list" target="_blank">
+              <p>{{ article.title }}</p>
+            </a>
             <div class="line">
               <i class="fa-regular fa-user"></i>
               <p>{{ article.autor.username }}</p>
@@ -177,7 +179,7 @@
     </div>
   </div>
 
-  <!-- The Modal -->
+  <!-- Modal Message -->
   <div id="modalMessage" class="modal">
 
     <!-- Modal content -->
@@ -189,6 +191,18 @@
       <button id="dontSend">No envíar mensaje</button>
     </div>
 
+  </div>
+
+  <!-- Modal Confirmation -->
+  <div id="modalConfirmation" class="modal">
+      
+      <!-- Modal content -->
+      <div class="modal-content">
+        <span class="close" id="closeModalConfirmation">&times;</span>
+        <h3>¿Estás seguro de que deseas cambiar el estado de esta tarea?</h3>
+        <button id="confirm">Confirmar</button>
+        <button id="dontConfirm">Cancelar</button>
+      </div>
   </div>
 
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
