@@ -23,6 +23,9 @@ from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count,F
 from notification.utils import send_email
+import csv
+
+
 
 def home(request):
     """
@@ -1204,3 +1207,35 @@ def sold_categories(request):
             'date_range': date_range  # Pass the selected date range to the template
         }
     )
+
+@login_required
+def download_sold_categories(request):
+    if not request.user.tiene_permisos([PermissionEnum.VER_CATEGORIAS_PAGO]):
+        return redirect('forbidden')
+
+    # Filter the payments by the date range (optional, depending on your logic)
+    payments = Payment.objects.filter(status="completed")
+
+    # Filter categories that have been paid for (type 'pay') and have associated payments
+    paid_categories = Category.objects.filter(
+        payment__in=payments, 
+        type=CategoryType.PAY.value
+    ).distinct()
+
+    # Create a response object and set the content type to CSV
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="categorias_vendidas.csv"'
+
+    # Create a CSV writer object
+    writer = csv.writer(response)
+
+    # Write the header row, including the 'Fecha de Compra' (Purchase Date)
+    writer.writerow(['Categoria', 'Comprador', 'Fecha de Compra'])
+
+    # Iterate over the paid categories and write the category, buyer username, and purchase date
+    for category in paid_categories:
+        category_payments = payments.filter(category=category)
+        for payment in category_payments:
+            writer.writerow([category.name, payment.user.username, payment.date_paid.strftime('%Y-%m-%d %H:%M:%S')])
+
+    return response
