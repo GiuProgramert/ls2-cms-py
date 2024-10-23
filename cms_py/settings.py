@@ -171,7 +171,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MDEDITOR_CONFIGS = {
     "default": {
         # 'width': '90% ',  # Custom edit box width
-        "height": 500,  # Custom edit box height
+        "height": 700,  # Custom edit box height
         "toolbar": [
             "undo",
             "redo",
