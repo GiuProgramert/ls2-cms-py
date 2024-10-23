@@ -23,6 +23,7 @@ import kanban.views as kanban
 from django.conf.urls.static import static
 from django.urls import path, include
 from django.conf import settings
+from article.custom_mdeditor_views import CustomUploadView
 
 urlpatterns = [
     path(
@@ -40,9 +41,11 @@ urlpatterns = [
     path(r"article/", include("article.urls_articles")),
     path(r"categories/", include("article.urls_categories")),
     path(r"roles/", include("roles.urls")),
-    path(r"mdeditor/", include("mdeditor.urls")),
     path(r"kanban/", include("kanban.urls")),
     path(r"users/", include("user.urls")),
+    # Mdeditor url config
+    path('mdeditor/uploads/', CustomUploadView.as_view(), name='mdeditor_upload'),
+    path('mdeditor/', include('mdeditor.urls')),
 ]
 
 if settings.DEBUG:
