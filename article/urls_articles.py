@@ -42,5 +42,9 @@ urlpatterns = [
     path("<int:pk>/like/", views.like_article, name="like-article"),
     path("<int:pk>/dislike/", views.dislike_article, name="dislike-article"),
     path("sold-categories/", views.sold_categories, name="sold-categories"),
-    path("sold-categories/download/", views.download_sold_categories, name="download-sold-categories"),
+    path(
+        "sold-categories/download/",
+        views.download_sold_categories,
+        name="download-sold-categories",
+    ),
 ]
