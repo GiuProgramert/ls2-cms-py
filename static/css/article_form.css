@@ -9,3 +9,7 @@
     max-width: 1200px; /* Aumentar el ancho máximo para pantallas más grandes */
   }
 }
+
+.editormd-image-dialog {
+  height: auto !important;
+}
