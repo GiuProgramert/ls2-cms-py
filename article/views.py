@@ -13,7 +13,7 @@ from article.models import (
     CategoryType,
     ArticleVote,
     ArticlesToPublish,
-    Payment
+    Payment,
 )
 from article.forms import *
 from django.db.models import Avg
@@ -21,10 +21,9 @@ from collections import defaultdict
 from django.db.models import Q
 from datetime import timedelta
 from django.utils import timezone
-from django.db.models import Count,F
+from django.db.models import Count, F
 from notification.utils import send_email
 import csv
-
 
 
 def home(request):
@@ -50,7 +49,6 @@ def home(request):
             if category.type != CategoryType.FREE.value
         ]
     else:
-        
         # Obtener todos los pagos del usuario en una sola consulta
         user_payments = Payment.objects.filter(user=request.user)
 
@@ -58,7 +56,6 @@ def home(request):
         payment_status_by_category = defaultdict(lambda: None)
         for payment in user_payments:
             payment_status_by_category[payment.category_id] = payment.status
-
 
         permissions = [
             permiso.name
@@ -109,12 +106,12 @@ def home(request):
         selected_category = form.cleaned_data.get("category")
         if selected_category:
             articles = articles.filter(category=selected_category)
-        
+
         # Filtrar por tipo de categoría
         selected_category_type = form.cleaned_data.get("category_type")
         if selected_category_type and selected_category_type != "all":
             articles = articles.filter(category__type=selected_category_type)
-    
+
     # Filtrar por rango de tiempo
     if time_range != "all":
         now = timezone.now()
@@ -128,7 +125,7 @@ def home(request):
             articles = articles.filter(published_at__gte=now - timedelta(days=30))
         elif time_range == "365d":
             articles = articles.filter(published_at__gte=now - timedelta(days=365))
-    
+
     # Filtrar por búsqueda
     if search_query:
         articles = articles.filter(
@@ -145,7 +142,7 @@ def home(request):
             article.avg_rating = round(avg_rating, 1)
         else:
             article.avg_rating = None  # Or set it to 0 if you prefer
-    
+
     # Ordenar los resultados
     if order_by == "published_at":
         # Asegurarse de que los más nuevos se muestren primero cuando está en descendente
@@ -156,7 +153,6 @@ def home(request):
     elif order_direction == "desc":
         order_by = f"-{order_by}"
     articles = articles.order_by(order_by)
-
 
     authenticated = request.user.is_authenticated
 
@@ -176,7 +172,6 @@ def home(request):
             "time_range": time_range,
         },
     )
-
 
 
 def forbidden(request):
@@ -472,9 +467,8 @@ def article_detail(request, pk):
         user_vote = ArticleVote.objects.filter(
             article=article, user=request.user
         ).first()
-        
-        if article.state == ArticleStates.PUBLISHED.value:
 
+        if article.state == ArticleStates.PUBLISHED.value:
             # Handle like/dislike and rating submissions
             if request.method == "POST":
                 if "rating" in request.POST:
@@ -1110,7 +1104,7 @@ def payment_success(request, pk):
             # Actualizar el estado del pago en la base de datos
             payment.status = "completed"
             payment.save()
-            
+
             # Send confirmation email to the purchaser
             subject = f"Confirmacion de compra por la categoria: {category.name}"
             html_content = f"""
@@ -1121,11 +1115,7 @@ def payment_success(request, pk):
             """
 
             # Send the email using the send_email function
-            send_email(
-                to=user.email,
-                subject=subject,
-                html=html_content
-            )
+            send_email(to=user.email, subject=subject, html=html_content)
 
             # Redirigir a la página de éxito
             return render(request, "article/success.html", {"category": category})
@@ -1154,45 +1144,48 @@ def payment_cancel(request, pk):
     payment.save()
     return render(request, "article/cancel.html")
 
+
 @login_required
 def sold_categories(request):
     if not request.user.tiene_permisos([PermissionEnum.VER_CATEGORIAS_PAGO]):
-        return redirect('forbidden')
+        return redirect("forbidden")
 
     # Get the selected date range from the request (default is 'all')
-    date_range = request.GET.get('date_range', 'all')
+    date_range = request.GET.get("date_range", "all")
 
     # Set the filter for the date range
     filter_kwargs = {}
-    if date_range == '24h':
-        filter_kwargs['date_paid__gte'] = timezone.now() - timedelta(hours=24)
-    elif date_range == '7d':
-        filter_kwargs['date_paid__gte'] = timezone.now() - timedelta(days=7)
-    elif date_range == '30d':
-        filter_kwargs['date_paid__gte'] = timezone.now() - timedelta(days=30)
-    elif date_range == '365d':
-        filter_kwargs['date_paid__gte'] = timezone.now() - timedelta(days=365)
+    if date_range == "24h":
+        filter_kwargs["date_paid__gte"] = timezone.now() - timedelta(hours=24)
+    elif date_range == "7d":
+        filter_kwargs["date_paid__gte"] = timezone.now() - timedelta(days=7)
+    elif date_range == "30d":
+        filter_kwargs["date_paid__gte"] = timezone.now() - timedelta(days=30)
+    elif date_range == "365d":
+        filter_kwargs["date_paid__gte"] = timezone.now() - timedelta(days=365)
 
     # Filter payments based on the selected date range and status 'completed'
     payments = Payment.objects.filter(status="completed", **filter_kwargs)
 
     # Group by category name and count the number of payments associated with each category
     categories_sales = (
-        payments
-        .values('category__name')  # Group by category name
-        .annotate(total_sales=Count('category'))  # Count the number of purchases per category
-        .order_by('-total_sales')  # Order from most sold to least sold
+        payments.values("category__name")  # Group by category name
+        .annotate(
+            total_sales=Count("category")
+        )  # Count the number of purchases per category
+        .order_by("-total_sales")  # Order from most sold to least sold
     )
 
     # Extract category names and corresponding sales for the graph
-    categories = [item['category__name'] for item in categories_sales]
-    sales = [item['total_sales'] for item in categories_sales]
+    categories = [item["category__name"] for item in categories_sales]
+    sales = [item["total_sales"] for item in categories_sales]
 
     # Get the list of users who bought each category
     buyers_per_category = {
-        category['category__name']: list(
-            payments.filter(category__name=category['category__name'])
-            .values_list('user__username', flat=True)
+        category["category__name"]: list(
+            payments.filter(category__name=category["category__name"]).values_list(
+                "user__username", flat=True
+            )
         )
         for category in categories_sales
     }
@@ -1201,41 +1194,47 @@ def sold_categories(request):
         request,
         "article/sold_categories.html",
         {
-            'categories': categories,
-            'sales': sales,
-            'buyers_per_category': buyers_per_category,
-            'date_range': date_range  # Pass the selected date range to the template
-        }
+            "categories": categories,
+            "sales": sales,
+            "buyers_per_category": buyers_per_category,
+            "date_range": date_range,  # Pass the selected date range to the template
+        },
     )
+
 
 @login_required
 def download_sold_categories(request):
     if not request.user.tiene_permisos([PermissionEnum.VER_CATEGORIAS_PAGO]):
-        return redirect('forbidden')
+        return redirect("forbidden")
 
     # Filter the payments by the date range (optional, depending on your logic)
     payments = Payment.objects.filter(status="completed")
 
     # Filter categories that have been paid for (type 'pay') and have associated payments
     paid_categories = Category.objects.filter(
-        payment__in=payments, 
-        type=CategoryType.PAY.value
+        payment__in=payments, type=CategoryType.PAY.value
     ).distinct()
 
     # Create a response object and set the content type to CSV
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="categorias_vendidas.csv"'
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="categorias_vendidas.csv"'
 
     # Create a CSV writer object
     writer = csv.writer(response)
 
     # Write the header row, including the 'Fecha de Compra' (Purchase Date)
-    writer.writerow(['Categoria', 'Comprador', 'Fecha de Compra'])
+    writer.writerow(["Categoria", "Comprador", "Fecha de Compra"])
 
     # Iterate over the paid categories and write the category, buyer username, and purchase date
     for category in paid_categories:
         category_payments = payments.filter(category=category)
         for payment in category_payments:
-            writer.writerow([category.name, payment.user.username, payment.date_paid.strftime('%Y-%m-%d %H:%M:%S')])
+            writer.writerow(
+                [
+                    category.name,
+                    payment.user.username,
+                    payment.date_paid.strftime("%Y-%m-%d %H:%M:%S"),
+                ]
+            )
 
     return response
