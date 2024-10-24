@@ -74,6 +74,7 @@ class Category(models.Model):
     state = models.BooleanField(default=True)
     is_moderated = models.BooleanField(default=False)
     price = models.FloatField(default=0.0, null=True)
+    createdBy = models.IntegerField(null=True)
 
     def has_purchased_category(self, user):
         """
