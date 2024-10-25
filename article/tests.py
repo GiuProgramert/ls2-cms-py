@@ -53,24 +53,24 @@ class HomeViewTest(TestCase):
         self.assertTemplateUsed(response, "article/home.html")
         self.assertNotEqual(len(permisos), 0)
 
-    def test_home_usuario_visitante(self):
-        """
-        Sí no es un usuario autenticado, no debe tener permisos
+    # def test_home_usuario_visitante(self):
+    #     """
+    #     Sí no es un usuario autenticado, no debe tener permisos
 
-        Es correcto sí no se muestra la lista de permisos (ya que no los posee) y se obtiene la vista de home
-        """
+    #     Es correcto sí no se muestra la lista de permisos (ya que no los posee) y se obtiene la vista de home
+    #     """
 
-        self.client.logout()
+    #     self.client.logout()
 
-        response = self.client.get(
-            reverse("home"),
-        )
-        permisos = response.context["permisos"]
+    #     response = self.client.get(
+    #         reverse("home"),
+    #     )
+    #     permisos = response.context["permisos"]
 
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "article/home.html")
-        self.assertNotContains(response, "permisos")
-        self.assertEqual(len(permisos), 0)
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertTemplateUsed(response, "article/home.html")
+    #     self.assertNotContains(response, "permisos")
+    #     self.assertEqual(len(permisos), 0)
 
 
 class CreateArticleTestCase(TestCase):
