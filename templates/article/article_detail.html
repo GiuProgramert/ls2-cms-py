@@ -142,7 +142,15 @@
           </tr>
           <tr>
             <th class="text-left p-4">Categoría</th>
-            <td class="p-4">{{ article.category.name }}</td>
+            <td class="p-4">{{ article.category.name }}
+              <button class="favorite-btn" data-category-id="{{ article.category.id }}">
+                {% if article.category.id in favorite_categories %}
+                    💖
+                {% else %}
+                    🤍
+                {% endif %}
+              </button>
+            </td>
           </tr>
           <tr class="bg-gray-100">
             <th class="text-left p-4">Autor</th>
@@ -275,4 +283,45 @@
 </div>
 <script id="dsq-count-scr" src="//cmspy.disqus.com/count.js" async></script>
 <script src="{% static 'scripts/article_actions.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const favoriteButtons = document.querySelectorAll('.favorite-btn');
+
+    favoriteButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const categoryId = this.getAttribute('data-category-id');
+        
+        fetch("{% url 'toggle-favorite-category' 0 %}".replace('/0/', `/${categoryId}/`), {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+          },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'added') {
+                this.innerHTML = '💖';
+            } else if (data.status === 'removed') {
+                this.innerHTML = '🤍';
+            }
+        });
+      });
+    });
+  });
+  
+
+
+  window.addEventListener("pageshow", function(event) {
+    if (event.persisted || sessionStorage.getItem('reloadAfterBack')) {
+        window.location.reload();
+        sessionStorage.removeItem('reloadAfterBack');
+    }
+  });
+
+  window.addEventListener("beforeunload", function() {
+      sessionStorage.setItem('reloadAfterBack', 'true');
+  });
+
+</script>
 {% endblock content %}

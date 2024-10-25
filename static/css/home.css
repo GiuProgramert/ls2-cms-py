@@ -350,3 +350,21 @@ sdffsdddddddddddddddddddddddddddddddddddddddd
 .toggle-order:hover {
   background-color: #0056b3;
 }
+
+.section-header {
+  margin-top: 20px;
+  padding: 10px;
+  text-align: center;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+.favorite-header {
+  background-color: #f2f8f3;  /* Un verde claro */
+  color: #2e7d32;  /* Un verde más oscuro para el texto */
+}
+
+.normal-header {
+  background-color: #f0f0f0;  /* Un gris claro */
+  color: #616161;  /* Un gris más oscuro para el texto */
+}

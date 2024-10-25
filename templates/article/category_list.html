@@ -39,7 +39,16 @@
     {% if categories %}
         {% for category in categories %}
             <div class="category-item">
-                <a href="{% url 'category-detail' category.id %}" class="category">{{ category.name }}</a>
+                <div class="category-row">
+                    <a href="{% url 'category-detail' category.id %}" class="category">{{ category.name }}</a>
+                    <button class="favorite-btn" data-category-id="{{ category.id }}">
+                        {% if category.id in favorite_categories %}
+                            💖
+                        {% else %}
+                            🤍
+                        {% endif %}
+                    </button>
+                </div>
                 <p>Tipo: {{ category.get_type_display }}</p>
             </div>
         {% endfor %}
@@ -49,5 +58,48 @@
 
     <a href="{% url 'category-create' %}" class="button">Crear nueva categoría</a>
 </div>
-
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const favoriteButtons = document.querySelectorAll('.favorite-btn');
+    
+        favoriteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const categoryId = this.getAttribute('data-category-id');
+                
+                fetch("{% url 'toggle-favorite-category' 0 %}".replace('/0/', `/${categoryId}/`), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'), 
+                        'Content-Type': 'application/json'
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'added') {
+                        this.innerHTML = '💖';
+                    } else if (data.status === 'removed') {
+                        this.innerHTML = '🤍';
+                    }
+                });
+            });
+        });
+    
+        // Función para obtener el CSRF token de las cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
 {% endblock content %}

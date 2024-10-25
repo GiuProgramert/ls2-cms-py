@@ -90,6 +90,26 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+    
+class FavoriteCategory(models.Model):
+    """
+    Modelo que representa la relación entre un usuario y sus categorías favoritas.
+
+    Attributes:
+        user (ForeignKey): Referencia al usuario que ha seleccionado una categoría como favorita.
+        category (ForeignKey): Referencia a la categoría seleccionada como favorita por el usuario.
+
+    Meta:
+        unique_together (tuple): Evita la duplicación de combinaciones de usuario y categoría, asegurando que un usuario no pueda tener la misma categoría marcada como favorita más de una vez.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorite_categories')
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'category')  # Evitar duplicados
+
+    def __str__(self):
+        return f"{self.user.username} - {self.category.name}"
 
 
 class ArticleStates(Enum):
