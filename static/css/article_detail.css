@@ -8,86 +8,262 @@
   }
 }
 
-.article-details-container, .article-header {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.article-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  width: 500px;
-}
-
-.article-header {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
+/* Estilos generales para el contenedor principal */
+.article-details-container {
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 20px;
+  background-color: #f9fafb; /* Fondo claro */
 }
 
+/* Título del artículo */
+.article-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: #1a202c; /* Texto oscuro */
+}
+
+/* Descripción del artículo */
+.article-description {
+  font-size: 1rem;
+  color: #4a5568; /* Texto gris */
+}
+
+/* Tablas */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #e2e8f0; /* Borde gris claro */
+}
+
+th {
+  background-color: #edf2f7; /* Fondo gris para encabezados */
+  font-weight: 600;
+}
+
+tr:nth-child(even) {
+  background-color: #f7fafc; /* Fondo alternado para filas pares */
+}
+
+/* Estilos para los botones */
+.btn {
+  padding: 8px 16px;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-success {
+  background-color: #48bb78; /* Verde */
+  color: #fff;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+
+.btn-success:hover {
+  background-color: #38a169; /* Verde más oscuro */
+}
+
+.btn-danger {
+  background-color: #f56565; /* Rojo */
+  color: #fff;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+
+.btn-danger:hover {
+  background-color: #e53e3e; /* Rojo más oscuro */
+}
+
+.btn-primary {
+  background-color: #3182ce; /* Azul */
+  color: #fff;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #2b6cb0; /* Azul más oscuro */
+}
+
+/* Enlaces */
 .detail-link {
-  padding: 0.75rem 1rem; /* Espaciado interno */
-  background-color: #3182ce; /* Fondo azul (similar a Tailwind's blue-600) */
-  color: #ffffff; /* Color de texto blanco */
-  border: none; /* Sin borde */
-  border-radius: 4px; /* Bordes redondeados */
-  font-size: 1rem; /* Tamaño de fuente */
-  font-weight: 600; /* Texto en negrita */
-  cursor: pointer; /* Cambiar el cursor al pasar sobre el botón */
-  transition: background-color 0.3s; /* Transición suave para el fondo */
-  text-decoration: none; /* Sin subrayado */
+  color: #3182ce;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
 }
 
 .detail-link:hover {
-  background-color: #2b6cb0; /* Cambiar fondo al pasar el mouse (similar a Tailwind's blue-700) */
+  color: #2b6cb0; /* Azul más oscuro */
 }
 
-.article-title {
-    color: #1a202c; /* Color del texto (similar a Tailwind's gray-900) */
-    margin-bottom: 0.5rem; /* Margen inferior para separar del formulario */
+/* Formulario de votación */
+select {
+  padding: 6px 12px;
+  border: 1px solid #cbd5e0; /* Borde gris */
+  border-radius: 0.375rem;
+  font-size: 1rem;
 }
 
+select:focus {
+  border-color: #3182ce; /* Azul en focus */
+  outline: none;
+  box-shadow: 0 0 0 1px #3182ce;
+}
+
+/* Disposición general del artículo */
 .article-body {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  line-height: 1.75;
+  font-size: 1rem;
+  color: #2d3748; /* Texto oscuro */
+}
+
+/* Estilos para la sección de comentarios */
+#disqus_thread {
+  margin-top: 2rem;
+}
+
+
+/* Enlaces estilo botón */
+a.detail-link {
+  display: inline-block; /* Hace que el enlace se comporte como un botón de bloque en línea */
+  padding: 10px 20px; /* Espaciado interno */
+  background-color: #3182ce; /* Color de fondo */
+  color: white; /* Color de texto */
+  font-size: 1rem; /* Tamaño del texto */
+  font-weight: 600; /* Peso del texto */
+  border-radius: 6px; /* Bordes redondeados */
+  text-align: center; /* Centra el texto */
+  text-decoration: none; /* Elimina el subrayado */
+  transition: background-color 0.3s ease, transform 0.2s ease; /* Transición suave para efectos */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra para darle efecto de elevación */
+}
+
+a.detail-link:hover {
+  background-color: #2b6cb0; /* Color de fondo más oscuro al pasar el ratón */
+  transform: translateY(-2px); /* Efecto de "flotante" cuando se hace hover */
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15); /* Aumenta la sombra al hacer hover */
+}
+
+a.detail-link:active {
+  background-color: #2c5282; /* Color cuando se hace clic */
+  transform: translateY(0); /* Vuelve a la posición original al hacer clic */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra reducida al hacer clic */
+}
+
+/* Estilo general para los botones */
+button {
+  padding: 10px 20px; /* Espaciado interno */
+  background-color: #3182ce; /* Color de fondo */
+  color: white; /* Color de texto */
+  font-size: 1rem; /* Tamaño del texto */
+  font-weight: 600; /* Peso del texto */
+  border: none; /* Elimina los bordes predeterminados */
+  border-radius: 6px; /* Bordes redondeados */
+  cursor: pointer; /* Cambia el cursor a mano apuntadora */
+  transition: background-color 0.3s ease, transform 0.2s ease; /* Transición suave para efectos */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+}
+
+/* Estilo al pasar el ratón por encima (hover) */
+button:hover {
+  background-color: #2b6cb0; /* Color de fondo más oscuro al hacer hover */
+  transform: translateY(-2px); /* Efecto de "flotante" al hacer hover */
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15); /* Aumenta la sombra */
+}
+
+/* Estilo al hacer clic (active) */
+button:active {
+  background-color: #2c5282; /* Color cuando se hace clic */
+  transform: translateY(0); /* Regresa a la posición original */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra reducida al hacer clic */
+}
+
+/* Botón deshabilitado */
+button:disabled {
+  background-color: #a0aec0; /* Color de fondo para botones deshabilitados */
+  cursor: not-allowed; /* Cambia el cursor para indicar que no se puede interactuar */
+  box-shadow: none; /* Elimina la sombra */
+}
+
+/* Tamaños personalizados para botones */
+button.small {
+  padding: 6px 12px;
+  font-size: 0.875rem;
+}
+
+button.large {
+  padding: 12px 24px;
+  font-size: 1.25rem;
+}
+
+/* The Modal (background) */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0, 0, 0); /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+.line {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+/* Modal Content/Box */
+.modal-content {
+  background-color: #fefefe;
   border-radius: 12px;
-  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra reducida al hacer clic */
+  margin: 13% auto; /* 15% from the top and centered */
+  padding: 10px 20px;
+
+  width: 80%; /* Could be more or less, depending on screen size */
 }
 
-.article-description {
-  margin-bottom: 0;
+.message {
+  border-radius: 12px;
+  border: 1px rgb(213, 212, 212) solid;
+  margin-bottom: 10px;
+  padding: 10px;
 }
 
-.article-body img {
-  object-fit: contain;
-  width: 1000px;
-  margin-top: 20px;
+.message:focus {
+  outline: none;
+  border: 1px gray solid;
+  
 }
 
-.article-body h1, h2, h3, h4, h5, h6 {
-  color: black;
-}
-
-.article-body p {
-  margin-bottom: 0.8rem;
-}
-
-.article-body blockquote {
-  background-color: #f7fafc; /* Fondo gris claro (similar a Tailwind's gray-100) */
-  border-left: 4px solid #3182ce; /* Borde izquierdo azul (similar a Tailwind's blue-600) */
-  padding: 1rem; /* Espaciado interno */
-  margin: 1rem 0; /* Margen superior e inferior */
-}
-
-.article-body table {
+/* The Close Button */
+.close {
+  color: #aaa;
   width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
+  display: flex;
+  justify-content: flex-end;
+  font-size: 28px;
+  font-weight: bold;
 }
 
-.article-body th, .article-body td {
-  border: 1px solid #e2e8f0; /* Borde gris claro (similar a Tailwind's gray-200) */
-  padding: 0.5rem; /* Espaciado interno */
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
 }
-

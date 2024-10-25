@@ -2,6 +2,7 @@ from django import forms
 from .models import CustomUser, Role
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import PasswordChangeForm
+from roles.models import Role
 
 
 class CustomPasswordChangeForm(PasswordChangeForm):
@@ -115,3 +116,36 @@ class ProfileForm(forms.ModelForm):
             "username": "Requerido. 150 caracteres o menos. Letras, dígitos y @/./+/-/_ solamente.",
             "phone": "Ingresa tu número de teléfono.",
         }
+
+
+class UserSearchForm(forms.Form):
+    """
+    Formulario para buscar y filtrar usuarios.
+
+    Campos:
+        search_term (CharField): Campo de texto opcional para ingresar el término de búsqueda por nombre o email.
+        order_by (ChoiceField): Campo de selección que permite ordenar los resultados por nombre o fecha de creación.
+        filter_role (ChoiceField): Campo de selección dinámico que se llena con los roles existentes en el sistema.
+    """
+
+    search_term = forms.CharField(
+        max_length=255,
+        required=False,
+        label="Buscar usuario",
+        widget=forms.TextInput(
+            attrs={"placeholder": "Ingrese el nombre o email del usuario"}
+        ),
+    )
+
+    filter_role = forms.ChoiceField(
+        required=False, label="Filtrar por rol", widget=forms.Select
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Poblar dinámicamente el campo filter_role con los roles existentes
+        roles = Role.objects.all()
+        role_choices = [("all", "Todos")] + [
+            (role.name, role.name) for role in roles
+        ]  # 'all' es la opción por defecto
+        self.fields["filter_role"].choices = role_choices

@@ -24,10 +24,11 @@ class PermissionEnum(str, Enum):
 
     VER_INICIO = "ver_inicio"
     VER_CATEGORIAS_SUSCRIPTOR = "ver_categorias_suscriptor"
-    VER_CATEGORIAS_PAGO = "ver_categorias_pago"
+    VER_CATEGORIAS_PAGO = "ver_categorias_pago"  # se utiliza para ver todo lo comprado por cms, permiso del financiero
     CREAR_ARTICULOS = "crear_articulos"
-    EDITAR_ARTICULOS = "editar_articulos"
-    MODERAR_ARTICULOS = "moderar_articulos"
+    EDITAR_ARTICULOS = "editar_articulos"  # editar articulos en edicion
+    EDITAR_ARTICULOS_BORRADOR = "editar_articulos_borrador"
+    MODERAR_ARTICULOS = "moderar_articulos"  # permiso para publicar
     PUBLICAR_COMENTARIOS = "publicar_comentarios"
     LEER_COMENTARIOS = "leer_comentarios"
     EVALUAR_ARTICULOS = "evaluar_articulos"

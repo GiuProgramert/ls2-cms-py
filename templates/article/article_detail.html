@@ -1,4 +1,4 @@
-{% extends "base.html" %} 
+{% extends "base.html" %}  
 
 {% block headblock %}
 {% load static %}
@@ -11,76 +11,268 @@
 
 <div class="article-details-container">
 
-    <div class="article-header">
-      <h1 class="article-title">{{ article.title }}</h1>
-
-      <div class="article-actions">
-
-        {% if can_edit and article.state != 'r' %}
-          <a href="{% url 'article-to-draft' pk=article.id %}" class="detail-link">Pasar a Borrador</a>
-        {% endif %}
-
-        {% if can_edit and article.state == 'd' %}
-          <a href="{% url 'article-to-revision' pk=article.id %}" class="detail-link">Pasar a Revisión</a>
-        {% endif %}
-
-        {% if can_publish and article.state == 'r' %}
-            <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
-        {% endif %}
-        
-        {% if not is_moderated_category and article.state == 'r' %}
-            <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
-        {% endif %}
-
-        {% if can_edit and article.state != 'i' %}
-          <a href="{% url 'article-to-inactive' pk=article.id %}" class="detail-link">Inactivar</a>
-        {% endif %}
-        
-        {% if can_edit and article.state != 'p' %}
-          <a href="{% url 'article-update' article.id %}" class="detail-link">Editar</a>
-        {% endif %}
+  <!-- Modal Structure -->
+  <div id="modalMessage" class="modal">
+      <div class="modal-content">
+          <span class="close" id="closeModal">&times;</span>
+          <h3>Agrega el motivo por el que será modificado el estado de esta tarea</h3>
+          <textarea name="message" id="message" class="message" rows="15" cols="150" placeholder="Esta parte está bien pero podrías mejorarla..."></textarea>
+          <button id="send">Enviar mensaje</button>
+          <button id="dontSend">No enviar mensaje</button>
       </div>
+  </div>
 
-      <div>
-        <h2 class="article-title">Descripción</h2>
-        <p class="article-description">{{ article.description }}</p>
-      </div>
+  <div class="article-actions">
+    {% if article.state == 'r' and can_edit_as_editor %}
+      <a href="{% url 'article-update' article.id %}" class="detail-link">Editar como editor</a>
+    {% elif article.state == 'd' and can_edit_as_author %}
+      <a href="{% url 'article-update' article.id %}" class="detail-link">Editar como autor</a>
+    {% endif %}
 
-      <div>
-        <h2 class="article-title">Categoría</h2>
-        <p class="article-description">{{ article.category.name }}</p>
-      </div>
+    {% if can_edit_as_editor and article.state == 'r' %}
+      <a href="{% url 'article-to-draft' pk=article.id %}" class="detail-link pasar-borrador">Pasar a Borrador</a>
+    {% endif %}
 
-      <div>
-        <h2 class="article-title">Estado</h2>
-        <p class="article-description">
-          {% if article.state == 'd' %}
-            Borrador
-          {% elif article.state == 'p' %}
-            Publicado
-          {% elif article.state == 'i' %}
-            Inactivo
-          {% elif article.state == 'r' %}
-            Revisión
-          {% endif %}
-        </p>
-      </div>
-    </div>
+    {% if can_publish and article.state == 'e' or can_edit_as_author and article.state == 'd' %}
+      <a href="{% url 'article-to-revision' pk=article.id %}" class="detail-link">Pasar a Revisión</a>
+    {% endif %}
 
-    <div class="article-body">{{ article_render_content|safe }}</div>
+    {% if can_edit_as_editor and article.state == 'r' %}
+      <a href="{% url 'article-to-edited' pk=article.id %}" class="detail-link">Pasar a Editado</a>
+    {% endif %}
 
-    <div class="article-history">
-      {% if can_edit %}
-        <a href="{% url 'article-update-history' article.id %}" class="detail-link">Ver historial de cambios</a>
+    
+    {% if can_publish or is_author %}
+      {% if not is_moderated_category and article.state != 'p' and is_author and article.state != 'i' %}
+        <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
+      {% elif article.state == 'e' and can_publish and is_moderated_category and article.state != 'i' %}
+        <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
+      {% elif not is_moderated_category and article.state != 'p' and can_publish and article.state != 'i' %}
+        <a href="{% url 'article-to-published' pk=article.id %}" class="detail-link">Publicar</a>
       {% endif %}
-      <a href="{% if request.GET.from == 'home' %}{% url 'home' %}{% else %}{% url 'article-list' %}{% endif %}" class="detail-link">
-        {% if request.GET.from == 'home' %}
-          Volver a la página principal
-        {% else %}
-          Volver a la lista
-        {% endif %}
-      </a>
-    </div>
-</div>
+    {% endif %}
 
+    <!-- Display Inactivate option only for Admin or Author roles -->
+    {% if can_inactivate and article.state != 'i' %}
+      <a href="{% url 'article-to-inactive' pk=article.id %}" class="detail-link">Inactivar</a>
+    {% endif %}
+    
+    <br>
+    <br>
+    <br>
+
+    {% if can_publish or is_author %}
+      {% if not is_moderated_category and article.state != 'p' and is_author and article.state != 'i' %}
+        <form method="POST" action="{% url 'article-to-published-schedule' pk=article.id %}" placeholder="Fecha de publicación">
+          {% csrf_token %}
+          <div>
+            {% if to_publish_date %}
+              <p>Fecha a publicar {{to_publish_date.to_publish_at}}</p>
+              <label for="to_publish_date">Cambiar fecha publicación : </label>
+              <input type="datetime-local" name="to_publish_date" id="to_publish_date" required>
+            {% else %}
+              <label for="to_publish_date">Fecha: </label>
+              <input type="datetime-local" name="to_publish_date" id="to_publish_date" required>
+            {% endif %}
+          </div>
+          <button type="submit" class="btn btn-primary">Programar publicación</button>
+        </form>
+      {% elif article.state == 'e' and is_author and is_moderated_category and article.state != 'i' %}
+      <form method="POST" action="{% url 'article-to-published-schedule' pk=article.id %}" placeholder="Fecha de publicación">
+        {% csrf_token %}
+        <div>
+          {% if to_publish_date %}
+            <p>Fecha a publicar {{to_publish_date.to_publish_at}}</p>
+            <label for="to_publish_date">Cambiar fecha publicación : </label>
+            <input type="datetime-local" name="to_publish_date" id="to_publish_date" required>
+          {% else %}
+            <label for="to_publish_date">Fecha: </label>
+            <input type="datetime-local" name="to_publish_date" id="to_publish_date" required>
+          {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary">Programar publicación</button>
+      </form>
+      {% elif article.state == 'e' and is_admin and is_moderated_category and article.state != 'i' %}
+        <form method="POST" action="{% url 'article-to-published-schedule' pk=article.id %}" placeholder="Fecha de publicación">
+          {% csrf_token %}
+          <div>
+            {% if to_publish_date %}
+              <p>Fecha a publicar {{to_publish_date.to_publish_at}}</p>
+              <label for="to_publish_date">Cambiar fecha publicación : </label>
+              <input type="datetime-local" name="to_publish_date" id="to_publish_date" required>
+            {% else %}
+              <label for="to_publish_date">Fecha: </label>
+              <input type="datetime-local" name="to_publish_date" id="to_publish_date" required>
+            {% endif %}
+          </div>
+          <button type="submit" class="btn btn-primary">Programar publicación</button>
+        </form>
+      {% elif not is_moderated_category and article.state != 'p' and is_admin and article.state != 'i' %}
+        <form method="POST" action="{% url 'article-to-published-schedule' pk=article.id %}" placeholder="Fecha de publicación">
+          {% csrf_token %}
+          <div>
+            {% if to_publish_date %}
+              <p>Fecha a publicar {{to_publish_date.to_publish_at}}</p>
+              <label for="to_publish_date">Cambiar fecha publicación : </label>
+              <input type="datetime-local" name="to_publish_date" id="to_publish_date" required>
+            {% else %}
+              <label for="to_publish_date">Fecha: </label>
+              <input type="datetime-local" name="to_publish_date" id="to_publish_date" required>
+            {% endif %}
+          </div>
+          <button type="submit" class="btn btn-primary">Programar publicación</button>
+        </form>
+      {% endif %}
+    {% endif %}
+
+  </div>
+  <br>
+  <br>
+
+    <!-- Título del artículo -->
+    <div class="article-header">
+      <h1 class="text-3xl font-bold mb-4">{{ article.title }}</h1>
+
+      <!-- Tabla con información del artículo -->
+      <table class="min-w-full table-auto bg-white shadow-md rounded-lg overflow-hidden">
+        <tbody>
+          <tr class="bg-gray-100">
+            <th class="text-left p-4">Descripción</th>
+            <td class="p-4">{{ article.description }}</td>
+          </tr>
+          <tr>
+            <th class="text-left p-4">Categoría</th>
+            <td class="p-4">{{ article.category.name }}</td>
+          </tr>
+          <tr class="bg-gray-100">
+            <th class="text-left p-4">Autor</th>
+            <td class="p-4">{{ article.autor.username }}</td>
+          </tr>
+          <tr>
+            <th class="text-left p-4">Estado</th>
+            <td class="p-4">
+              {{ article.get_state_display }}
+            </td>
+          </tr>
+          <tr class="bg-gray-100">
+            <th class="text-left p-4">Visualizaciones</th>
+            <td class="p-4">{{ article.views_number }}</td>
+          </tr>
+          {% if article.published_at %}
+          <tr class="bg-gray-100">
+            <th class="text-left p-4">Fecha de publicación</th>
+            <td class="p-4">{{ article.published_at }}</td>
+          </tr>
+          {% endif %}
+          <tr>
+            <th class="text-left p-4">Tags</th>
+            <td class="p-4">
+              {% if article.tags.all %}
+                {% for tag in article.tags.all %}
+                  <span class="tag">{{ tag.name }}</span>{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+              {% else %}
+                No hay tags asignados
+              {% endif %}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {% if article.state == 'p' %}
+        <!-- Votos -->
+        <div class="mt-8">
+          {% if authenticated %}
+            <h2 class="text-2xl font-semibold mb-4">Votos del artículo</h2>
+            <div class="flex items-center space-x-4">
+              <span class="text-lg">Me gusta: {{ article.likes_number }}</span>
+              <a href="{% url 'like-article' article.id %}" class="btn btn-success">👍</a>
+              <span class="text-lg">No me gusta: {{ article.dislikes_number }}</span>
+              <a href="{% url 'dislike-article' article.id %}" class="btn btn-danger">👎</a>
+            </div>
+            <br>
+          {% endif %}
+        </div>
+
+        <!-- Votar artículo -->
+        {% if authenticated %}
+          <div class="mt-8">
+            <h2 class="text-2xl font-semibold mb-4">Votar artículo</h2>
+            {% if user_rating %}
+              <p>Has calificado este artículo con {{ user_rating.rating }} estrellas.</p>
+              <form method="POST" class="mt-4">
+                {% csrf_token %}
+                <label for="rating">Cambiar calificación:</label>
+                <select name="rating" id="rating" class="border border-gray-300 rounded px-3 py-2">
+                  {% for i in "12345" %}
+                    <option value="{{ i }}" {% if user_rating.rating == i %}selected{% endif %}>{{ i }} Estrella{{ i|pluralize }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary ml-4">Actualizar</button>
+              </form>
+            {% else %}
+              <form method="POST" class="mt-4">
+                {% csrf_token %}
+                <label for="rating">Calificar:</label>
+                <select name="rating" id="rating" class="border border-gray-300 rounded px-3 py-2">
+                  {% for i in "12345" %}
+                    <option value="{{ i }}">{{ i }} Estrella{{ i|pluralize }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary ml-4">Enviar</button>
+              </form>
+            {% endif %}
+          </div>
+          <br>
+        {% endif %}
+      {% endif %}
+      
+      <!-- Promedio de calificación -->
+      <div class="mt-8">
+        <h2 class="text-2xl font-semibold mb-4">Promedio de calificación</h2>
+        {% if avg_rating %}
+          <p>Este artículo tiene una calificación promedio de {{ avg_rating }} estrellas.</p>
+        {% else %}
+          <p>Este artículo aún no tiene calificaciones.</p>
+        {% endif %}
+      </div>
+
+      <!-- Historial de cambios y enlaces de navegación -->
+      <div class="mt-8">
+        {% if can_edit %}
+          <a href="{% url 'article-update-history' article.id %}" class="detail-link">Ver historial de cambios</a>
+        {% endif %}
+        <a href="{% if request.GET.from == 'home' %}{% url 'home' %}{% else %}{% url 'article-list' %}{% endif %}" class="detail-link">
+          {% if request.GET.from == 'home' %}
+            Volver a la página principal
+          {% else %}
+            Volver a la lista
+          {% endif %}
+        </a>
+      </div>
+    </div>
+    <br>
+    <br>
+
+    <!-- Renderizado del contenido del artículo -->
+    <h2 class="text-2xl font-semibold mb-4">ARTICULO SOBRE: {{ article.title }}</h2>
+    <div class="article-body mt-12 bg-white p-8 rounded-lg shadow">{{ article_render_content|safe }}</div>
+
+    {% if article.state == 'p' %}
+      <!-- Sección de comentarios de Disqus -->
+      <div id="disqus_thread" class="mt-12"></div>
+      <script>
+          (function() { 
+            var d = document, s = d.createElement('script');
+            s.src = 'https://cmspy.disqus.com/embed.js';
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+          })();
+      </script>
+      <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    {% endif %}
+      
+</div>
+<script id="dsq-count-scr" src="//cmspy.disqus.com/count.js" async></script>
+<script src="{% static 'scripts/article_actions.js' %}"></script>
 {% endblock content %}

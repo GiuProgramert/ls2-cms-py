@@ -7,15 +7,31 @@
 {% block content %}
   <h2>Lista de Usuarios</h2>
 
-  <table class="form-table">
+  <!-- Formulario de búsqueda -->
+  <form method="get" action="{% url 'user-list' %}" class="search-form">
+    <div class="form-group" >
+      {{ form.search_term.label_tag }}
+      {{ form.search_term }}
+    </div>
+
+    <div class="form-group">
+      {{ form.filter_role.label_tag }}
+      {{ form.filter_role }}
+    </div>
+
+    <button type="submit" class="btn btn-primary">Buscar</button>
+  </form>
+
+  <table class="form-table" id="userTable">
     <thead>
       <tr>
-        <th>Nombre de Usuario</th>
-        <th>Email</th>
-        <th>Roles</th>
-        <th>Acciones</th>
+        <th data-order="username" data-label="Nombre de Usuario">Nombre de Usuario</th>
+        <th data-order="email" data-label="Email">Email</th>
+        <th data-order="roles" data-label="Roles">Roles</th>
+        <th data-label="Acciones">Acciones</th>  <!-- No tiene ordenamiento -->
       </tr>
     </thead>
+    
     <tbody>
       {% for user in users %}
       <tr>
@@ -34,13 +50,82 @@
         </td>
         <td>
           <a href="{% url 'assign_roles' user.pk %}" class="btn">Asignar Roles</a>
+          {% if user.is_active %}
+          <a href="{% url 'toggle-user-status' user.pk %}" class="btn btn-danger">Desactivar</a>
+          {% else %}
+          <a href="{% url 'toggle-user-status' user.pk %}" class="btn btn-success">Activar</a>
+          {% endif %}
         </td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="4">No hay usuarios disponibles.</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const table = document.getElementById('userTable');
+      const headers = table.querySelectorAll('th[data-order]');
+      let currentOrder = 'asc';
+
+      // Ordenar la tabla por la primera columna ('Nombre de Usuario') al cargar la página
+      const defaultHeader = table.querySelector('th[data-order="username"]');
+      const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+      // Ordenar las filas por defecto en orden ascendente
+      rows.sort((a, b) => {
+        const cellA = a.querySelector('td:nth-child(1)').innerText.toLowerCase();  // Columna 'Nombre de Usuario'
+        const cellB = b.querySelector('td:nth-child(1)').innerText.toLowerCase();
+
+        return cellA > cellB ? 1 : -1;  // Orden ascendente por defecto
+      });
+
+      // Actualizar la tabla con las filas ordenadas
+      table.querySelector('tbody').innerHTML = '';
+      rows.forEach(row => table.querySelector('tbody').appendChild(row));
+
+      // Mostrar la flecha ascendente por defecto
+      defaultHeader.innerHTML = defaultHeader.getAttribute('data-label') + ' &#9650;';
+
+      // Habilitar el click en los encabezados para ordenar
+      headers.forEach(header => {
+        header.addEventListener('click', function() {
+          const orderBy = this.getAttribute('data-order');
+          const rows = Array.from(table.querySelectorAll('tbody tr'));
+  
+          // Alternar la dirección de ordenamiento
+          currentOrder = currentOrder === 'asc' ? 'desc' : 'asc';
+  
+          // Remover las flechas existentes en los otros encabezados
+          headers.forEach(h => h.innerHTML = h.getAttribute('data-label'));
+  
+          // Agregar la flecha al encabezado actual
+          if (currentOrder === 'asc') {
+            this.innerHTML = this.getAttribute('data-label') + ' &#9650;';  // Flecha ascendente
+          } else {
+            this.innerHTML = this.getAttribute('data-label') + ' &#9660;';  // Flecha descendente
+          }
+  
+          // Ordenar las filas
+          rows.sort((a, b) => {
+            const cellA = a.querySelector(`td:nth-child(${this.cellIndex + 1})`).innerText.toLowerCase();
+            const cellB = b.querySelector(`td:nth-child(${this.cellIndex + 1})`).innerText.toLowerCase();
+  
+            if (currentOrder === 'asc') {
+              return cellA > cellB ? 1 : -1;
+            } else {
+              return cellA < cellB ? 1 : -1;
+            }
+          });
+  
+          // Remover las filas antiguas
+          table.querySelector('tbody').innerHTML = '';
+  
+          // Añadir las filas ordenadas
+          rows.forEach(row => {
+            table.querySelector('tbody').appendChild(row);
+          });
+        });
+      });
+    });
+  </script>
 {% endblock content %}

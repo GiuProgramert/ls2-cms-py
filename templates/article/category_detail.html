@@ -1,6 +1,7 @@
 {% extends "base.html" %} 
 {% block headblock %}
 {% load static %}
+<script src="https://js.stripe.com/v3/"></script>
 <link rel="stylesheet" href="{% static 'css/category_detail.css' %}">
 {% endblock headblock %}
 {% block content %}
@@ -12,9 +13,51 @@
 <p>Tipo: {{ category.get_type_display }}</p>
 <p>Estado: {{ category.state|yesno:"Activo,Inactivo" }}</p>
 <p>Moderado: {{ category.is_moderated|yesno:"Sí,No" }}</p>
+<p>Precio $: {{ category.price }}</p>
 
 <a href="{% url 'category-update' category.id %}">Editar</a>
 <a href="{% url 'category-delete' category.id %}">Eliminar</a>
+
 <a href="{% url 'category-list' %}">Volver a la lista</a>
+<br><br>
+<!-- Botón de pago -->
+<button id="checkout-button">Pagar por esta Categoría</button>
 </div>
+
+<script>
+    // Configuración de Stripe con tu clave pública
+    const stripe = Stripe("pk_test_51Q3IEOFWDLOQpTHGvvQ2a6Kpf2z9JdbMp5NpnMtBFtzUqTNRjLPVxWl1bbd2kvDRslXnEhtI2oCNOHCdktGdW6Zm00fnnxrBgX");  // Usamos la clave pública de Stripe
+
+    const checkoutButton = document.getElementById("checkout-button");
+
+    // Función para extraer el ID de la categoría (se pasa desde Django)
+    const categoryId = "{{ category.id }}";  // ID de la categoría directamente desde el contexto
+
+    checkoutButton.addEventListener("click", function () {
+        // Enviar la solicitud POST con el ID de la categoría
+        fetch(`/categories/crear-checkout-session/${categoryId}/`, {  // URL con el ID de la categoría
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}",  // Incluye el CSRF token para la solicitud POST en Django
+            },
+        })
+        .then(function (response) {
+            return response.json();
+        })
+        .then(function (sessionData) {
+            // Redirigir a Stripe Checkout usando el ID de la sesión devuelta por la vista de Django
+            return stripe.redirectToCheckout({ sessionId: sessionData.id });
+        })
+        .then(function (result) {
+            if (result.error) {
+                // Muestra un error si ocurre algún problema durante la redirección
+                alert(result.error.message);
+            }
+        })
+        .catch(function (error) {
+            console.error("Error:", error);
+        });
+    });
+</script>
 {% endblock content %}

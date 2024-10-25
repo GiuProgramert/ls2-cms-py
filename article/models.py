@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from enum import Enum
 from mdeditor.fields import MDTextField
+from notification.utils import send_email
+from django.utils import timezone
+from taggit.managers import TaggableManager
 
 User = get_user_model()
 
@@ -19,6 +22,31 @@ class CategoryType(Enum):
     FREE = "free"
     PAY = "pay"
     SUSCRIPTION = "suscription"
+
+
+def get_state_name(state):
+    """
+    Obtiene el nombre del estado de un artículo.
+
+    Args:
+        state (str): El estado del artículo.
+
+    Returns:
+        str: El nombre del estado del artículo.
+    """
+
+    if state == ArticleStates.DRAFT.value:
+        return "Borrador"
+    if state == ArticleStates.REVISION.value:
+        return "En revisión"
+    if state == ArticleStates.EDITED.value:
+        return "Editado"
+    if state == ArticleStates.PUBLISHED.value:
+        return "Publicado"
+    if state == ArticleStates.INACTIVE.value:
+        return "Inactivo"
+
+    return "Desconocido"
 
 
 class Category(models.Model):
@@ -45,6 +73,8 @@ class Category(models.Model):
     type = models.CharField(choices=type_choices, default=CategoryType.FREE)
     state = models.BooleanField(default=True)
     is_moderated = models.BooleanField(default=False)
+    price = models.FloatField(default=0.0, null=True)
+    createdBy = models.IntegerField(null=True)
 
     def has_purchased_category(self, user):
         """
@@ -74,6 +104,7 @@ class ArticleStates(Enum):
 
     DRAFT = "d"
     REVISION = "r"
+    EDITED = "e"
     PUBLISHED = "p"
     INACTIVE = "i"
 
@@ -86,6 +117,7 @@ class Article(models.Model):
         title (str): Título del artículo.
         description (str): Descripción del articulo
         autor (ForeignKey): Referencia al usuario autor del artículo.
+        tags (TaggableManager): Campo para manejar los etiquetas (tags)
         views_number (int): Número de visualizaciones del artículo.
         shares_number (int): Número de veces que se ha compartido el artículo.
         likes_number (int): Número de 'me gusta' que ha recibido el artículo.
@@ -96,17 +128,22 @@ class Article(models.Model):
     title = models.CharField(max_length=100)
     autor = models.ForeignKey(User, on_delete=models.CASCADE)
     description = models.TextField(max_length=300, null=True)
+    tags = TaggableManager()
 
     views_number = models.IntegerField(default=0)
     shares_number = models.IntegerField(default=0)
     likes_number = models.IntegerField(default=0)
     dislikes_number = models.IntegerField(default=0)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    published_at = models.DateTimeField(
+        auto_now_add=False, auto_now=False, null=True, default=None
+    )
     state = models.CharField(
         max_length=1,
         choices=[
             (ArticleStates.DRAFT.value, "Borrador"),
             (ArticleStates.REVISION.value, "En revisión"),
+            (ArticleStates.EDITED.value, "Editado"),
             (ArticleStates.PUBLISHED.value, "Publicado"),
             (ArticleStates.INACTIVE.value, "Inactivo"),
         ],
@@ -120,8 +157,40 @@ class Article(models.Model):
         Args:
             new_state (str): El nuevo estado del artículo.
         """
+
+        send_email(
+            to=self.autor.email,
+            subject="CMS PY: Cambio de estado de artículo",
+            html=f"""
+                <h3>Hola, {self.autor.username}</h3>
+                <p>
+                    El esta de tu articulo <strong>{self.title}</strong> ha sido cambiado
+                </p>
+                <p>
+                    <strong>{get_state_name(self.state)}</strong> → <strong>{get_state_name(new_state)}</strong>
+                </p>
+            """,
+        )
+
+        if new_state == ArticleStates.PUBLISHED.value:
+            self.published_at = timezone.now()
+
         self.state = new_state
         self.save()
+
+
+class ArticlesToPublish(models.Model):
+    """
+    Modelo que representa los artículos que están pendientes de publicación.
+
+    Attributes:
+        article (ForeignKey): Referencia al artículo que está pendiente de publicación.
+        created_at (DateTimeField): Fecha de creación del registro.
+    """
+
+    article = models.ForeignKey(Article, on_delete=models.CASCADE)
+    to_publish_at = models.DateTimeField(null=False)
+    published = models.BooleanField(default=False)
 
 
 class ArticleContent(models.Model):
@@ -160,3 +229,42 @@ class UserCategoryPurchase(models.Model):
         return (
             f"{self.user.username} compró {self.category.name} el {self.purchase_date}"
         )
+
+
+class ArticleVote(models.Model):
+    LIKE = 1
+    DISLIKE = -1
+    VOTE_CHOICES = [
+        (LIKE, "Like"),
+        (DISLIKE, "Dislike"),
+    ]
+
+    RATING_CHOICES = [
+        (1, "1 Star"),
+        (2, "2 Stars"),
+        (3, "3 Stars"),
+        (4, "4 Stars"),
+        (5, "5 Stars"),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE)
+    vote = models.IntegerField(choices=VOTE_CHOICES, null=True, blank=True)
+    rating = models.IntegerField(choices=RATING_CHOICES, null=True, blank=True)
+
+    class Meta:
+        unique_together = ("user", "article")
+
+    def __str__(self):
+        return (
+            f"{self.user.username} rated {self.article.title} with {self.rating} stars"
+        )
+
+
+class Payment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    price = models.FloatField(default=0.00, null=True)
+    date_paid = models.DateTimeField(default=timezone.now)
+    stripe_payment_id = models.CharField(max_length=255, null=True, blank=True)
+    status = models.CharField(max_length=20, default="pending")  # Agregar este campo
