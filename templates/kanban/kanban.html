@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% block headblock %}
+{% load static %}
+  <link rel="stylesheet" href="{% static 'css/kanban.css' %}">
+{% endblock headblock %}
+{% block content %}
+  
+  <h2>
+    Estado de los articulos
+  </h2>
+
+  <div class="kanban">
+    <div class="state draft">
+      <h4>Borrador</h4>
+
+      <div class="items" data-state="draft">
+        {% for article in draft_articles %}
+          {% comment %} Solamente el autor o el admin pueden pasar a otro estado {% endcomment %}
+          <div 
+            class="item {% if is_autor or is_admin or not article.category.is_moderated  %}clickable{% endif %}" 
+            draggable="{% if is_autor or is_admin or not article.category.is_moderated %}true{% else %}false{% endif %}" 
+            data-id="{{ article.id }}"
+          >
+            <a href="{% url 'article-detail' article.id %}?from=article-list" target="_blank">
+              <p>{{ article.title }}</p>
+            </a>
+            <div class="line">
+              <i class="fa-regular fa-user"></i>
+              <p>{{ article.autor.username }}</p>
+            </div>
+            <div class="line">
+              <i class="fa-solid fa-layer-group"></i>
+              <p>
+                {{article.category.name}} - 
+                <b>
+                  {% if article.category.is_moderated %}
+                    Moderado
+                  {% else %}
+                    No moderado
+                  {% endif %}
+                </b>
+              </p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="state revision">
+      <h4>Revisión</h4>
+
+      <div class="items" data-state="revision">
+        {% for article in revision_articles %}
+          {% comment %} Solamente el editor o el admin pueden pasar a otro estado {% endcomment %}
+          <div 
+            class="item {% if is_editor or is_admin or not article.category.is_moderated %}clickable{% endif %}" 
+            draggable="{% if is_editor or is_admin or not article.category.is_moderated %}true{% else %}false{% endif %}" 
+            data-id="{{ article.id }}"
+          >
+          <a href="{% url 'article-detail' article.id %}?from=article-list" target="_blank">
+            <p>{{ article.title }}</p>
+          </a>
+          <div class="line">
+            <i class="fa-regular fa-user"></i>
+            <p>{{ article.autor.username }}</p>
+          </div>
+          <div class="line">
+            <i class="fa-solid fa-layer-group"></i>
+            <p>
+              {{article.category.name}} - 
+              <b>
+                {% if article.category.is_moderated %}
+                  Moderado
+                {% else %}
+                  No moderado
+                {% endif %}
+              </b>
+            </p>
+          </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="state edited">
+      <h4>Editado</h4>
+
+      <div class="items" data-state="edited">
+        {% for article in edited_articles %}
+          {% comment %} Solamente el editor o el admin pueden pasar a otro estado {% endcomment %}
+          <div 
+            class="item {% if is_admin or is_publisher or is_editor or not article.category.is_moderated %}clickable{% endif %}" 
+            draggable="{% if is_admin or is_publisher or is_editor or not article.category.is_moderated %}true{% else %}false{% endif %}" 
+            data-id="{{ article.id }}"
+          >
+            <a href="{% url 'article-detail' article.id %}?from=article-list" target="_blank">
+              <p>{{ article.title }}</p>
+            </a>
+            <div class="line">
+              <i class="fa-regular fa-user"></i>
+              <p>{{ article.autor.username }}</p>
+            </div>
+            <div class="line">
+              <i class="fa-solid fa-layer-group"></i>
+              <p>
+                {{article.category.name}} - 
+                <b>
+                  {% if article.category.is_moderated %}
+                    Moderado
+                  {% else %}
+                    No moderado
+                  {% endif %}
+                </b>
+              </p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="state published">
+      <h4>Publicado</h4>
+
+      <div class="items" data-state="published">
+        {% for article in published_articles %}
+          <div 
+            class="item {% if is_admin or is_autor or not article.category.is_moderated %}clickable{% endif %}" 
+            draggable="{% if is_admin or is_autor or not article.category.is_moderated %}true{% else %}false{% endif %}" 
+            data-id="{{ article.id }}"
+          >
+            <a href="{% url 'article-detail' article.id %}?from=article-list" target="_blank">
+              <p>{{ article.title }}</p>
+            </a>
+            <div class="line">
+              <i class="fa-regular fa-user"></i>
+              <p>{{ article.autor.username }}</p>
+            </div>
+            <div class="line">
+              <i class="fa-solid fa-layer-group"></i>
+              <p>
+                {{article.category.name}} - 
+                <b>
+                  {% if article.category.is_moderated %}
+                    Moderado
+                  {% else %}
+                    No moderado
+                  {% endif %}
+                </b>
+              </p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="state inactive">
+      <h4>Inactivo</h4>
+
+      <div class="items" data-state="inactive">
+        {% for article in inactive_articles %}
+          <div 
+            class="item"  
+            draggable="false" 
+            data-id="{{ article.id }}"
+          >
+            <a href="{% url 'article-detail' article.id %}?from=article-list" target="_blank">
+              <p>{{ article.title }}</p>
+            </a>
+            <div class="line">
+              <i class="fa-regular fa-user"></i>
+              <p>{{ article.autor.username }}</p>
+            </div>
+            <div class="line">
+              <i class="fa-solid fa-layer-group"></i>
+              <p>
+                {{article.category.name}} - 
+                <b>
+                  {% if article.category.is_moderated %}
+                    Moderado
+                  {% else %}
+                    No moderado
+                  {% endif %}
+                </b>
+              </p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Message -->
+  <div id="modalMessage" class="modal">
+
+    <!-- Modal content -->
+    <div class="modal-content">
+      <span class="close" id="closeModal">&times;</span>
+      <h3>Agrega el motivo por el que será modificado el estado de esta tarea</h3>
+      <textarea name="message" id="message" class="message" rows="15" cols="150" placeholder="Esta parte esta bien pero podrías mejorarla..."></textarea>
+      <button id="send">Envíar mensaje</button>
+      <button id="dontSend">No envíar mensaje</button>
+    </div>
+
+  </div>
+
+  <!-- Modal Confirmation -->
+  <div id="modalConfirmation" class="modal">
+      
+      <!-- Modal content -->
+      <div class="modal-content">
+        <span class="close" id="closeModalConfirmation">&times;</span>
+        <h3>¿Estás seguro de que deseas cambiar el estado de esta tarea?</h3>
+        <button id="confirm">Confirmar</button>
+        <button id="dontConfirm">Cancelar</button>
+      </div>
+  </div>
+
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+  var isAdmin = {{ is_admin|yesno:"true,false" }};
+  var isAutor = {{ is_autor|yesno:"true,false" }};
+  var isEditor = {{ is_editor|yesno:"true,false" }};
+  var isPublisher = {{ is_publisher|yesno:"true,false" }};
+</script>
+<script src="{% static 'scripts/kanban.js' %}" defer></script>
+{% endblock %}
