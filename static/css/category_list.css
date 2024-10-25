@@ -170,4 +170,30 @@
   background-color: #2b6cb0; /* Azul más oscuro al pasar el mouse */
 }
 
+.category-row {
+    display: flex;
+    align-items: center; /* Alinear verticalmente */
+    justify-content: space-between; /* Separar elementos */
+    margin-bottom: 5px; /* Espacio entre líneas */
+}
 
+.category-row .category {
+    margin-right: 10px; /* Espacio entre el nombre de la categoría y el botón */
+}
+
+.favorite-btn {
+    border: none;
+    background: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0;
+}
+
+.category-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #ccc; /* Línea separadora */
+}
+
+.category-item:last-child {
+  border-bottom: none; /* Quita la línea del último elemento */
+}

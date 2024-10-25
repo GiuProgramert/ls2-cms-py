@@ -73,10 +73,113 @@
         <button type="submit" onclick="applyFilters()">Aplicar</button>
     </noscript>
 </form>
+<!-- Atriculos de categorias favoritas -->
+<section class="articles">
+  <div class="section-header favorite-header">
+    <h3>Artículos de Categorías Favoritas</h3>
+  </div>
+  {% if favorite_articles %}
+    {% for article in favorite_articles %}
+    <div class="article-card">
+      <a href="{% url 'article-detail' article.id %}?from=home">
+        <h2 class="article-title">{{ article.title }}</h2>
+      </a>        
+      <p class="author">Autor: {{ article.autor.username }}</p>
+      <p class="description">{{ article.description }}</p>
+      <div class="article-actions">
+        <span><i class="fas fa-eye"></i> {{ article.views_number }}</span>
+        <span><i class="fas fa-share"></i> {{ article.shares_number }}</span>
+        <span><i class="fas fa-thumbs-up"></i> {{ article.likes_number }}</span>
+        <span><i class="fas fa-thumbs-down"></i> {{ article.dislikes_number }}</span>
+        <span>
+      </div>
 
+      <div class="article-tags">
+        <strong>Tags:</strong>
+        {% if article.tags.all %}
+          {% for tag in article.tags.all %}
+            <span class="tag">{{ tag.name }}</span>
+          {% endfor %}
+        {% else %}
+          No hay tags asignados
+        {% endif %}
+      </div>
+
+      <div>
+        <p>Promedio de calificación: 
+        {% if article.avg_rating %}
+          {{ article.avg_rating }} estrellas
+        {% else %}
+          No calificado
+        {% endif %}
+        {% if not authenticated and article.category.type != 'free' %}
+          <p><i>Este artículo pertenece a una categoría de suscripción o de pago. Inicie sesión o suscríbase para ver el contenido completo.</i></p>
+        {% endif %}
+        </p>
+      </div>
+      
+    </div>
+    {% endfor %}
+  {% else %}
+    <!-- Mostrar un mensaje si no se encuentran artículos -->
+    <p class="no-results-message">No se encontraron artículos que coincidan con los filtros aplicados.</p>
+  {% endif %}
+</section>
+<aside class="categories">
+  <form method="get" action="{% url 'home' %}" class="search-form">
+    <input 
+        type="text" 
+        name="search" 
+        placeholder="Buscar artículos..." 
+        value="{{ search_query }}" 
+        class="search-input">
+    <button type="submit" class="search-button">
+        <i class="fas fa-search"></i>
+    </button>
+    </form>
+    <div class="category-section">
+        <h3>Categorías - Free</h3>
+        {% for category in permited_categories %}
+          {% if category.type == 'free' %}
+          <p>{{ category.name }}</p>
+          {% endif %}
+        {% endfor %}
+    </div>
+    <div class="category-section">
+        <h3>Categorías - Suscriptor</h3>
+        {% for category in permited_categories %}
+          {% if category.type == 'suscription' %}
+            <p>{{ category.name }}</p>
+          {% endif %}
+        {% endfor %}
+        {% for category in not_permited_categories %}
+          {% if category.type == 'suscription' %} 
+            <p>🔒 {{category.name}}</p>
+          {% endif %}
+        {% endfor %}
+    </div>
+    <div class="category-section">
+        <h3>Categorías - Pagas</h3>
+        {% for category in permited_categories %}
+          {% if category.type == 'pay' %}
+            <p>{{ category.name }}</p>
+          {% endif %}
+        {% endfor %}
+
+        {% for category in not_permited_categories %}
+          {% if category.type == 'pay' %} 
+          <p>🔒 {{category.name}}</p>
+          {% endif %}
+        {% endfor %}
+    </div>
+</aside>
+  <!-- Atriculos de categorias no favoritas -->
   <section class="articles">
-    {% if articles %}
-      {% for article in articles %}
+    <div class="section-header normal-header">
+      <h3>Artículos de Otras Categorías</h3>
+    </div>
+    {% if normal_articles %}
+      {% for article in normal_articles %}
       <div class="article-card">
         <a href="{% url 'article-detail' article.id %}?from=home">
           <h2 class="article-title">{{ article.title }}</h2>
@@ -122,54 +225,6 @@
       <p class="no-results-message">No se encontraron artículos que coincidan con los filtros aplicados.</p>
     {% endif %}
   </section>
-  <aside class="categories">
-    <form method="get" action="{% url 'home' %}" class="search-form">
-      <input 
-          type="text" 
-          name="search" 
-          placeholder="Buscar artículos..." 
-          value="{{ search_query }}" 
-          class="search-input">
-      <button type="submit" class="search-button">
-          <i class="fas fa-search"></i>
-      </button>
-      </form>
-      <div class="category-section">
-          <h3>Categorías - Free</h3>
-          {% for category in permited_categories %}
-            {% if category.type == 'free' %}
-            <p>{{ category.name }}</p>
-            {% endif %}
-          {% endfor %}
-      </div>
-      <div class="category-section">
-          <h3>Categorías - Suscriptor</h3>
-          {% for category in permited_categories %}
-            {% if category.type == 'suscription' %}
-              <p>{{ category.name }}</p>
-            {% endif %}
-          {% endfor %}
-          {% for category in not_permited_categories %}
-            {% if category.type == 'suscription' %} 
-              <p>🔒 {{category.name}}</p>
-            {% endif %}
-          {% endfor %}
-      </div>
-      <div class="category-section">
-          <h3>Categorías - Pagas</h3>
-          {% for category in permited_categories %}
-            {% if category.type == 'pay' %}
-              <p>{{ category.name }}</p>
-            {% endif %}
-          {% endfor %}
-
-          {% for category in not_permited_categories %}
-            {% if category.type == 'pay' %} 
-            <p>🔒 {{category.name}}</p>
-            {% endif %}
-          {% endfor %}
-      </div>
-  </aside>
 </main>
 
 <script>
