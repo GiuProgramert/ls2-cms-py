@@ -2,7 +2,7 @@ import mistune
 from zoneinfo import ZoneInfo
 from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse, HttpResponseBadRequest
 from django.contrib.auth.decorators import login_required
 from roles.utils import PermissionEnum
 from article.models import (
@@ -14,6 +14,7 @@ from article.models import (
     ArticleVote,
     ArticlesToPublish,
     Payment,
+    FavoriteCategory,
 )
 from article.forms import *
 from django.db.models import Avg
@@ -27,16 +28,11 @@ import csv
 
 
 def home(request):
-    """
-    Vista que muestra la página principal del artículo.
-    """
-
     categories = Category.objects.all()
 
     if not request.user.is_authenticated:
         permissions = []
 
-        # Allow viewing of all categories but restrict access based on type
         permited_categories = [
             category
             for category in categories
@@ -49,10 +45,8 @@ def home(request):
             if category.type != CategoryType.FREE.value
         ]
     else:
-        # Obtener todos los pagos del usuario en una sola consulta
         user_payments = Payment.objects.filter(user=request.user)
 
-        # Crear un diccionario que mapea categorías a su estado de pago
         payment_status_by_category = defaultdict(lambda: None)
         for payment in user_payments:
             payment_status_by_category[payment.category_id] = payment.status
@@ -66,8 +60,7 @@ def home(request):
         permited_categories = [
             category
             for category in categories
-            if category.type
-            in (CategoryType.FREE.value, CategoryType.SUSCRIPTION.value)
+            if category.type in (CategoryType.FREE.value, CategoryType.SUSCRIPTION.value)
             or Payment.objects.filter(
                 category=category, user=request.user, status="completed"
             ).exists()
@@ -82,79 +75,86 @@ def home(request):
             ).exists()
         ]
 
-    # Fetch all articles for the home page
-    articles = Article.objects.filter(state=ArticleStates.PUBLISHED.value)
+    permited_categories_ids = [category.id for category in permited_categories]
+
+    favorite_categories_ids = FavoriteCategory.objects.filter(
+        user=request.user, 
+        category_id__in=permited_categories_ids
+    ).values_list('category_id', flat=True)
+
+    normal_categories_ids = [
+        category.id for category in permited_categories if category.id not in favorite_categories_ids
+    ]
+
+    # Filtrar artículos en dos conjuntos: favoritos y normales
+    favorite_articles = Article.objects.filter(
+        state=ArticleStates.PUBLISHED.value,
+        category__id__in=favorite_categories_ids
+    )
+
+    normal_articles = Article.objects.filter(
+        state=ArticleStates.PUBLISHED.value,
+        category__id__in=normal_categories_ids
+    )
+
+    # Aplicar los filtros y ordenamiento a ambos conjuntos
     form = ArticleFilterForm(request.GET or None)
     search_query = request.GET.get("search", "")
-    order_by = request.GET.get(
-        "order_by", "published_at"
-    )  # Ordenar por fecha de publicación por defecto
-    order_direction = request.GET.get(
-        "order_direction", "desc"
-    )  # Dirección de orden ascendente por defecto
-    time_range = request.GET.get(
-        "time_range", "all"
-    )  # Rango de tiempo por defecto (sin límite)
+    order_by = request.GET.get("order_by", "published_at")
+    order_direction = request.GET.get("order_direction", "desc")
+    time_range = request.GET.get("time_range", "all")
 
     if form.is_valid():
-        # Filtrar por tag
         selected_tag = form.cleaned_data.get("tags")
-        if selected_tag:
-            articles = articles.filter(tags__name__in=[selected_tag])
-
-        # Filtrar por categoría
         selected_category = form.cleaned_data.get("category")
-        if selected_category:
-            articles = articles.filter(category=selected_category)
-
-        # Filtrar por tipo de categoría
         selected_category_type = form.cleaned_data.get("category_type")
-        if selected_category_type and selected_category_type != "all":
-            articles = articles.filter(category__type=selected_category_type)
 
-    # Filtrar por rango de tiempo
+        if selected_tag:
+            favorite_articles = favorite_articles.filter(tags__name__in=[selected_tag])
+            normal_articles = normal_articles.filter(tags__name__in=[selected_tag])
+
+        if selected_category:
+            favorite_articles = favorite_articles.filter(category=selected_category)
+            normal_articles = normal_articles.filter(category=selected_category)
+
+        if selected_category_type and selected_category_type != "all":
+            favorite_articles = favorite_articles.filter(category__type=selected_category_type)
+            normal_articles = normal_articles.filter(category__type=selected_category_type)
+
     if time_range != "all":
         now = timezone.now()
-        if time_range == "1h":
-            articles = articles.filter(published_at__gte=now - timedelta(hours=1))
-        elif time_range == "24h":
-            articles = articles.filter(published_at__gte=now - timedelta(hours=24))
-        elif time_range == "7d":
-            articles = articles.filter(published_at__gte=now - timedelta(days=7))
-        elif time_range == "30d":
-            articles = articles.filter(published_at__gte=now - timedelta(days=30))
-        elif time_range == "365d":
-            articles = articles.filter(published_at__gte=now - timedelta(days=365))
+        time_filters = {
+            "1h": now - timedelta(hours=1),
+            "24h": now - timedelta(hours=24),
+            "7d": now - timedelta(days=7),
+            "30d": now - timedelta(days=30),
+            "365d": now - timedelta(days=365),
+        }
+        if time_range in time_filters:
+            favorite_articles = favorite_articles.filter(published_at__gte=time_filters[time_range])
+            normal_articles = normal_articles.filter(published_at__gte=time_filters[time_range])
 
-    # Filtrar por búsqueda
     if search_query:
-        articles = articles.filter(
-            Q(title__icontains=search_query) | Q(description__icontains=search_query)
-        )
+        favorite_articles = favorite_articles.filter(
+            Q(title__icontains=search_query) | 
+            Q(description__icontains=search_query) |
+            Q(tags__name__icontains=search_query)
+        ).distinct()
 
-    # Add average rating for each article
-    for article in articles:
-        ratings = ArticleVote.objects.filter(article=article)
-        avg_rating = ratings.aggregate(Avg("rating"))["rating__avg"]
+        normal_articles = normal_articles.filter(
+            Q(title__icontains=search_query) | 
+            Q(description__icontains=search_query) |
+            Q(tags__name__icontains=search_query)
+        ).distinct()
 
-        # Check if avg_rating is None before rounding
-        if avg_rating is not None:
-            article.avg_rating = round(avg_rating, 1)
-        else:
-            article.avg_rating = None  # Or set it to 0 if you prefer
-
-    # Ordenar los resultados
-    if order_by == "published_at":
-        # Asegurarse de que los más nuevos se muestren primero cuando está en descendente
-        if order_direction == "desc":
-            order_by = "-published_at"
-        else:
-            order_by = "published_at"
+    if order_by == "published_at" and order_direction == "desc":
+        order_by = "-published_at"
     elif order_direction == "desc":
         order_by = f"-{order_by}"
-    articles = articles.order_by(order_by)
 
-    authenticated = request.user.is_authenticated
+    favorite_articles = favorite_articles.order_by(order_by)
+    normal_articles = normal_articles.order_by(order_by)
+    print(favorite_articles)
 
     return render(
         request,
@@ -163,15 +163,18 @@ def home(request):
             "permisos": permissions,
             "permited_categories": permited_categories,
             "not_permited_categories": not_permited_categories,
-            "articles": articles,
-            "authenticated": authenticated,
+            "favorite_articles": favorite_articles,
+            "normal_articles": normal_articles,
             "form": form,
             "search_query": search_query,
             "order_by": order_by,
             "order_direction": order_direction,
             "time_range": time_range,
+            "normal_categories": normal_categories_ids,
+            "favorite_categories": favorite_categories_ids,
         },
     )
+
 
 
 def forbidden(request):
@@ -554,7 +557,7 @@ def article_detail(request, pk):
         # Convert article content body using mistune
         article_render_content = mistune.html(article_content.body)
 
-        # print(to_publish_date.to_publish_at)
+        favorite_categories = FavoriteCategory.objects.filter(user=request.user).values_list('category_id', flat=True)
 
         return render(
             request,
@@ -574,6 +577,7 @@ def article_detail(request, pk):
                 "authenticated": authenticated,
                 "is_author": is_author,
                 "is_admin": is_admin,
+                "favorite_categories": favorite_categories,
             },
         )
 
@@ -779,6 +783,7 @@ def category_list(request):
 
     form = CategorySearchForm(request.GET or None)
     categories = Category.objects.all()
+    favorite_categories = FavoriteCategory.objects.filter(user=request.user).values_list('category_id', flat=True)
 
     if form.is_valid():
         search_term = form.cleaned_data.get("search_term")
@@ -797,9 +802,28 @@ def category_list(request):
         categories = categories.order_by(order_by)
 
     return render(
-        request, "article/category_list.html", {"form": form, "categories": categories}
+        request, "article/category_list.html", {
+            "form": form, 
+            "categories": categories,
+            "favorite_categories": favorite_categories
+        }
     )
 
+@login_required
+def toggle_favorite_category(request, pk):
+    if request.method == "POST":
+        category = Category.objects.get(id=pk)
+        favorite, created = FavoriteCategory.objects.get_or_create(user=request.user, category=category)
+        
+        if not created:
+            # Si ya existe el favorito, lo eliminamos (desmarcar favorito)
+            favorite.delete()
+            return JsonResponse({'status': 'removed'})
+        
+        # Si no existe, lo creamos (marcar como favorito)
+        return JsonResponse({'status': 'added'})
+    
+    return HttpResponseBadRequest("Invalid request")
 
 def category_detail(request, pk):
     """

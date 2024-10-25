@@ -135,7 +135,7 @@ class ArticleFilterForm(forms.Form):
         choices=[
             ("all", "Todos"),
             ("free", "Gratis"),
-            ("subscription", "Suscripción"),
+            ("suscription", "Suscripción"),
             ("pay", "Pago"),
         ],
         required=False,
