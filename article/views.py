@@ -316,8 +316,15 @@ def article_update_history(request, pk):
     if not request.user.is_authenticated:
         return redirect("login")
 
-    if not request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS]):
+    article = get_object_or_404(Article, pk=pk)
+    
+    if not (
+        request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS])
+        or request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS_BORRADOR])
+        or request.user == article.autor
+    ):
         return redirect("forbidden")
+        
 
     if request.method == "POST":
         article_id = request.POST.get("article_id")
@@ -557,7 +564,7 @@ def article_detail(request, pk):
         )
         can_edit_as_author = (
             is_author
-            and request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS_BORRADOR])
+            or request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS_BORRADOR])
         ) or is_admin
 
         # General edit permission (either editor or author)
