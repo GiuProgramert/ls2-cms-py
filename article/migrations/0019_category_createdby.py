@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('article', '0018_merge_0013_article_tags_0017_article_tags'),
+        ("article", "0018_merge_0013_article_tags_0017_article_tags"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='category',
-            name='createdBy',
+            model_name="category",
+            name="createdBy",
             field=models.IntegerField(null=True),
         ),
     ]

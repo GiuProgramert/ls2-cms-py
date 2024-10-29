@@ -2,7 +2,12 @@ import mistune
 from zoneinfo import ZoneInfo
 from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, HttpResponseForbidden, JsonResponse, HttpResponseBadRequest
+from django.http import (
+    HttpResponse,
+    HttpResponseForbidden,
+    JsonResponse,
+    HttpResponseBadRequest,
+)
 from django.contrib.auth.decorators import login_required
 from roles.utils import PermissionEnum
 from article.models import (
@@ -60,7 +65,8 @@ def home(request):
         permited_categories = [
             category
             for category in categories
-            if category.type in (CategoryType.FREE.value, CategoryType.SUSCRIPTION.value)
+            if category.type
+            in (CategoryType.FREE.value, CategoryType.SUSCRIPTION.value)
             or Payment.objects.filter(
                 category=category, user=request.user, status="completed"
             ).exists()
@@ -77,24 +83,26 @@ def home(request):
 
     permited_categories_ids = [category.id for category in permited_categories]
 
-    favorite_categories_ids = FavoriteCategory.objects.filter(
-        user=request.user, 
-        category_id__in=permited_categories_ids
-    ).values_list('category_id', flat=True)
+    if request.user.is_authenticated:
+        favorite_categories_ids = FavoriteCategory.objects.filter(
+            user=request.user, category_id__in=permited_categories_ids
+        ).values_list("category_id", flat=True)
+    else:
+        favorite_categories_ids = []
 
     normal_categories_ids = [
-        category.id for category in permited_categories if category.id not in favorite_categories_ids
+        category.id
+        for category in permited_categories
+        if category.id not in favorite_categories_ids
     ]
 
     # Filtrar artículos en dos conjuntos: favoritos y normales
     favorite_articles = Article.objects.filter(
-        state=ArticleStates.PUBLISHED.value,
-        category__id__in=favorite_categories_ids
+        state=ArticleStates.PUBLISHED.value, category__id__in=favorite_categories_ids
     )
 
     normal_articles = Article.objects.filter(
-        state=ArticleStates.PUBLISHED.value,
-        category__id__in=normal_categories_ids
+        state=ArticleStates.PUBLISHED.value, category__id__in=normal_categories_ids
     )
 
     # Aplicar los filtros y ordenamiento a ambos conjuntos
@@ -118,8 +126,12 @@ def home(request):
             normal_articles = normal_articles.filter(category=selected_category)
 
         if selected_category_type and selected_category_type != "all":
-            favorite_articles = favorite_articles.filter(category__type=selected_category_type)
-            normal_articles = normal_articles.filter(category__type=selected_category_type)
+            favorite_articles = favorite_articles.filter(
+                category__type=selected_category_type
+            )
+            normal_articles = normal_articles.filter(
+                category__type=selected_category_type
+            )
 
     if time_range != "all":
         now = timezone.now()
@@ -131,20 +143,24 @@ def home(request):
             "365d": now - timedelta(days=365),
         }
         if time_range in time_filters:
-            favorite_articles = favorite_articles.filter(published_at__gte=time_filters[time_range])
-            normal_articles = normal_articles.filter(published_at__gte=time_filters[time_range])
+            favorite_articles = favorite_articles.filter(
+                published_at__gte=time_filters[time_range]
+            )
+            normal_articles = normal_articles.filter(
+                published_at__gte=time_filters[time_range]
+            )
 
     if search_query:
         favorite_articles = favorite_articles.filter(
-            Q(title__icontains=search_query) | 
-            Q(description__icontains=search_query) |
-            Q(tags__name__icontains=search_query)
+            Q(title__icontains=search_query)
+            | Q(description__icontains=search_query)
+            | Q(tags__name__icontains=search_query)
         ).distinct()
 
         normal_articles = normal_articles.filter(
-            Q(title__icontains=search_query) | 
-            Q(description__icontains=search_query) |
-            Q(tags__name__icontains=search_query)
+            Q(title__icontains=search_query)
+            | Q(description__icontains=search_query)
+            | Q(tags__name__icontains=search_query)
         ).distinct()
 
     if order_by == "published_at" and order_direction == "desc":
@@ -174,7 +190,6 @@ def home(request):
             "favorite_categories": favorite_categories_ids,
         },
     )
-
 
 
 def forbidden(request):
@@ -557,7 +572,9 @@ def article_detail(request, pk):
         # Convert article content body using mistune
         article_render_content = mistune.html(article_content.body)
 
-        favorite_categories = FavoriteCategory.objects.filter(user=request.user).values_list('category_id', flat=True)
+        favorite_categories = FavoriteCategory.objects.filter(
+            user=request.user
+        ).values_list("category_id", flat=True)
 
         return render(
             request,
@@ -783,7 +800,9 @@ def category_list(request):
 
     form = CategorySearchForm(request.GET or None)
     categories = Category.objects.all()
-    favorite_categories = FavoriteCategory.objects.filter(user=request.user).values_list('category_id', flat=True)
+    favorite_categories = FavoriteCategory.objects.filter(
+        user=request.user
+    ).values_list("category_id", flat=True)
 
     if form.is_valid():
         search_term = form.cleaned_data.get("search_term")
@@ -802,28 +821,34 @@ def category_list(request):
         categories = categories.order_by(order_by)
 
     return render(
-        request, "article/category_list.html", {
-            "form": form, 
+        request,
+        "article/category_list.html",
+        {
+            "form": form,
             "categories": categories,
-            "favorite_categories": favorite_categories
-        }
+            "favorite_categories": favorite_categories,
+        },
     )
+
 
 @login_required
 def toggle_favorite_category(request, pk):
     if request.method == "POST":
         category = Category.objects.get(id=pk)
-        favorite, created = FavoriteCategory.objects.get_or_create(user=request.user, category=category)
-        
+        favorite, created = FavoriteCategory.objects.get_or_create(
+            user=request.user, category=category
+        )
+
         if not created:
             # Si ya existe el favorito, lo eliminamos (desmarcar favorito)
             favorite.delete()
-            return JsonResponse({'status': 'removed'})
-        
+            return JsonResponse({"status": "removed"})
+
         # Si no existe, lo creamos (marcar como favorito)
-        return JsonResponse({'status': 'added'})
-    
+        return JsonResponse({"status": "added"})
+
     return HttpResponseBadRequest("Invalid request")
+
 
 def category_detail(request, pk):
     """

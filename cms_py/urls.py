@@ -44,8 +44,8 @@ urlpatterns = [
     path(r"kanban/", include("kanban.urls")),
     path(r"users/", include("user.urls")),
     # Mdeditor url config
-    path('mdeditor/uploads/', CustomUploadView.as_view(), name='mdeditor_upload'),
-    path('mdeditor/', include('mdeditor.urls')),
+    path("mdeditor/uploads/", CustomUploadView.as_view(), name="mdeditor_upload"),
+    path("mdeditor/", include("mdeditor.urls")),
 ]
 
 if settings.DEBUG:
