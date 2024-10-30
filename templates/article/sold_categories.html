@@ -1,9 +1,13 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<form method="GET" action="{% url 'download-sold-categories' %}">
-    <button type="submit" class="btn btn-primary">Descargar lista de categorías vendidas</button>
-</form>
+
+<div class="top-buttons-container">
+    <form method="GET" action="{% url 'sold-categories' %}">
+        <input type="hidden" name="view_type" value="list">
+        <button type="submit" class="btn btn-secondary">Ver lista de categorías</button>
+    </form>
+</div>
 
 <!-- Date Range Filter Buttons -->
 <div class="button-container">
@@ -62,6 +66,13 @@ button.active {
     background-color: #4caf50;
     color: white;
 }
+
+.top-buttons-container {
+    display: flex;
+    gap: 20px; /* Space between the buttons */
+    margin-bottom: 20px; /* Space below the buttons */
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

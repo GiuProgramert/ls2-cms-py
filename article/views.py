@@ -1208,7 +1208,8 @@ def sold_categories(request):
 
     # Get the selected date range from the request (default is 'all')
     date_range = request.GET.get("date_range", "all")
-
+    view_type = request.GET.get("view_type", "default")
+    
     # Set the filter for the date range
     filter_kwargs = {}
     if date_range == "24h":
@@ -1246,9 +1247,11 @@ def sold_categories(request):
         for category in categories_sales
     }
 
+    template_name = "article/view_sold_categories.html" if view_type == "list" else "article/sold_categories.html"
+    
     return render(
         request,
-        "article/sold_categories.html",
+        template_name,
         {
             "categories": categories,
             "sales": sales,
