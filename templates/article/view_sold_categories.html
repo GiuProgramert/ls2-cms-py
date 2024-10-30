@@ -3,11 +3,10 @@
 {% block content %}
 <h2>Lista de Categorías Vendidas</h2>
 <ul>
-    {% for category, buyers in buyers_per_category.items %}
-        <li><strong>{{ category }}</strong> - Compradores: {{ buyers|join:", " }}</li>
+    {% for category, sales, earning, buyers in category_data %}
+        <li><strong>{{ category }}</strong> - Ventas: {{ sales }} - Ganancias: ${{ earning }} - Compradores: {{ buyers|join:", " }}</li>
     {% endfor %}
 </ul>
-
 
 <div class="download-button-container">
     <form method="GET" action="{% url 'download-sold-categories' %}">
@@ -16,10 +15,9 @@
 </div>
 
 <style>
-    /* Add spacing for the download button */
     .download-button-container {
-        margin-top: 20px; /* Space above the download button */
+        margin-top: 20px;
     }
 </style>
-
 {% endblock %}
+
