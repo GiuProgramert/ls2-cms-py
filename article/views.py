@@ -1210,6 +1210,8 @@ def sold_categories(request):
     # Get the selected date range from the request (default is 'all')
     date_range = request.GET.get("date_range", "all")
     view_type = request.GET.get("view_type", "default")
+    start_date_str = request.GET.get("start_date", None)
+    end_date_str = request.GET.get("end_date", None)
     
     # Set the filter for the date range
     filter_kwargs = {}
@@ -1222,6 +1224,15 @@ def sold_categories(request):
     elif date_range == "365d":
         filter_kwargs["date_paid__gte"] = timezone.now() - timedelta(days=365)
 
+    if start_date_str and end_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
+            filter_kwargs["date_paid__range"] = (start_date, end_date)
+        except ValueError:
+            # Handle invalid date format
+            return HttpResponseBadRequest("Invalid date format. Use YYYY-MM-DD.")
+    
     # Filter payments based on the selected date range and status 'completed'
     payments = Payment.objects.filter(status="completed", **filter_kwargs)
 
@@ -1268,6 +1279,8 @@ def sold_categories(request):
             "buyers_per_category": buyers_per_category,
             "category_data": category_data,
             "date_range": date_range,  # Pass the selected date range to the template
+            "start_date": start_date_str,
+            "end_date": end_date_str,
         },
     )
 
