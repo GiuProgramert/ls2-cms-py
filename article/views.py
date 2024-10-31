@@ -1,15 +1,12 @@
 import mistune
-from zoneinfo import ZoneInfo
+import stripe
+import os
+import csv
+
 from datetime import datetime
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import (
-    HttpResponse,
-    HttpResponseForbidden,
-    JsonResponse,
-    HttpResponseBadRequest,
-)
-from django.contrib.auth.decorators import login_required
-from roles.utils import PermissionEnum
+from collections import defaultdict
+from datetime import timedelta
+
 from article.models import (
     Category,
     ArticleContent,
@@ -21,16 +18,34 @@ from article.models import (
     Payment,
     FavoriteCategory,
 )
-from article.forms import *
-from django.db.models import Avg
-from collections import defaultdict
-from django.db.models import Q
-from datetime import timedelta
-from django.utils import timezone
-from django.db.models import Count, F
+from article.forms import (
+    CategoryForm,
+    ArticleForm,
+    CategorySearchForm,
+    ArticleFilterForm,
+)
+from roles.utils import PermissionEnum
 from notification.utils import send_email
-import csv
+
+from django.http import (
+    HttpResponse,
+    HttpResponseForbidden,
+    JsonResponse,
+    HttpResponseBadRequest,
+)
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.db.models import Avg
+from django.db.models import Q
+from django.utils import timezone
+from django.db.models import Count
 from django.db.models import Sum
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+
+
+# Configura Stripe con la clave secreta
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 def home(request):
@@ -318,14 +333,13 @@ def article_update_history(request, pk):
         return redirect("login")
 
     article = get_object_or_404(Article, pk=pk)
-    
+
     if not (
         request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS])
         or request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS_BORRADOR])
         or request.user == article.autor
     ):
         return redirect("forbidden")
-        
 
     if request.method == "POST":
         article_id = request.POST.get("article_id")
@@ -1065,19 +1079,6 @@ def dislike_article(request, pk):
     return redirect("article-detail", pk=pk)
 
 
-# stripe
-# views.py
-from django.conf import settings
-from django.http import JsonResponse
-from django.shortcuts import render
-import stripe
-import os
-from article.models import Payment
-
-# Configura Stripe con la clave secreta
-stripe.api_key = settings.STRIPE_SECRET_KEY
-
-
 def stripe_checkout(request, pk):
     # Obtener la categoría o devolver 404 si no existe
     category = get_object_or_404(Category, id=pk)
@@ -1125,12 +1126,9 @@ def stripe_checkout(request, pk):
     return JsonResponse({"id": session.id})
 
 
-from django.core.exceptions import ObjectDoesNotExist
-
-
 def checkout_page(request, pk):
     try:
-        payment = Payment.objects.filter(
+        Payment.objects.filter(
             user=request.user, category=pk, status="completed"
         ).latest("date_paid")
         # Si se encuentra el pago y tiene estado "completed", ir a exists
@@ -1212,7 +1210,7 @@ def sold_categories(request):
     view_type = request.GET.get("view_type", "default")
     start_date_str = request.GET.get("start_date", None)
     end_date_str = request.GET.get("end_date", None)
-    
+
     # Set the filter for the date range
     filter_kwargs = {}
     if date_range == "24h":
@@ -1232,7 +1230,7 @@ def sold_categories(request):
         except ValueError:
             # Handle invalid date format
             return HttpResponseBadRequest("Invalid date format. Use YYYY-MM-DD.")
-    
+
     # Filter payments based on the selected date range and status 'completed'
     payments = Payment.objects.filter(status="completed", **filter_kwargs)
 
@@ -1240,27 +1238,33 @@ def sold_categories(request):
     categories_sales = (
         payments.values("category__name")  # Group by category name
         .annotate(
-            total_sales=Count("category"),total_earnings=Sum("price")
+            total_sales=Count("category"), total_earnings=Sum("price")
         )  # Count the number of purchases per category
         .order_by("-total_sales")  # Order from most sold to least sold
     )
-        
+
     # Extract category names and corresponding sales for the graph
     categories = [item["category__name"] for item in categories_sales]
     sales = [item["total_sales"] for item in categories_sales]
     earnings = [item["total_earnings"] for item in categories_sales]
-    
+
     # Get the list of users who bought each category
     buyers_per_category = {
         category["category__name"]: [
             f"{purchase['user__username']} ({purchase['date_paid'].strftime('%Y-%m-%d')})"
-            for purchase in payments.filter(category__name=category["category__name"]).values("user__username", "date_paid")
+            for purchase in payments.filter(
+                category__name=category["category__name"]
+            ).values("user__username", "date_paid")
         ]
         for category in categories_sales
     }
 
-    template_name = "article/view_sold_categories.html" if view_type == "list" else "article/sold_categories.html"
-    
+    template_name = (
+        "article/view_sold_categories.html"
+        if view_type == "list"
+        else "article/sold_categories.html"
+    )
+
     category_data = zip(
         [item["category__name"] for item in categories_sales],
         [item["total_sales"] for item in categories_sales],
@@ -1268,12 +1272,14 @@ def sold_categories(request):
         [
             [
                 f"{purchase['user__username']} ({purchase['date_paid'].strftime('%Y-%m-%d')})"
-                for purchase in payments.filter(category__name=item["category__name"]).values("user__username", "date_paid")
+                for purchase in payments.filter(
+                    category__name=item["category__name"]
+                ).values("user__username", "date_paid")
             ]
             for item in categories_sales
-        ]
+        ],
     )
-    
+
     return render(
         request,
         template_name,
@@ -1296,16 +1302,14 @@ def download_sold_categories(request):
         return redirect("forbidden")
 
     payments = Payment.objects.filter(status="completed")
-    
+
     # Get the category data similar to the view
     categories_sales = (
         payments.values("category__name")
-        .annotate(
-            total_sales=Count("category"), total_earnings=Sum("price")
-        )
+        .annotate(total_sales=Count("category"), total_earnings=Sum("price"))
         .order_by("-total_sales")
     )
-    
+
     # Create the response as a CSV file
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = 'attachment; filename="categorias_vendidas.csv"'
@@ -1321,8 +1325,12 @@ def download_sold_categories(request):
         total_earnings = item["total_earnings"]
         buyers = [
             f"{purchase['user__username']} ({purchase['date_paid'].strftime('%Y-%m-%d')})"
-            for purchase in payments.filter(category__name=category_name).values("user__username", "date_paid")
+            for purchase in payments.filter(category__name=category_name).values(
+                "user__username", "date_paid"
+            )
         ]
-        writer.writerow([category_name, total_sales, f"${total_earnings:.2f}", ", ".join(buyers)])
+        writer.writerow(
+            [category_name, total_sales, f"${total_earnings:.2f}", ", ".join(buyers)]
+        )
 
     return response
