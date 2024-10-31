@@ -1210,6 +1210,8 @@ def sold_categories(request):
     # Get the selected date range from the request (default is 'all')
     date_range = request.GET.get("date_range", "all")
     view_type = request.GET.get("view_type", "default")
+    start_date_str = request.GET.get("start_date", None)
+    end_date_str = request.GET.get("end_date", None)
     
     # Set the filter for the date range
     filter_kwargs = {}
@@ -1222,6 +1224,15 @@ def sold_categories(request):
     elif date_range == "365d":
         filter_kwargs["date_paid__gte"] = timezone.now() - timedelta(days=365)
 
+    if start_date_str and end_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
+            filter_kwargs["date_paid__range"] = (start_date, end_date)
+        except ValueError:
+            # Handle invalid date format
+            return HttpResponseBadRequest("Invalid date format. Use YYYY-MM-DD.")
+    
     # Filter payments based on the selected date range and status 'completed'
     payments = Payment.objects.filter(status="completed", **filter_kwargs)
 
@@ -1241,22 +1252,27 @@ def sold_categories(request):
     
     # Get the list of users who bought each category
     buyers_per_category = {
-        category["category__name"]: list(
-            payments.filter(category__name=category["category__name"]).values_list(
-                "user__username", flat=True
-            )
-        )
+        category["category__name"]: [
+            f"{purchase['user__username']} ({purchase['date_paid'].strftime('%Y-%m-%d')})"
+            for purchase in payments.filter(category__name=category["category__name"]).values("user__username", "date_paid")
+        ]
         for category in categories_sales
     }
 
     template_name = "article/view_sold_categories.html" if view_type == "list" else "article/sold_categories.html"
     
     category_data = zip(
-    [item["category__name"] for item in categories_sales],
-    [item["total_sales"] for item in categories_sales],
-    [item["total_earnings"] for item in categories_sales],
-    [list(payments.filter(category__name=item["category__name"]).values_list("user__username", flat=True)) for item in categories_sales]
-)
+        [item["category__name"] for item in categories_sales],
+        [item["total_sales"] for item in categories_sales],
+        [item["total_earnings"] for item in categories_sales],
+        [
+            [
+                f"{purchase['user__username']} ({purchase['date_paid'].strftime('%Y-%m-%d')})"
+                for purchase in payments.filter(category__name=item["category__name"]).values("user__username", "date_paid")
+            ]
+            for item in categories_sales
+        ]
+    )
     
     return render(
         request,
@@ -1268,6 +1284,8 @@ def sold_categories(request):
             "buyers_per_category": buyers_per_category,
             "category_data": category_data,
             "date_range": date_range,  # Pass the selected date range to the template
+            "start_date": start_date_str,
+            "end_date": end_date_str,
         },
     )
 
@@ -1301,9 +1319,10 @@ def download_sold_categories(request):
         category_name = item["category__name"]
         total_sales = item["total_sales"]
         total_earnings = item["total_earnings"]
-        buyers = list(
-            payments.filter(category__name=category_name).values_list("user__username", flat=True)
-        )
+        buyers = [
+            f"{purchase['user__username']} ({purchase['date_paid'].strftime('%Y-%m-%d')})"
+            for purchase in payments.filter(category__name=category_name).values("user__username", "date_paid")
+        ]
         writer.writerow([category_name, total_sales, f"${total_earnings:.2f}", ", ".join(buyers)])
 
     return response

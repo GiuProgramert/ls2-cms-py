@@ -9,6 +9,18 @@
     </form>
 </div>
 
+<div class="custom-date-filter">
+    <form method="GET" action="{% url 'sold-categories' %}">
+        <label for="start_date">Desde:</label>
+        <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
+        
+        <label for="end_date">Hasta:</label>
+        <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
+
+        <button type="submit" class="btn btn-primary">Aplicar Filtro</button>
+    </form>
+</div>
+
 <!-- Date Range Filter Buttons -->
 <div class="button-container">
     <form method="GET" action="{% url 'sold-categories' %}">
@@ -71,6 +83,13 @@ button.active {
     display: flex;
     gap: 20px; /* Space between the buttons */
     margin-bottom: 20px; /* Space below the buttons */
+}
+
+.custom-date-filter {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
 </style>
