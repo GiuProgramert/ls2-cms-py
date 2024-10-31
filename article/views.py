@@ -30,6 +30,7 @@ from django.utils import timezone
 from django.db.models import Count, F
 from notification.utils import send_email
 import csv
+from django.db.models import Sum
 
 
 def home(request):
@@ -1208,7 +1209,8 @@ def sold_categories(request):
 
     # Get the selected date range from the request (default is 'all')
     date_range = request.GET.get("date_range", "all")
-
+    view_type = request.GET.get("view_type", "default")
+    
     # Set the filter for the date range
     filter_kwargs = {}
     if date_range == "24h":
@@ -1227,15 +1229,16 @@ def sold_categories(request):
     categories_sales = (
         payments.values("category__name")  # Group by category name
         .annotate(
-            total_sales=Count("category")
+            total_sales=Count("category"),total_earnings=Sum("price")
         )  # Count the number of purchases per category
         .order_by("-total_sales")  # Order from most sold to least sold
     )
-
+        
     # Extract category names and corresponding sales for the graph
     categories = [item["category__name"] for item in categories_sales]
     sales = [item["total_sales"] for item in categories_sales]
-
+    earnings = [item["total_earnings"] for item in categories_sales]
+    
     # Get the list of users who bought each category
     buyers_per_category = {
         category["category__name"]: list(
@@ -1246,13 +1249,24 @@ def sold_categories(request):
         for category in categories_sales
     }
 
+    template_name = "article/view_sold_categories.html" if view_type == "list" else "article/sold_categories.html"
+    
+    category_data = zip(
+    [item["category__name"] for item in categories_sales],
+    [item["total_sales"] for item in categories_sales],
+    [item["total_earnings"] for item in categories_sales],
+    [list(payments.filter(category__name=item["category__name"]).values_list("user__username", flat=True)) for item in categories_sales]
+)
+    
     return render(
         request,
-        "article/sold_categories.html",
+        template_name,
         {
             "categories": categories,
             "sales": sales,
+            "earnings": earnings,
             "buyers_per_category": buyers_per_category,
+            "category_data": category_data,
             "date_range": date_range,  # Pass the selected date range to the template
         },
     )
@@ -1263,34 +1277,33 @@ def download_sold_categories(request):
     if not request.user.tiene_permisos([PermissionEnum.VER_CATEGORIAS_PAGO]):
         return redirect("forbidden")
 
-    # Filter the payments by the date range (optional, depending on your logic)
     payments = Payment.objects.filter(status="completed")
-
-    # Filter categories that have been paid for (type 'pay') and have associated payments
-    paid_categories = Category.objects.filter(
-        payment__in=payments, type=CategoryType.PAY.value
-    ).distinct()
-
-    # Create a response object and set the content type to CSV
+    
+    # Get the category data similar to the view
+    categories_sales = (
+        payments.values("category__name")
+        .annotate(
+            total_sales=Count("category"), total_earnings=Sum("price")
+        )
+        .order_by("-total_sales")
+    )
+    
+    # Create the response as a CSV file
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = 'attachment; filename="categorias_vendidas.csv"'
 
-    # Create a CSV writer object
+    # Set up the CSV writer
     writer = csv.writer(response)
+    writer.writerow(["Categoria", "Ventas", "Ganancias", "Compradores"])
 
-    # Write the header row, including the 'Fecha de Compra' (Purchase Date)
-    writer.writerow(["Categoria", "Comprador", "Fecha de Compra"])
-
-    # Iterate over the paid categories and write the category, buyer username, and purchase date
-    for category in paid_categories:
-        category_payments = payments.filter(category=category)
-        for payment in category_payments:
-            writer.writerow(
-                [
-                    category.name,
-                    payment.user.username,
-                    payment.date_paid.strftime("%Y-%m-%d %H:%M:%S"),
-                ]
-            )
+    # Add rows in the specified format, excluding the date
+    for item in categories_sales:
+        category_name = item["category__name"]
+        total_sales = item["total_sales"]
+        total_earnings = item["total_earnings"]
+        buyers = list(
+            payments.filter(category__name=category_name).values_list("user__username", flat=True)
+        )
+        writer.writerow([category_name, total_sales, f"${total_earnings:.2f}", ", ".join(buyers)])
 
     return response
