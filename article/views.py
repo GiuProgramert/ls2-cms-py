@@ -1252,22 +1252,27 @@ def sold_categories(request):
     
     # Get the list of users who bought each category
     buyers_per_category = {
-        category["category__name"]: list(
-            payments.filter(category__name=category["category__name"]).values_list(
-                "user__username", flat=True
-            )
-        )
+        category["category__name"]: [
+            f"{purchase['user__username']} ({purchase['date_paid'].strftime('%Y-%m-%d')})"
+            for purchase in payments.filter(category__name=category["category__name"]).values("user__username", "date_paid")
+        ]
         for category in categories_sales
     }
 
     template_name = "article/view_sold_categories.html" if view_type == "list" else "article/sold_categories.html"
     
     category_data = zip(
-    [item["category__name"] for item in categories_sales],
-    [item["total_sales"] for item in categories_sales],
-    [item["total_earnings"] for item in categories_sales],
-    [list(payments.filter(category__name=item["category__name"]).values_list("user__username", flat=True)) for item in categories_sales]
-)
+        [item["category__name"] for item in categories_sales],
+        [item["total_sales"] for item in categories_sales],
+        [item["total_earnings"] for item in categories_sales],
+        [
+            [
+                f"{purchase['user__username']} ({purchase['date_paid'].strftime('%Y-%m-%d')})"
+                for purchase in payments.filter(category__name=item["category__name"]).values("user__username", "date_paid")
+            ]
+            for item in categories_sales
+        ]
+    )
     
     return render(
         request,
@@ -1314,9 +1319,10 @@ def download_sold_categories(request):
         category_name = item["category__name"]
         total_sales = item["total_sales"]
         total_earnings = item["total_earnings"]
-        buyers = list(
-            payments.filter(category__name=category_name).values_list("user__username", flat=True)
-        )
+        buyers = [
+            f"{purchase['user__username']} ({purchase['date_paid'].strftime('%Y-%m-%d')})"
+            for purchase in payments.filter(category__name=category_name).values("user__username", "date_paid")
+        ]
         writer.writerow([category_name, total_sales, f"${total_earnings:.2f}", ", ".join(buyers)])
 
     return response
