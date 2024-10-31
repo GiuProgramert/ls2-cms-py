@@ -2,7 +2,6 @@ from django import forms
 from .models import CustomUser, Role
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import PasswordChangeForm
-from roles.models import Role
 
 
 class CustomPasswordChangeForm(PasswordChangeForm):

@@ -17,8 +17,6 @@ Including another URLconf
 
 import article.views as article
 import user.views as user
-import roles.views as roles
-import kanban.views as kanban
 
 from django.conf.urls.static import static
 from django.urls import path, include

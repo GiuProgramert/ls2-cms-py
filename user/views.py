@@ -3,7 +3,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.views.generic import ListView
 from .models import CustomUser, Role
-from .forms import *
+from .forms import (
+    CustomPasswordChangeForm,
+    CustomUserCreationForm,
+    ProfileForm,
+    UserSearchForm,
+)
 from django.contrib.auth.mixins import UserPassesTestMixin
 from roles.utils import PermissionEnum
 from django.contrib.auth.decorators import login_required

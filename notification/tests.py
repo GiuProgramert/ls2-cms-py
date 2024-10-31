@@ -1,9 +1,6 @@
 from django.test import TestCase
 from unittest import TestCase, mock
-from unittest.mock import patch
 from notification.utils import send_email
-from io import StringIO
-import sys
 
 
 class SendEmailTestCase(TestCase):

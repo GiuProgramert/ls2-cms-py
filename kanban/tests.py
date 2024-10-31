@@ -1,6 +1,5 @@
 from unittest.mock import patch, MagicMock
 from article.models import Payment
-from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 
 # Create your tests here.
@@ -17,12 +16,8 @@ from article.models import (
     Category,
     CategoryType,
     Article,
-    ArticleContent,
-    ArticleVote,
     ArticleStates,
 )
-from article.forms import CategoryForm
-
 
 User = get_user_model()
 

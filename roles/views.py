@@ -1,4 +1,3 @@
-from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import UpdateView
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -6,9 +5,8 @@ from user.models import CustomUser
 from user.forms import RoleAssignmentForm
 from roles.utils import PermissionEnum
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
-from roles.models import Role, Permission
 from roles.forms import RoleForm
+from roles.models import Role
 from notification.utils import (
     send_email,
 )  # Import the send_email function from your utils

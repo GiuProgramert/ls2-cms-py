@@ -1,5 +1,3 @@
-from django.shortcuts import render
-
 # Create your views here.
 from django.conf import settings
 from django.shortcuts import render, redirect
@@ -8,7 +6,6 @@ from django.contrib.auth.decorators import login_required
 # from modulos.Pagos.models import Payment
 # from modulos.Categories.models import Category
 # from modulos.Pagos.forms import PaymentForm, UserProfileForm
-from article.models import UserCategoryPurchase
 from article.models import Category
 from .models import Payment
 
