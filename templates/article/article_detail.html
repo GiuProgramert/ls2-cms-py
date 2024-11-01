@@ -189,7 +189,7 @@
 
       {% if article.state == 'p' %}
         <!-- Votos -->
-        <div class="mt-8">
+        <div class="mt-8 mb-8">
           {% if authenticated %}
             <h2 class="text-2xl font-semibold mb-4">Votos del artículo</h2>
             <div class="flex items-center space-x-4">
@@ -201,6 +201,21 @@
             <br>
           {% endif %}
         </div>
+
+        {% if authenticated %}
+          <div class="mt-8" style="margin-bottom: 1.5rem;">
+            <h2 class="text-2xl font-semibold mb-4">Compartir artículo</h2>
+            <button>
+              <i class="fa-solid fa-share-nodes" style="color: white;"></i>
+              {{shares_number}} Compartidos
+            </button>
+
+            <button id="shareButton">
+              <i class="fa-solid fa-copy"></i>
+              Copiar enlace del artículo
+            </button>
+          </div>
+        {% endif %}
 
         <!-- Votar artículo -->
         {% if authenticated %}
@@ -281,8 +296,17 @@
     {% endif %}
       
 </div>
+
+<!-- Disqus Script -->
 <script id="dsq-count-scr" src="//cmspy.disqus.com/count.js" async></script>
+<!-- Toast lib -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script type="text/javascript" defer src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
 <script src="{% static 'scripts/article_actions.js' %}"></script>
+<script src="{% static 'scripts/article_share_button.js' %}"></script>
+
+<!-- To mark a category as favorite -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const favoriteButtons = document.querySelectorAll('.favorite-btn');
@@ -309,19 +333,6 @@
       });
     });
   });
-  
-
-
-  window.addEventListener("pageshow", function(event) {
-    if (event.persisted || sessionStorage.getItem('reloadAfterBack')) {
-        window.location.reload();
-        sessionStorage.removeItem('reloadAfterBack');
-    }
-  });
-
-  window.addEventListener("beforeunload", function() {
-      sessionStorage.setItem('reloadAfterBack', 'true');
-  });
-
 </script>
+
 {% endblock content %}

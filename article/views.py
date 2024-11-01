@@ -449,6 +449,7 @@ def article_detail(request, pk):
     # Check if the article's category is "free"
     is_free = article.category.type == CategoryType.FREE.value
     authenticated = request.user.is_authenticated
+    shares_number = request.GET.get("shared", "false") == "true"
 
     # Handle unauthenticated users (unknown users)
     if not authenticated:
@@ -501,6 +502,11 @@ def article_detail(request, pk):
         # Increment view count
         if article.state == ArticleStates.PUBLISHED.value:
             article.views_number += 1
+            article.save()
+
+        # Increment shared count
+        if shares_number:
+            article.shares_number += 1
             article.save()
 
         # Fetch the user's vote and rating for the article
@@ -613,6 +619,7 @@ def article_detail(request, pk):
                 "is_moderated_category": is_moderated_category,
                 "avg_rating": avg_rating,
                 "user_vote": user_vote,  # Pass both vote and rating information to the template
+                "shares_number": article.shares_number,
                 "authenticated": authenticated,
                 "is_author": is_author,
                 "is_admin": is_admin,
