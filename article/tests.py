@@ -535,7 +535,7 @@ class PruebasGestionArticulo(TestCase):
         """
 
         self.role.permissions.remove(self.permission_editar_articulos)
-        
+
         self.client.login(username="articleuser", password="articlepassword")
 
         new_user = User.objects.create_user(
@@ -544,11 +544,11 @@ class PruebasGestionArticulo(TestCase):
 
         self.article.autor = new_user
         self.article.save()
-        
+
         response = self.client.get(
             reverse("article-update-history", args=[self.article.pk])
         )
-        
+
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("forbidden"))
 
@@ -589,6 +589,21 @@ class PruebasGestionArticulo(TestCase):
         response = self.client.get(reverse("article-detail", args=[self.article.pk]))
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("forbidden"))
+
+    def test_compartir_articulo(self):
+        """
+        Prueba para compartir un artículo. El contador de compartidos debe subir
+        """
+
+        self.client.login(username="articleuser", password="articlepassword")
+        response = self.client.get(f"/article/{self.article.pk}/detail/?shared=true")
+        
+        self.assertEqual(self.article.shares_number, 0)
+
+        self.article.refresh_from_db()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.article.shares_number, 1)
 
 
 class CasoDePruebaVotoArticulo(TestCase):
@@ -635,7 +650,7 @@ class CasoDePruebaVotoArticulo(TestCase):
         # Iniciar sesión del usuario
         self.client.login(username="votante", password="password")
 
-    def prueba_me_gusta_articulo(self):
+    def test_me_gusta_articulo(self):
         """
         Prueba para dar 'me gusta' a un artículo.
         """
@@ -649,7 +664,7 @@ class CasoDePruebaVotoArticulo(TestCase):
             response, reverse("article-detail", args=[self.article.pk])
         )
 
-    def prueba_no_me_gusta_articulo(self):
+    def test_no_me_gusta_articulo(self):
         """
         Prueba para dar 'no me gusta' a un artículo.
         """
