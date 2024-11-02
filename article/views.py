@@ -186,7 +186,6 @@ def home(request):
 
     favorite_articles = favorite_articles.order_by(order_by)
     normal_articles = normal_articles.order_by(order_by)
-    print(favorite_articles)
 
     return render(
         request,

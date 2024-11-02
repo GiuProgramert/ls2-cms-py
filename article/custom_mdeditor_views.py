@@ -18,8 +18,6 @@ class CustomUploadView(mdeditor_views.UploadView):
             data["url"] = url
             response._container = [json.dumps(data).encode()]
 
-            print(url)
-
             return response
 
         return response

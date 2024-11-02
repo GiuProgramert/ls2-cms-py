@@ -533,11 +533,22 @@ class PruebasGestionArticulo(TestCase):
         """
         Verificar que un usuario sin permiso 'EDITAR_ARTICULOS' es redirigido.
         """
+
         self.role.permissions.remove(self.permission_editar_articulos)
+        
         self.client.login(username="articleuser", password="articlepassword")
+
+        new_user = User.objects.create_user(
+            username="articleuser2", password="articlepassword2"
+        )
+
+        self.article.autor = new_user
+        self.article.save()
+        
         response = self.client.get(
             reverse("article-update-history", args=[self.article.pk])
         )
+        
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("forbidden"))
 

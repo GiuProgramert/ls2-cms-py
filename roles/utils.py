@@ -33,4 +33,5 @@ class PermissionEnum(str, Enum):
     LEER_COMENTARIOS = "leer_comentarios"
     EVALUAR_ARTICULOS = "evaluar_articulos"
     MANEJO_ROLES = "manejo_roles"
-    MANEJAR_CATEGORIAS = "manejar_categorias"
+    MANEJAR_CATEGORIAS = "manejar_categorias" # Solamente para admins
+    VER_CATEGORIAS = "ver_categorias" # Ver todas las categorias usado para comprar categorías
