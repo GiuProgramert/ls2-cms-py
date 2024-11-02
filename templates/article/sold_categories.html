@@ -100,6 +100,7 @@ button.active {
     var categories = {{ categories|safe }};
     var sales = {{ sales|safe }};
     var buyersPerCategory = {{ buyers_per_category|safe }};
+    var earnings = {{ earnings|safe }};
 
     var categoriesChart = new Chart(ctx, {
         type: 'bar',
@@ -135,6 +136,13 @@ button.active {
                 },
                 tooltip: {
                     callbacks: {
+
+                        beforeLabel: function(tooltipItem) {
+                            var category = tooltipItem.label;
+                            var totalEarnings = earnings[tooltipItem.dataIndex] || 0;  // Verifica que el valor exista
+                            return 'Total de la categoría: $' + totalEarnings.toFixed(2);
+                        },
+
                         afterLabel: function(tooltipItem) {
                             var category = tooltipItem.label;
                             var buyers = buyersPerCategory[category] || [];
