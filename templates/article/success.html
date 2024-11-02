@@ -4,6 +4,9 @@
 <link rel="stylesheet" href="{% static 'css/category_detail.css' %}">
 {% endblock headblock %}
 {% block content %}
-    <h1>¡Gracias por tu compra!</h1>
-    <p>Tu pago fue procesado exitosamente.</p>
+<div class="category-details-container">
+    <h1>¡Gracias por tu compra de!</h1>
+    <p>Tu pago de la categoría {{category.name}} fue procesado exitosamente.</p>
+    <a href="{% url 'category-list' %}">Volver a la lista</a>
+</div>
 {% endblock content %}

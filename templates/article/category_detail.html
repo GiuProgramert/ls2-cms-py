@@ -15,8 +15,10 @@
 <p>Moderado: {{ category.is_moderated|yesno:"Sí,No" }}</p>
 <p>Precio $: {{ category.price }}</p>
 
-<a href="{% url 'category-update' category.id %}">Editar</a>
-<a href="{% url 'category-delete' category.id %}">Eliminar</a>
+{% if can_manage_categories %}
+    <a href="{% url 'category-update' category.id %}">Editar</a>
+    <a href="{% url 'category-delete' category.id %}">Eliminar</a>
+{% endif %}
 
 <a href="{% url 'category-list' %}">Volver a la lista</a>
 <br><br>

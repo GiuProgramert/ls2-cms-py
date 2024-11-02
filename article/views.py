@@ -823,7 +823,14 @@ def category_list(request):
     if not request.user.is_authenticated:
         return redirect("login")
 
-    if not request.user.tiene_permisos([PermissionEnum.MANEJAR_CATEGORIAS]):
+    can_create_categories = request.user.tiene_permisos(
+        [PermissionEnum.MANEJAR_CATEGORIAS]
+    )
+
+    if not (
+        request.user.tiene_permisos([PermissionEnum.MANEJAR_CATEGORIAS])
+        or request.user.tiene_permisos([PermissionEnum.VER_CATEGORIAS])
+    ):
         return redirect("forbidden")
 
     form = CategorySearchForm(request.GET or None)
@@ -855,6 +862,7 @@ def category_list(request):
             "form": form,
             "categories": categories,
             "favorite_categories": favorite_categories,
+            "can_create_categories": can_create_categories,
         },
     )
 
@@ -897,11 +905,22 @@ def category_detail(request, pk):
     if not request.user.is_authenticated:
         return redirect("login")
 
-    if not request.user.tiene_permisos([PermissionEnum.MANEJAR_CATEGORIAS]):
+    can_manage_categories = request.user.tiene_permisos(
+        [PermissionEnum.MANEJAR_CATEGORIAS]
+    )
+
+    if not (
+        request.user.tiene_permisos([PermissionEnum.MANEJAR_CATEGORIAS])
+        or request.user.tiene_permisos([PermissionEnum.VER_CATEGORIAS])
+    ):
         return redirect("forbidden")
 
     category = get_object_or_404(Category, pk=pk)
-    return render(request, "article/category_detail.html", {"category": category})
+    return render(
+        request,
+        "article/category_detail.html",
+        {"category": category, "can_manage_categories": can_manage_categories},
+    )
 
 
 def category_create(request):

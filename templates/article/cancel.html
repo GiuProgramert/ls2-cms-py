@@ -4,6 +4,9 @@
 <link rel="stylesheet" href="{% static 'css/category_detail.css' %}">
 {% endblock headblock %}
 {% block content %}
+<div class="category-details-container">
     <h1>Pago Cancelado</h1>
     <p>Parece que cancelaste el pago. Vuelve a intentarlo</p>
+    <a href="{% url 'category-list' %}">Volver a la lista</a>
+</div>
 {% endblock content %}

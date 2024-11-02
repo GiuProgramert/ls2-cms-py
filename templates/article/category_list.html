@@ -55,9 +55,12 @@
     {% else %}
         <p>No se encontraron categorías que coincidan con la búsqueda.</p>
     {% endif %}
-
-    <a href="{% url 'category-create' %}" class="button">Crear nueva categoría</a>
+    
+    {% if can_create_categories %}
+        <a href="{% url 'category-create' %}" class="button">Crear nueva categoría</a>
+    {% endif %}
 </div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const favoriteButtons = document.querySelectorAll('.favorite-btn');
