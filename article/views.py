@@ -1,7 +1,9 @@
 import mistune
 import stripe
 import os
-import csv
+import openpyxl
+from openpyxl.utils import get_column_letter
+from django.http import HttpResponse
 
 from datetime import datetime
 from collections import defaultdict
@@ -1319,37 +1321,50 @@ def download_sold_categories(request):
     # Get the category data similar to the view
     categories_sales = (
         payments.values("category__name")
-        .annotate(total_sales=Count("category"), total_earnings=Sum("price"))
+        .annotate(total_sales=Count("category"), total_earnings=Sum("price"), category_price=Sum("price") / Count("category"))
         .order_by("-total_sales")
     )
 
-    total_general = sum(item["total_earnings"] for item in categories_sales)
-    
-    # Create the response as a CSV file
-    response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = 'attachment; filename="categorias_vendidas.csv"'
+    # Calculate total earnings across all categories
+    total_earnings_all_categories = payments.aggregate(Sum("price"))["price__sum"]
 
-    # Set up the CSV writer
-    writer = csv.writer(response)
-    writer.writerow(["Categoria", "Ventas", "Ganancias", "Compradores"])
+    # Create an Excel workbook and sheet
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Ventas por Categoría"
 
-    # Add rows in the specified format, excluding the date
+    # Write headers
+    headers = ["Categoria", "Ventas", "Ganancias", "Costo de la Categoría", "Compradores (Fecha y Hora)"]
+    ws.append(headers)
+
+    # Add rows in the specified format
     for item in categories_sales:
         category_name = item["category__name"]
         total_sales = item["total_sales"]
         total_earnings = item["total_earnings"]
+        category_price = item["category_price"]  # Average price per purchase for this category
         buyers = [
-            f"{purchase['user__username']} - Costo: ${purchase['price']:.2f} (Fecha: {purchase['date_paid'].strftime('%Y-%m-%d')} Hora: {purchase['date_paid'].strftime('%H:%M:%S')})"
+            f"{purchase['user__username']} (fecha: {purchase['date_paid'].strftime('%Y-%m-%d')}, hora: {purchase['date_paid'].strftime('%H:%M:%S')})"
             for purchase in payments.filter(category__name=category_name).values(
-                "user__username", "price", "date_paid"
+                "user__username", "date_paid"
             )
         ]
+        ws.append([category_name, total_sales, f"${total_earnings:.2f}", f"${category_price:.2f}", ", ".join(buyers)])
 
-        writer.writerow(
-            [category_name, total_sales, f"${total_earnings:.2f}", ", ".join(buyers)]
-        )
+    # Write total earnings at the end of the sheet
+    ws.append([])
+    ws.append(["Total Ganancias", f"${total_earnings_all_categories:.2f}"])
 
-    writer.writerow([])
-    writer.writerow(["Total General", "", f"${total_general:.2f}", ""])
-    
+    # Adjust column width for better readability (optional)
+    for col in ws.columns:
+        max_length = max(len(str(cell.value)) for cell in col)
+        ws.column_dimensions[get_column_letter(col[0].column)].width = max_length
+
+    # Create the response as an Excel file
+    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    response["Content-Disposition"] = 'attachment; filename="categorias_vendidas.xlsx"'
+
+    # Save the workbook to the response
+    wb.save(response)
+
     return response
