@@ -1258,19 +1258,24 @@ def sold_categories(request):
     # Get the list of users who bought each category
     buyers_per_category = {
         category["category__name"]: [
-            f"{purchase['user__username']} ({purchase['date_paid'].strftime('%Y-%m-%d')})"
+            f"{purchase['user__username']} - Costo: ${purchase['price']:.2f} (Fecha: {purchase['date_paid'].strftime('%Y-%m-%d')} Hora: {purchase['date_paid'].strftime('%H:%M:%S')})"
             for purchase in payments.filter(
                 category__name=category["category__name"]
-            ).values("user__username", "date_paid")
+            ).values("user__username", "price", "date_paid")
         ]
         for category in categories_sales
     }
+
+
 
     template_name = (
         "article/view_sold_categories.html"
         if view_type == "list"
         else "article/sold_categories.html"
     )
+    
+    # Cálculo del total general de ganancias
+    total_general = sum(item["total_earnings"] for item in categories_sales)
 
     category_data = zip(
         [item["category__name"] for item in categories_sales],
@@ -1278,10 +1283,10 @@ def sold_categories(request):
         [item["total_earnings"] for item in categories_sales],
         [
             [
-                f"{purchase['user__username']} ({purchase['date_paid'].strftime('%Y-%m-%d')})"
+                f"{purchase['user__username']} - Costo: ${purchase['price']:.2f} (Fecha: {purchase['date_paid'].strftime('%Y-%m-%d')} Hora: {purchase['date_paid'].strftime('%H:%M:%S')})"
                 for purchase in payments.filter(
                     category__name=item["category__name"]
-                ).values("user__username", "date_paid")
+                ).values("user__username", "price", "date_paid")
             ]
             for item in categories_sales
         ],
@@ -1299,6 +1304,7 @@ def sold_categories(request):
             "date_range": date_range,  # Pass the selected date range to the template
             "start_date": start_date_str,
             "end_date": end_date_str,
+            "total_general": total_general,
         },
     )
 
@@ -1317,6 +1323,8 @@ def download_sold_categories(request):
         .order_by("-total_sales")
     )
 
+    total_general = sum(item["total_earnings"] for item in categories_sales)
+    
     # Create the response as a CSV file
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = 'attachment; filename="categorias_vendidas.csv"'
@@ -1331,13 +1339,17 @@ def download_sold_categories(request):
         total_sales = item["total_sales"]
         total_earnings = item["total_earnings"]
         buyers = [
-            f"{purchase['user__username']} ({purchase['date_paid'].strftime('%Y-%m-%d')})"
+            f"{purchase['user__username']} - Costo: ${purchase['price']:.2f} (Fecha: {purchase['date_paid'].strftime('%Y-%m-%d')} Hora: {purchase['date_paid'].strftime('%H:%M:%S')})"
             for purchase in payments.filter(category__name=category_name).values(
-                "user__username", "date_paid"
+                "user__username", "price", "date_paid"
             )
         ]
+
         writer.writerow(
             [category_name, total_sales, f"${total_earnings:.2f}", ", ".join(buyers)]
         )
 
+    writer.writerow([])
+    writer.writerow(["Total General", "", f"${total_general:.2f}", ""])
+    
     return response
