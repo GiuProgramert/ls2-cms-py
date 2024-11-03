@@ -2,6 +2,37 @@
 
 {% block content %}
 
+<div class="custom-filters">
+    <form method="GET" action="{% url 'sold-categories' %}" style="display: flex; align-items: center; gap: 10px;">
+        
+        <!-- Category Dropdown -->
+        <label for="category_name">Nombre De La Categoria:</label>
+        <select id="category_name" name="category_name">
+            <option value="">Todas las categorias</option>
+            {% for category in all_categories %}
+                <option value="{{ category.name }}" {% if category.name == category_name %}selected{% endif %}>
+                    {{ category.name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <!-- User Dropdown -->
+        <label for="username">Usuario:</label>
+        <select id="username" name="username">
+            <option value="">Todos Los Usuarios</option>
+            {% for user in all_users %}
+                <option value="{{ user.username }}" {% if user.username == username %}selected{% endif %}>
+                    {{ user.username }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <!-- Apply Filters Button -->
+        <button type="submit" class="btn btn-primary">Apply Filters</button>
+    </form>
+</div>
+
+
 <div class="top-buttons-container">
     <form method="GET" action="{% url 'sold-categories' %}">
         <input type="hidden" name="view_type" value="list">
