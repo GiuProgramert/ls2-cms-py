@@ -45,6 +45,9 @@ from django.db.models import Sum
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
+import user
+from user.models import CustomUser
+
 
 # Configura Stripe con la clave secreta
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -1237,6 +1240,9 @@ def sold_categories(request):
     view_type = request.GET.get("view_type", "default")
     start_date_str = request.GET.get("start_date", None)
     end_date_str = request.GET.get("end_date", None)
+    category_name = request.GET.get("category_name", "")
+    username = request.GET.get("username", "")
+
 
     # Set the filter for the date range
     filter_kwargs = {}
@@ -1260,6 +1266,11 @@ def sold_categories(request):
 
     # Filter payments based on the selected date range and status 'completed'
     payments = Payment.objects.filter(status="completed", **filter_kwargs)
+    
+    if category_name:
+        payments = payments.filter(category__name__icontains=category_name)
+    if username:
+        payments = payments.filter(user__username__icontains=username)
 
     # Group by category name and count the number of payments associated with each category
     categories_sales = (
@@ -1286,7 +1297,8 @@ def sold_categories(request):
         for category in categories_sales
     }
 
-
+    all_categories = Category.objects.filter(payment__status="completed").distinct()
+    all_users = CustomUser.objects.filter(payment__status="completed").distinct()
 
     template_name = (
         "article/view_sold_categories.html"
@@ -1325,6 +1337,10 @@ def sold_categories(request):
             "start_date": start_date_str,
             "end_date": end_date_str,
             "total_general": total_general,
+            "category_name": category_name,
+            "username": username,
+            "all_categories": all_categories,
+            "all_users": all_users,
         },
     )
 
