@@ -2,11 +2,59 @@
 
 {% block content %}
 <h2>Lista de Categorías Vendidas</h2>
-<ul>
-    {% for category, sales, earning, buyers in category_data %}
-        <li><strong>{{ category }}</strong> - Ventas: {{ sales }} - Ganancias: ${{ earning }} - Compradores: {{ buyers|join:", " }}</li>
-    {% endfor %}
-</ul>
+
+<!-- Filter Form -->
+<div>
+    <label for="filter_start_date">Desde:</label>
+    <input type="date" id="filter_start_date">
+    
+    <label for="filter_end_date">Hasta:</label>
+    <input type="date" id="filter_end_date">
+    
+    <label for="filter_category">Categoría:</label>
+    <select id="filter_category">
+        <option value="">Todas</option>
+        {% for category in all_categories %}
+            <option value="{{ category.name }}">{{ category.name }}</option>
+        {% endfor %}
+    </select>
+    
+    <label for="filter_username">Usuario:</label>
+    <select id="filter_username">
+        <option value="">Todos</option>
+        {% for user in all_users %}
+            <option value="{{ user.username }}">{{ user.username }}</option>
+        {% endfor %}
+    </select>
+    
+    <button type="button" onclick="applyFilters()">Filtrar</button>
+</div>
+
+<!-- Table for Displaying Sold Categories -->
+<table id="category_table">
+    <thead>
+        <tr>
+            <th>Categoría</th>
+            <th>Ventas</th>
+            <th>Ganancias</th>
+            <th>Compradores (Fecha y Hora)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for category, sales, earning, buyers in category_data %}
+        <tr>
+            <td>{{ category }}</td>
+            <td>{{ sales }}</td>
+            <td>${{ earning }}</td>
+            <td>
+                {% for buyer in buyers %}
+                    <div class="buyer-info">{{ buyer }}</div>
+                {% endfor %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
 <p><strong>Total General de Ganancias:</strong> ${{ total_general }}</p>
 
@@ -20,6 +68,91 @@
     .download-button-container {
         margin-top: 20px;
     }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
 </style>
-{% endblock %}
 
+<script>
+    function applyFilters() {
+    console.log("applyFilters function called");
+
+    const startDateStr = document.getElementById("filter_start_date").value;
+    const endDateStr = document.getElementById("filter_end_date").value;
+    const selectedCategory = document.getElementById("filter_category").value.toLowerCase();
+    const selectedUsername = document.getElementById("filter_username").value.toLowerCase();
+
+    const startDate = startDateStr ? new Date(startDateStr) : null;
+    const endDate = endDateStr ? new Date(endDateStr) : null;
+
+    console.log("Start Date:", startDate, "End Date:", endDate); // Debugging line
+    console.log("Selected Category:", selectedCategory); // Debugging line
+
+    const rows = document.querySelectorAll("#category_table tbody tr");
+
+    rows.forEach(row => {
+        const category = row.cells[0].textContent.toLowerCase();
+        const buyers = row.cells[3].querySelectorAll(".buyer-info");
+
+        console.log("Row Category:", category); // Debugging line
+
+        // First, filter by category
+        let showRow = true;
+        if (selectedCategory && selectedCategory !== category) {
+            showRow = false;
+            console.log("Category mismatch. Hiding row."); // Debugging line
+        }
+
+        // Only proceed with buyer filtering if the category matched
+        if (showRow) {
+            let buyerMatch = false;
+            buyers.forEach(buyer => {
+                const buyerText = buyer.textContent.toLowerCase();
+                const dateMatch = buyerText.match(/fecha: (\d{4}-\d{2}-\d{2})/);
+                const buyerDate = dateMatch ? new Date(dateMatch[1]) : null;
+
+                const buyerDateString = buyerDate ? buyerDate.toISOString().split('T')[0] : null;
+                const startDateString = startDate ? startDate.toISOString().split('T')[0] : null;
+                const endDateString = endDate ? endDate.toISOString().split('T')[0] : null;
+
+                console.log("Checking buyer:", buyerText, "Buyer Date:", buyerDateString, "Start Date:", startDateString, "End Date:", endDateString);
+
+                if (selectedUsername && !buyerText.includes(selectedUsername)) {
+                    return;
+                }
+
+                if (startDateString && endDateString && buyerDateString) {
+                    if (buyerDateString < startDateString || buyerDateString > endDateString) {
+                        return;
+                    }
+                }
+
+                buyerMatch = true;
+            });
+
+            // If username or date filtering is applied, use buyerMatch to determine showRow
+            if (selectedUsername || (startDate && endDate)) {
+                showRow = buyerMatch;
+            }
+        }
+
+        console.log("Final showRow value:", showRow);
+
+        // Show or hide the row based on filtering
+        row.style.display = showRow ? "" : "none";
+    });
+}
+
+
+
+</script>
+{% endblock %}
