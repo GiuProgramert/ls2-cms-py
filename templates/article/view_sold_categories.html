@@ -60,9 +60,14 @@
 
 <div class="download-button-container">
     <form method="GET" action="{% url 'download-sold-categories' %}">
+        <input type="hidden" name="start_date" id="download_start_date">
+        <input type="hidden" name="end_date" id="download_end_date">
+        <input type="hidden" name="category_name" id="download_category_name">
+        <input type="hidden" name="username" id="download_username">
         <button type="submit" class="btn btn-primary">Descargar lista de categorías vendidas</button>
     </form>
 </div>
+
 
 <style>
     .download-button-container {
@@ -149,6 +154,14 @@
 
         // Show or hide the row based on filtering
         row.style.display = showRow ? "" : "none";
+
+        document.querySelector(".download-button-container form").addEventListener("submit", function() {
+            document.getElementById("download_start_date").value = document.getElementById("filter_start_date").value;
+            document.getElementById("download_end_date").value = document.getElementById("filter_end_date").value;
+            document.getElementById("download_category_name").value = document.getElementById("filter_category").value;
+            document.getElementById("download_username").value = document.getElementById("filter_username").value;
+        });
+
     });
 }
 
