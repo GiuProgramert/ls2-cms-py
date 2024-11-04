@@ -2,11 +2,44 @@
 
 {% block content %}
 
+<div class="custom-filters">
+    <form method="GET" action="{% url 'sold-categories' %}" style="display: flex; align-items: center; gap: 10px;">
+        
+        <!-- Category Dropdown -->
+        <label for="category_name">Nombre De La Categoria:</label>
+        <select id="category_name" name="category_name">
+            <option value="">Todas las categorias</option>
+            {% for category in all_categories %}
+                <option value="{{ category.name }}" {% if category.name == category_name %}selected{% endif %}>
+                    {{ category.name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <!-- User Dropdown -->
+        <label for="username">Usuario:</label>
+        <select id="username" name="username">
+            <option value="">Todos Los Usuarios</option>
+            {% for user in all_users %}
+                <option value="{{ user.username }}" {% if user.username == username %}selected{% endif %}>
+                    {{ user.username }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <!-- Apply Filters Button -->
+        <button type="submit" class="btn btn-primary">Apply Filters</button>
+    </form>
+</div>
+
+
 <div class="top-buttons-container">
     <form method="GET" action="{% url 'sold-categories' %}">
         <input type="hidden" name="view_type" value="list">
         <button type="submit" class="btn btn-secondary">Ver lista de categorías</button>
     </form>
+    
+    <button onclick="showPieChart()" class="btn btn-primary">Ver gráfico circular</button>
 </div>
 
 <div class="custom-date-filter">
@@ -45,9 +78,13 @@
     </form>
 </div>
 
-<!-- Graph -->
 <div class="chart-container">
     <canvas id="categoriesChart"></canvas>
+    <canvas id="pieChart" style="display: none;"></canvas> <!-- Gráfico circular -->
+</div>
+
+<div class="total-earnings">
+    <h3>Total general de ganancias: ${{ total_general }}</h3>
 </div>
 
 <style>
@@ -96,12 +133,15 @@ button.active {
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    
+
     var ctx = document.getElementById('categoriesChart').getContext('2d');
     var categories = {{ categories|safe }};
     var sales = {{ sales|safe }};
     var buyersPerCategory = {{ buyers_per_category|safe }};
     var earnings = {{ earnings|safe }};
 
+    // Gráfico de barras
     var categoriesChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -153,5 +193,49 @@ button.active {
             }
         }
     });
+
+    // Función para mostrar el gráfico circular
+function showPieChart() {
+    const totalEarnings = parseFloat({{ total_general|default:0 }});
+
+    if (isNaN(totalEarnings) || totalEarnings <= 0) {
+        console.error("Total de ganancias no válido:", totalEarnings);
+        return;
+    }
+
+    var pieCtx = document.getElementById('pieChart').getContext('2d');
+    document.getElementById('categoriesChart').style.display = 'none';
+    document.getElementById('pieChart').style.display = 'block';
+
+    new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: categories,
+            datasets: [{
+                label: 'Total de ganancias',
+                data: earnings,
+                backgroundColor: categories.map((_, i) => `hsl(${i * 30}, 70%, 50%)`),
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                title: { display: true, text: 'Distribución de ganancias por categoría' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            var label = context.label || '';
+                            var amount = context.raw;
+                            var percentage = ((amount / totalEarnings) * 100).toFixed(2);
+                            return `${label}: $${amount.toFixed(2)} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
 </script>
 {% endblock %}
