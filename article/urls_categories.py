@@ -31,4 +31,5 @@ urlpatterns = [
     path("<int:pk>/success/", views.payment_success, name="payment_success"),
     path("<int:pk>/cancel/", views.payment_cancel, name="payment_cancel"),
     path("<int:pk>/cancel/", views.payment_cancel, name="payment_cancel"),
+    path("<int:pk>/exists/", views.category_exists, name="category_exists"),
 ]
