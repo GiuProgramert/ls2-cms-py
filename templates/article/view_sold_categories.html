@@ -45,7 +45,7 @@
         <tr>
             <td>{{ category }}</td>
             <td>{{ sales }}</td>
-            <td>${{ earning }}</td>
+            <td class="earning">${{ earning }}</td>
             <td>
                 {% for buyer in buyers %}
                     <div class="buyer-info">{{ buyer }}</div>
@@ -56,7 +56,7 @@
     </tbody>
 </table>
 
-<p><strong>Total General de Ganancias:</strong> ${{ total_general }}</p>
+<p><strong>Total de Ganancias:</strong> $<span id="total_earnings">{{ total_general }}</span></p>
 
 <div class="download-button-container">
     <form method="GET" action="{% url 'download-sold-categories' %}">
@@ -67,7 +67,6 @@
         <button type="submit" class="btn btn-primary">Descargar lista de categorías vendidas</button>
     </form>
 </div>
-
 
 <style>
     .download-button-container {
@@ -89,71 +88,83 @@
 
 <script>
     function applyFilters() {
-    console.log("applyFilters function called");
+        console.log("applyFilters function called");
 
-    const startDateStr = document.getElementById("filter_start_date").value;
-    const endDateStr = document.getElementById("filter_end_date").value;
-    const selectedCategory = document.getElementById("filter_category").value.toLowerCase();
-    const selectedUsername = document.getElementById("filter_username").value.toLowerCase();
+        const startDateStr = document.getElementById("filter_start_date").value;
+        const endDateStr = document.getElementById("filter_end_date").value;
+        const selectedCategory = document.getElementById("filter_category").value.toLowerCase();
+        const selectedUsername = document.getElementById("filter_username").value.toLowerCase();
 
-    const startDate = startDateStr ? new Date(startDateStr) : null;
-    const endDate = endDateStr ? new Date(endDateStr) : null;
+        const startDate = startDateStr ? new Date(startDateStr) : null;
+        const endDate = endDateStr ? new Date(endDateStr) : null;
 
-    console.log("Start Date:", startDate, "End Date:", endDate); // Debugging line
-    console.log("Selected Category:", selectedCategory); // Debugging line
+        console.log("Start Date:", startDate, "End Date:", endDate); // Debugging line
+        console.log("Selected Category:", selectedCategory); // Debugging line
 
-    const rows = document.querySelectorAll("#category_table tbody tr");
+        const rows = document.querySelectorAll("#category_table tbody tr");
+        let totalEarnings = 0;
 
-    rows.forEach(row => {
-        const category = row.cells[0].textContent.toLowerCase();
-        const buyers = row.cells[3].querySelectorAll(".buyer-info");
+        rows.forEach(row => {
+            const category = row.cells[0].textContent.toLowerCase();
+            const earningsCell = row.querySelector(".earning");
+            const earningsValue = parseFloat(earningsCell.textContent.replace('$', '')) || 0;
+            const buyers = row.cells[3].querySelectorAll(".buyer-info");
 
-        console.log("Row Category:", category); // Debugging line
+            console.log("Row Category:", category); // Debugging line
 
-        // First, filter by category
-        let showRow = true;
-        if (selectedCategory && selectedCategory !== category) {
-            showRow = false;
-            console.log("Category mismatch. Hiding row."); // Debugging line
-        }
+            // First, filter by category
+            let showRow = true;
+            if (selectedCategory && selectedCategory !== category) {
+                showRow = false;
+                console.log("Category mismatch. Hiding row."); // Debugging line
+            }
 
-        // Only proceed with buyer filtering if the category matched
-        if (showRow) {
-            let buyerMatch = false;
-            buyers.forEach(buyer => {
-                const buyerText = buyer.textContent.toLowerCase();
-                const dateMatch = buyerText.match(/fecha: (\d{4}-\d{2}-\d{2})/);
-                const buyerDate = dateMatch ? new Date(dateMatch[1]) : null;
+            // Only proceed with buyer filtering if the category matched
+            if (showRow) {
+                let buyerMatch = false;
+                buyers.forEach(buyer => {
+                    const buyerText = buyer.textContent.toLowerCase();
+                    const dateMatch = buyerText.match(/fecha: (\d{4}-\d{2}-\d{2})/);
+                    const buyerDate = dateMatch ? new Date(dateMatch[1]) : null;
 
-                const buyerDateString = buyerDate ? buyerDate.toISOString().split('T')[0] : null;
-                const startDateString = startDate ? startDate.toISOString().split('T')[0] : null;
-                const endDateString = endDate ? endDate.toISOString().split('T')[0] : null;
+                    const buyerDateString = buyerDate ? buyerDate.toISOString().split('T')[0] : null;
+                    const startDateString = startDate ? startDate.toISOString().split('T')[0] : null;
+                    const endDateString = endDate ? endDate.toISOString().split('T')[0] : null;
 
-                console.log("Checking buyer:", buyerText, "Buyer Date:", buyerDateString, "Start Date:", startDateString, "End Date:", endDateString);
+                    console.log("Checking buyer:", buyerText, "Buyer Date:", buyerDateString, "Start Date:", startDateString, "End Date:", endDateString);
 
-                if (selectedUsername && !buyerText.includes(selectedUsername)) {
-                    return;
-                }
-
-                if (startDateString && endDateString && buyerDateString) {
-                    if (buyerDateString < startDateString || buyerDateString > endDateString) {
+                    if (selectedUsername && !buyerText.includes(selectedUsername)) {
                         return;
                     }
+
+                    if (startDateString && endDateString && buyerDateString) {
+                        if (buyerDateString < startDateString || buyerDateString > endDateString) {
+                            return;
+                        }
+                    }
+
+                    buyerMatch = true;
+                });
+
+                // If username or date filtering is applied, use buyerMatch to determine showRow
+                if (selectedUsername || (startDate && endDate)) {
+                    showRow = buyerMatch;
                 }
-
-                buyerMatch = true;
-            });
-
-            // If username or date filtering is applied, use buyerMatch to determine showRow
-            if (selectedUsername || (startDate && endDate)) {
-                showRow = buyerMatch;
             }
-        }
 
-        console.log("Final showRow value:", showRow);
+            console.log("Final showRow value:", showRow);
 
-        // Show or hide the row based on filtering
-        row.style.display = showRow ? "" : "none";
+            // Show or hide the row based on filtering
+            row.style.display = showRow ? "" : "none";
+
+            // Sum earnings if the row is shown
+            if (showRow) {
+                totalEarnings += earningsValue;
+            }
+        });
+
+        // Update total earnings in the HTML
+        document.getElementById("total_earnings").textContent = totalEarnings.toFixed(2);
 
         document.querySelector(".download-button-container form").addEventListener("submit", function() {
             document.getElementById("download_start_date").value = document.getElementById("filter_start_date").value;
@@ -161,11 +172,7 @@
             document.getElementById("download_category_name").value = document.getElementById("filter_category").value;
             document.getElementById("download_username").value = document.getElementById("filter_username").value;
         });
-
-    });
-}
-
-
-
+    }
 </script>
 {% endblock %}
+
