@@ -58,20 +58,9 @@
 
 <p><strong>Total de Ganancias:</strong> $<span id="total_earnings">{{ total_general }}</span></p>
 
-<div class="download-button-container">
-    <form method="GET" action="{% url 'download-sold-categories' %}">
-        <input type="hidden" name="start_date" id="download_start_date">
-        <input type="hidden" name="end_date" id="download_end_date">
-        <input type="hidden" name="category_name" id="download_category_name">
-        <input type="hidden" name="username" id="download_username">
-        <button type="submit" class="btn btn-primary">Descargar lista de categorías vendidas</button>
-    </form>
-</div>
+<button type="button" onclick="downloadExcel()">Descargar lista de categorías vendidas</button>
 
 <style>
-    .download-button-container {
-        margin-top: 20px;
-    }
     table {
         width: 100%;
         border-collapse: collapse;
@@ -163,5 +152,64 @@ function applyFilters() {
     // Actualizar el total de ganancias en el HTML
     document.getElementById("total_earnings").textContent = totalEarnings.toFixed(2);
 }
+
+function downloadExcel() {
+    // Obtener el usuario seleccionado en el filtro
+    const selectedUser = document.getElementById("filter_username").value.toLowerCase();
+
+    // Obtener todas las filas visibles en la tabla
+    const tableRows = Array.from(document.querySelectorAll("#category_table tbody tr"))
+        .filter(row => row.style.display !== "none" || selectedUser === "");
+
+    // Recolectar datos de cada fila visible o todas si no se aplicó filtro
+    const tableData = tableRows
+        .map(row => {
+            // Filtrar compradores si se ha seleccionado un usuario específico
+            const filteredBuyers = Array.from(row.cells[3].querySelectorAll(".buyer-info"))
+                .map(buyer => buyer.textContent.trim())
+                .filter(buyerText => selectedUser === "" || buyerText.toLowerCase().includes(selectedUser));
+
+            // Convertir ventas y ganancias a números para asegurar comparaciones correctas
+            const ventas = parseInt(row.cells[1].textContent.trim(), 10);
+            const ganancias = parseFloat(row.cells[2].textContent.trim().replace('$', ''));
+
+            return {
+                categoria: row.cells[0].textContent.trim(),
+                ventas: ventas,
+                ganancias: ganancias,
+                compradores: filteredBuyers  // Solo los compradores filtrados
+            };
+        })
+        .filter(item => item.ventas > 0 || item.ganancias > 0 || item.compradores.length > 0);  // Excluir categorías sin ventas, ganancias o compradores
+
+    // Verificar que `tableData` no esté vacío antes de enviar
+    if (tableData.length === 0) {
+        alert("No hay datos para exportar.");
+        return;
+    }
+
+    fetch("{% url 'download-sold-categories' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ category_data: tableData })
+    })
+    .then(response => response.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "categorias_vendidas.xlsx";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    });
+}
+
+
+
+
 </script>
 {% endblock %}
