@@ -165,37 +165,38 @@ function downloadExcel() {
     // Obtener el usuario seleccionado en el filtro
     const selectedUser = document.getElementById("filter_username").value.toLowerCase();
 
-    // Obtener todas las filas visibles en la tabla
+    // Obtener solo las filas visibles en la tabla
     const tableRows = Array.from(document.querySelectorAll("#category_table tbody tr"))
-        .filter(row => row.style.display !== "none" || selectedUser === "");
+        .filter(row => row.style.display !== "none");  // Filtrar por visibilidad directamente
 
-    // Recolectar datos de cada fila visible o todas si no se aplicó filtro
-    const tableData = tableRows
-        .map(row => {
-            // Filtrar compradores si se ha seleccionado un usuario específico
-            const filteredBuyers = Array.from(row.cells[3].querySelectorAll(".buyer-info"))
-                .map(buyer => buyer.textContent.trim())
-                .filter(buyerText => selectedUser === "" || buyerText.toLowerCase().includes(selectedUser));
+    console.log("Filas visibles para exportar:", tableRows);
 
-            // Convertir ventas y ganancias a números para asegurar comparaciones correctas
-            const ventas = parseInt(row.cells[1].textContent.trim(), 10);
-            const ganancias = parseFloat(row.cells[2].textContent.trim().replace('$', ''));
+    // Recolectar datos de cada fila visible
+    const tableData = tableRows.map(row => {
+        // Filtrar compradores según el usuario seleccionado
+        const filteredBuyers = Array.from(row.cells[3].querySelectorAll(".buyer-info"))
+            .filter(buyer => buyer.style.display !== "none")  // Solo compradores visibles
+            .map(buyer => buyer.textContent.trim());
 
-            return {
-                categoria: row.cells[0].textContent.trim(),
-                ventas: ventas,
-                ganancias: ganancias,
-                compradores: filteredBuyers  // Solo los compradores filtrados
-            };
-        })
-        .filter(item => item.ventas > 0 || item.ganancias > 0 || item.compradores.length > 0);  // Excluir categorías sin ventas, ganancias o compradores
+        const ventas = parseInt(row.cells[1].textContent.trim(), 10);
+        const ganancias = parseFloat(row.cells[2].textContent.trim().replace('$', ''));
 
-    // Verificar que `tableData` no esté vacío antes de enviar
+        return {
+            categoria: row.cells[0].textContent.trim(),
+            ventas: ventas,
+            ganancias: ganancias,
+            compradores: filteredBuyers
+        };
+    }).filter(item => item.ventas > 0 || item.ganancias > 0 || item.compradores.length > 0);
+
+    console.log("Datos recopilados para exportar:", tableData);
+
     if (tableData.length === 0) {
         alert("No hay datos para exportar.");
         return;
     }
 
+    // Enviar datos filtrados al backend para generar el archivo Excel
     fetch("{% url 'download-sold-categories' %}", {
         method: "POST",
         headers: {
@@ -215,8 +216,6 @@ function downloadExcel() {
         a.remove();
     });
 }
-
-
 
 
 </script>
