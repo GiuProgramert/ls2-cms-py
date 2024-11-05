@@ -194,6 +194,9 @@ def home(request):
 
     favorite_articles = favorite_articles.order_by(order_by)
     normal_articles = normal_articles.order_by(order_by)
+    # Crear una lista con todos los articulos
+    all_articles = favorite_articles.union(normal_articles)
+    all_articles = all_articles.order_by(order_by)
 
     return render(
         request,
@@ -204,6 +207,7 @@ def home(request):
             "not_permited_categories": not_permited_categories,
             "favorite_articles": favorite_articles,
             "normal_articles": normal_articles,
+            "all_articles": all_articles,
             "form": form,
             "search_query": search_query,
             "order_by": order_by,
