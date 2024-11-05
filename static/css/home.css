@@ -368,3 +368,20 @@ sdffsdddddddddddddddddddddddddddddddddddddddd
   background-color: #f0f0f0;  /* Un gris claro */
   color: #616161;  /* Un gris más oscuro para el texto */
 }
+
+.category-header {
+  display: flex;
+  align-items: center; /* Alinea verticalmente el botón con el nombre */
+}
+
+.category-name {
+  margin-right: 10px; /* Espacio entre el nombre y el botón */
+}
+
+.favorite-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2em;
+  padding: 0;
+}
