@@ -951,12 +951,28 @@ def category_create(request):
     if request.method == "POST":
         form = CategoryForm(request.POST)
         if form.is_valid():
-            form.save()
+            # Crear una instancia de Category sin guardarla aún
+            category = form.save(commit=False)
+            # Asigna el ID del usuario al campo createdBy
+            category.createdBy = request.user.id
+            # Guarda la instancia en la base de datos
+            category.save()
             return redirect("category-list")
     else:
         form = CategoryForm()
 
     return render(request, "article/category_form.html", {"form": form})
+
+    """
+    if request.method == "POST":
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("category-list")
+    else:
+        form = CategoryForm()
+
+    return render(request, "article/category_form.html", {"form": form})"""
 
 
 def category_update(request, pk):
@@ -1109,50 +1125,63 @@ def dislike_article(request, pk):
 
 
 def stripe_checkout(request, pk):
-    # Obtener la categoría o devolver 404 si no existe
-    category = get_object_or_404(Category, id=pk)
+    try:
+        # Verifica si existe un pago completado
+        payment_exists = Payment.objects.filter(
+            user=request.user, category=pk, status="completed"
+        ).exists()
 
-    # Asignar el precio basado en la categoría (esto depende de tu lógica)
-    # Aquí suponemos que la categoría tiene un campo "price" (precio)
-    price_in_cents = int(category.price * 100)  # Convertir a centavos si es necesario
+        if payment_exists:
+            # Si se encuentra el pago y tiene estado "completed", ir a exists.html
+            return render(request, "article/exists.html")
 
-    # Crear el ítem para Stripe Checkout con base en la categoría
-    line_items = [
-        {
-            "price_data": {
-                "currency": "usd",
-                "product_data": {
-                    "name": category.name,  # Usamos el nombre de la categoría
+        # Obtener la categoría o devolver 404 si no existe
+        category = get_object_or_404(Category, id=pk)
+
+        # Asignar el precio basado en la categoría
+        price_in_cents = int(category.price * 100)  # Convertir a centavos si es necesario
+
+        # Crear el ítem para Stripe Checkout con base en la categoría
+        line_items = [
+            {
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {
+                        "name": category.name,
+                    },
+                    "unit_amount": price_in_cents,
                 },
-                "unit_amount": price_in_cents,  # Precio en centavos
-            },
-            "quantity": 1,  # Se asume una cantidad de 1 categoría a pagar
-        }
-    ]
+                "quantity": 1,
+            }
+        ]
 
-    # Crear un nuevo registro de pago con estado 'pending'
+        # Crear la sesión de Stripe Checkout
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode="payment",
+            success_url=f'{os.environ.get("URL")}/categories/{category.pk}/success/',
+            cancel_url=f'{os.environ.get("URL")}/categories/{category.pk}/cancel/',
+        )
 
-    # Crear la sesión de Stripe Checkout
-    session = stripe.checkout.Session.create(
-        payment_method_types=["card"],
-        line_items=line_items,  # Enviamos el ítem con la categoría
-        mode="payment",
-        success_url=f'{os.environ.get("URL")}/categories/{category.pk}/success/',
-        cancel_url=f'{os.environ.get("URL")}/categories/{category.pk}/cancel/',
-    )
+        # Crear un nuevo registro de pago con estado 'pending'
+        Payment.objects.create(
+            user=request.user,
+            category=category,
+            price=category.price,  # Usar el precio de la categoría
+            stripe_payment_id=session.id,
+            status="pending",
+        )
 
-    # print(session)
+        return JsonResponse({"id": session.id})
 
-    # Crear un nuevo registro de pago con estado 'pending'
-    Payment.objects.create(
-        user=request.user,
-        category=category,
-        price=5.00,  # Ajustar el monto según sea necesario
-        stripe_payment_id=session.id,  # Almacenar el PaymentIntent ID
-        status="pending",  # Inicialmente en 'pending'
-    )
+    except ObjectDoesNotExist:
+        # Si no existe la categoría, devuelve un error 404
+        return JsonResponse({"error": "Category does not exist"}, status=404)
 
-    return JsonResponse({"id": session.id})
+    except Exception as e:
+        # Manejar cualquier otro error
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 def checkout_page(request, pk):
@@ -1227,6 +1256,11 @@ def payment_cancel(request, pk):
     payment.status = "cancelled"
     payment.save()
     return render(request, "article/cancel.html")
+
+def category_exists(request, pk):
+    category = get_object_or_404(Category, id=pk)
+    user = request.user
+    return render(request, "article/exists.html")
 
 
 @login_required
