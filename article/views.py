@@ -46,6 +46,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core import serializers
 
 from user.models import CustomUser
+import json
+from django.views.decorators.csrf import csrf_exempt
+from openpyxl import Workbook
+
 
 
 # Configura Stripe con la clave secreta
@@ -190,6 +194,9 @@ def home(request):
 
     favorite_articles = favorite_articles.order_by(order_by)
     normal_articles = normal_articles.order_by(order_by)
+    # Crear una lista con todos los articulos
+    all_articles = favorite_articles.union(normal_articles)
+    all_articles = all_articles.order_by(order_by)
 
     return render(
         request,
@@ -200,6 +207,7 @@ def home(request):
             "not_permited_categories": not_permited_categories,
             "favorite_articles": favorite_articles,
             "normal_articles": normal_articles,
+            "all_articles": all_articles,
             "form": form,
             "search_query": search_query,
             "order_by": order_by,
@@ -951,12 +959,28 @@ def category_create(request):
     if request.method == "POST":
         form = CategoryForm(request.POST)
         if form.is_valid():
-            form.save()
+            # Crear una instancia de Category sin guardarla aún
+            category = form.save(commit=False)
+            # Asigna el ID del usuario al campo createdBy
+            category.createdBy = request.user.id
+            # Guarda la instancia en la base de datos
+            category.save()
             return redirect("category-list")
     else:
         form = CategoryForm()
 
     return render(request, "article/category_form.html", {"form": form})
+
+    """
+    if request.method == "POST":
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("category-list")
+    else:
+        form = CategoryForm()
+
+    return render(request, "article/category_form.html", {"form": form})"""
 
 
 def category_update(request, pk):
@@ -1109,50 +1133,63 @@ def dislike_article(request, pk):
 
 
 def stripe_checkout(request, pk):
-    # Obtener la categoría o devolver 404 si no existe
-    category = get_object_or_404(Category, id=pk)
+    try:
+        # Verifica si existe un pago completado
+        payment_exists = Payment.objects.filter(
+            user=request.user, category=pk, status="completed"
+        ).exists()
 
-    # Asignar el precio basado en la categoría (esto depende de tu lógica)
-    # Aquí suponemos que la categoría tiene un campo "price" (precio)
-    price_in_cents = int(category.price * 100)  # Convertir a centavos si es necesario
+        if payment_exists:
+            # Si se encuentra el pago y tiene estado "completed", ir a exists.html
+            return render(request, "article/exists.html")
 
-    # Crear el ítem para Stripe Checkout con base en la categoría
-    line_items = [
-        {
-            "price_data": {
-                "currency": "usd",
-                "product_data": {
-                    "name": category.name,  # Usamos el nombre de la categoría
+        # Obtener la categoría o devolver 404 si no existe
+        category = get_object_or_404(Category, id=pk)
+
+        # Asignar el precio basado en la categoría
+        price_in_cents = int(category.price * 100)  # Convertir a centavos si es necesario
+
+        # Crear el ítem para Stripe Checkout con base en la categoría
+        line_items = [
+            {
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {
+                        "name": category.name,
+                    },
+                    "unit_amount": price_in_cents,
                 },
-                "unit_amount": price_in_cents,  # Precio en centavos
-            },
-            "quantity": 1,  # Se asume una cantidad de 1 categoría a pagar
-        }
-    ]
+                "quantity": 1,
+            }
+        ]
 
-    # Crear un nuevo registro de pago con estado 'pending'
+        # Crear la sesión de Stripe Checkout
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode="payment",
+            success_url=f'{os.environ.get("URL")}/categories/{category.pk}/success/',
+            cancel_url=f'{os.environ.get("URL")}/categories/{category.pk}/cancel/',
+        )
 
-    # Crear la sesión de Stripe Checkout
-    session = stripe.checkout.Session.create(
-        payment_method_types=["card"],
-        line_items=line_items,  # Enviamos el ítem con la categoría
-        mode="payment",
-        success_url=f'{os.environ.get("URL")}/categories/{category.pk}/success/',
-        cancel_url=f'{os.environ.get("URL")}/categories/{category.pk}/cancel/',
-    )
+        # Crear un nuevo registro de pago con estado 'pending'
+        Payment.objects.create(
+            user=request.user,
+            category=category,
+            price=category.price,  # Usar el precio de la categoría
+            stripe_payment_id=session.id,
+            status="pending",
+        )
 
-    # print(session)
+        return JsonResponse({"id": session.id})
 
-    # Crear un nuevo registro de pago con estado 'pending'
-    Payment.objects.create(
-        user=request.user,
-        category=category,
-        price=5.00,  # Ajustar el monto según sea necesario
-        stripe_payment_id=session.id,  # Almacenar el PaymentIntent ID
-        status="pending",  # Inicialmente en 'pending'
-    )
+    except ObjectDoesNotExist:
+        # Si no existe la categoría, devuelve un error 404
+        return JsonResponse({"error": "Category does not exist"}, status=404)
 
-    return JsonResponse({"id": session.id})
+    except Exception as e:
+        # Manejar cualquier otro error
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 def checkout_page(request, pk):
@@ -1227,6 +1264,11 @@ def payment_cancel(request, pk):
     payment.status = "cancelled"
     payment.save()
     return render(request, "article/cancel.html")
+
+def category_exists(request, pk):
+    category = get_object_or_404(Category, id=pk)
+    user = request.user
+    return render(request, "article/exists.html")
 
 
 @login_required
@@ -1343,6 +1385,7 @@ def sold_categories(request):
     )
 
 
+@csrf_exempt
 @login_required
 def sold_categories_suscriptor(request):
     if not request.user.tiene_permisos([PermissionEnum.VER_CATEGORIAS]):
@@ -1411,112 +1454,62 @@ def sold_categories_suscriptor(request):
     )
 
 
+@csrf_exempt
 @login_required
 def download_sold_categories(request):
-    if not request.user.tiene_permisos([PermissionEnum.VER_CATEGORIAS_PAGO]):
-        return redirect("forbidden")
+    if request.method == "POST":
+        data = json.loads(request.body).get("category_data", [])
+        
+        # Agregar una impresión para ver el contenido recibido del frontend
 
-    # Obtener filtros de la solicitud
-    start_date_str = request.GET.get("start_date", None)
-    end_date_str = request.GET.get("end_date", None)
-    category_name = request.GET.get("category_name", "")
-    username = request.GET.get("username", "")
+        # Crear un archivo Excel y hoja de trabajo
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Ventas por Categoría"
 
-    # Calcular ganancias y ventas completas por categoría antes de aplicar filtros específicos
-    all_payments = Payment.objects.filter(status="completed")
-    categories_sales = (
-        all_payments.values("category__name")
-        .annotate(total_sales=Count("id"), total_earnings=Sum("price"))
-        .order_by("-total_sales")
-    )
+        # Escribir encabezados
+        headers = ["Categoria", "Ventas", "Ganancias", "Compradores (Fecha y Hora)"]
+        ws.append(headers)
 
-    # Construir los filtros de usuarios y fechas para la lista de compradores filtrados
-    filter_kwargs = {"status": "completed"}
-    if start_date_str and end_date_str:
-        try:
-            start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
-            end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
-            filter_kwargs["date_paid__range"] = (start_date, end_date)
-        except ValueError:
-            return HttpResponseBadRequest("Invalid date format. Use YYYY-MM-DD.")
-    if category_name:
-        filter_kwargs["category__name__icontains"] = category_name
-    if username:
-        filter_kwargs["user__username__icontains"] = username
+        # Variable para acumular el total de ganancias
+        total_earnings_filtered = 0
 
-    # Filtrar pagos basados en los filtros específicos para obtener la lista de compradores filtrados
-    payments_filtered = Payment.objects.filter(**filter_kwargs)
+        # Añadir filas en el formato especificado según los datos enviados
+        for item in data:
+            category_name = item["categoria"]
+            total_sales = int(item["ventas"])
+            total_earnings = float(item["ganancias"])
+            buyers = ", ".join(item["compradores"])
 
-    # Crear un archivo Excel y hoja de trabajo
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Ventas por Categoría"
+            # Solo añadir categorías que ya vienen con datos válidos desde el HTML
+            if total_sales > 0 and total_earnings > 0:
+                # Sumar las ganancias al total
+                total_earnings_filtered += total_earnings
 
-    # Escribir encabezados
-    headers = ["Categoria", "Ventas", "Ganancias", "Compradores (Fecha y Hora)"]
-    ws.append(headers)
-
-    # Variable para acumular el total de ganancias filtradas
-    total_earnings_filtered = 0
-
-    # Añadir filas en el formato especificado solo para categorías con compradores filtrados
-    for item in categories_sales:
-        category_name = item["category__name"]
-        total_sales = item[
-            "total_sales"
-        ]  # Ventas totales sin aplicar filtros de usuario
-        total_earnings = item[
-            "total_earnings"
-        ]  # Ganancias totales sin aplicar filtros de usuario
-
-        # Obtener todos los compradores de la categoría sin filtros
-        all_buyers = [
-            f"{purchase['user__username']} - Costo: ${purchase['price']:.2f} (Fecha: {purchase['date_paid'].strftime('%Y-%m-%d')} Hora: {purchase['date_paid'].strftime('%H:%M:%S')})"
-            for purchase in all_payments.filter(category__name=category_name).values(
-                "user__username", "price", "date_paid"
-            )
-        ]
-
-        # Obtener compradores filtrados por categoría específica
-        filtered_buyers = [
-            f"{purchase['user__username']} - Costo: ${purchase['price']:.2f} (Fecha: {purchase['date_paid'].strftime('%Y-%m-%d')} Hora: {purchase['date_paid'].strftime('%H:%M:%S')})"
-            for purchase in payments_filtered.filter(
-                category__name=category_name
-            ).values("user__username", "price", "date_paid")
-        ]
-
-        # Solo agregar la categoría si tiene compradores que cumplen con los filtros
-        if filtered_buyers:
-            # Sumar las ganancias de esta categoría al total de ganancias filtradas
-            total_earnings_filtered += total_earnings
-
-            # Agregar la categoría al Excel
-            ws.append(
-                [
+                # Agregar la categoría con los compradores al archivo Excel
+                ws.append([
                     category_name,
                     total_sales,
                     f"${total_earnings:.2f}",
-                    ", ".join(all_buyers),  # Mostrar todos los compradores
-                ]
-            )
+                    buyers
+                ])
 
-    # Escribir el total de ganancias filtradas al final de la hoja
-    ws.append([])
-    ws.append(["Total Ganancias", f"${total_earnings_filtered:.2f}"])
+        # Escribir el total de ganancias al final de la hoja
+        ws.append([])
+        ws.append(["Total Ganancias", f"${total_earnings_filtered:.2f}"])
 
-    # Ajustar ancho de columnas para mejor legibilidad
-    for col in ws.columns:
-        max_length = max(len(str(cell.value)) for cell in col)
-        ws.column_dimensions[get_column_letter(col[0].column)].width = max_length
+        # Ajustar ancho de columnas para mejor legibilidad
+        for col in ws.columns:
+            max_length = max(len(str(cell.value)) for cell in col)
+            ws.column_dimensions[get_column_letter(col[0].column)].width = max_length
 
-    # Crear la respuesta como archivo Excel
-    response = HttpResponse(
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-    response["Content-Disposition"] = 'attachment; filename="categorias_vendidas.xlsx"'
-    wb.save(response)
+        # Crear la respuesta como archivo Excel
+        response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        response["Content-Disposition"] = 'attachment; filename="categorias_vendidas.xlsx"'
+        wb.save(response)
 
-    return response
+        return response
+    return JsonResponse({"error": "Invalid request"}, status=400)
 
 
 @login_required

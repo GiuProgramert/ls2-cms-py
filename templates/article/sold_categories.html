@@ -27,6 +27,13 @@
             {% endfor %}
         </select>
 
+        <!-- Date Filters -->
+        <label for="start_date">Desde:</label>
+        <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
+
+        <label for="end_date">Hasta:</label>
+        <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
+
         <!-- Apply Filters Button -->
         <button type="submit" class="btn btn-primary">Apply Filters</button>
     </form>
@@ -42,17 +49,7 @@
     <button onclick="showPieChart()" class="btn btn-primary">Ver gráfico circular</button>
 </div>
 
-<div class="custom-date-filter">
-    <form method="GET" action="{% url 'sold-categories' %}">
-        <label for="start_date">Desde:</label>
-        <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
-        
-        <label for="end_date">Hasta:</label>
-        <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
 
-        <button type="submit" class="btn btn-primary">Aplicar Filtro</button>
-    </form>
-</div>
 
 <!-- Date Range Filter Buttons -->
 <div class="button-container">

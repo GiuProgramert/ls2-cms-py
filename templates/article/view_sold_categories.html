@@ -1,6 +1,14 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
+<div style="margin-top: 20px;">
+    <button type="button" onclick="window.location.href='http://127.0.0.1:8000/article/sold-categories/'" class="btn" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; cursor: pointer;">
+        Ir a los graficos
+    </button>
+</div>
+
+
 <h2>Lista de Categorías Vendidas</h2>
 
 <!-- Filter Form -->
@@ -58,20 +66,9 @@
 
 <p><strong>Total de Ganancias:</strong> $<span id="total_earnings">{{ total_general }}</span></p>
 
-<div class="download-button-container">
-    <form method="GET" action="{% url 'download-sold-categories' %}">
-        <input type="hidden" name="start_date" id="download_start_date">
-        <input type="hidden" name="end_date" id="download_end_date">
-        <input type="hidden" name="category_name" id="download_category_name">
-        <input type="hidden" name="username" id="download_username">
-        <button type="submit" class="btn btn-primary">Descargar lista de categorías vendidas</button>
-    </form>
-</div>
+<button type="button" onclick="downloadExcel()">Descargar lista de categorías vendidas</button>
 
 <style>
-    .download-button-container {
-        margin-top: 20px;
-    }
     table {
         width: 100%;
         border-collapse: collapse;
@@ -87,92 +84,139 @@
 </style>
 
 <script>
-    function applyFilters() {
-        console.log("applyFilters function called");
+function applyFilters() {
+    console.log("applyFilters function called");
 
-        const startDateStr = document.getElementById("filter_start_date").value;
-        const endDateStr = document.getElementById("filter_end_date").value;
-        const selectedCategory = document.getElementById("filter_category").value.toLowerCase();
-        const selectedUsername = document.getElementById("filter_username").value.toLowerCase();
+    const startDateStr = document.getElementById("filter_start_date").value;
+    const endDateStr = document.getElementById("filter_end_date").value;
+    const selectedCategory = document.getElementById("filter_category").value.toLowerCase();
+    const selectedUsername = document.getElementById("filter_username").value.toLowerCase();
 
-        const startDate = startDateStr ? new Date(startDateStr) : null;
-        const endDate = endDateStr ? new Date(endDateStr) : null;
+    const startDate = startDateStr ? new Date(startDateStr) : null;
+    const endDate = endDateStr ? new Date(endDateStr) : null;
 
-        console.log("Start Date:", startDate, "End Date:", endDate); // Debugging line
-        console.log("Selected Category:", selectedCategory); // Debugging line
+    const rows = document.querySelectorAll("#category_table tbody tr");
+    let totalEarnings = 0;
 
-        const rows = document.querySelectorAll("#category_table tbody tr");
-        let totalEarnings = 0;
+    rows.forEach(row => {
+        const category = row.cells[0].textContent.toLowerCase();
+        const buyers = row.cells[3].querySelectorAll(".buyer-info");
 
-        rows.forEach(row => {
-            const category = row.cells[0].textContent.toLowerCase();
-            const earningsCell = row.querySelector(".earning");
-            const earningsValue = parseFloat(earningsCell.textContent.replace('$', '')) || 0;
-            const buyers = row.cells[3].querySelectorAll(".buyer-info");
+        let rowEarnings = 0;
+        let rowSales = 0;
+        let showRow = false;
 
-            console.log("Row Category:", category); // Debugging line
+        // Filtrar por categoría
+        if (selectedCategory && selectedCategory !== category) {
+            row.style.display = "none";
+            return; // Saltar al siguiente row si la categoría no coincide
+        }
 
-            // First, filter by category
-            let showRow = true;
-            if (selectedCategory && selectedCategory !== category) {
-                showRow = false;
-                console.log("Category mismatch. Hiding row."); // Debugging line
+        buyers.forEach(buyer => {
+            const buyerText = buyer.textContent.toLowerCase();
+            const dateMatch = buyerText.match(/fecha: (\d{4}-\d{2}-\d{2})/);
+            const buyerDate = dateMatch ? new Date(dateMatch[1]) : null;
+
+            const buyerDateString = buyerDate ? buyerDate.toISOString().split('T')[0] : null;
+            const startDateString = startDate ? startDate.toISOString().split('T')[0] : null;
+            const endDateString = endDate ? endDate.toISOString().split('T')[0] : null;
+
+            // Filtrar por usuario
+            if (selectedUsername && !buyerText.includes(selectedUsername)) {
+                buyer.style.display = "none";
+                return;
             }
 
-            // Only proceed with buyer filtering if the category matched
-            if (showRow) {
-                let buyerMatch = false;
-                buyers.forEach(buyer => {
-                    const buyerText = buyer.textContent.toLowerCase();
-                    const dateMatch = buyerText.match(/fecha: (\d{4}-\d{2}-\d{2})/);
-                    const buyerDate = dateMatch ? new Date(dateMatch[1]) : null;
-
-                    const buyerDateString = buyerDate ? buyerDate.toISOString().split('T')[0] : null;
-                    const startDateString = startDate ? startDate.toISOString().split('T')[0] : null;
-                    const endDateString = endDate ? endDate.toISOString().split('T')[0] : null;
-
-                    console.log("Checking buyer:", buyerText, "Buyer Date:", buyerDateString, "Start Date:", startDateString, "End Date:", endDateString);
-
-                    if (selectedUsername && !buyerText.includes(selectedUsername)) {
-                        return;
-                    }
-
-                    if (startDateString && endDateString && buyerDateString) {
-                        if (buyerDateString < startDateString || buyerDateString > endDateString) {
-                            return;
-                        }
-                    }
-
-                    buyerMatch = true;
-                });
-
-                // If username or date filtering is applied, use buyerMatch to determine showRow
-                if (selectedUsername || (startDate && endDate)) {
-                    showRow = buyerMatch;
+            // Filtrar por fecha
+            if (startDate && endDate && buyerDateString) {
+                if (buyerDateString < startDateString || buyerDateString > endDateString) {
+                    buyer.style.display = "none";
+                    return;
                 }
             }
 
-            console.log("Final showRow value:", showRow);
+            // Si el comprador pasa todos los filtros, hacerlo visible y contar la ganancia y venta
+            buyer.style.display = "";
+            showRow = true;
 
-            // Show or hide the row based on filtering
-            row.style.display = showRow ? "" : "none";
-
-            // Sum earnings if the row is shown
-            if (showRow) {
-                totalEarnings += earningsValue;
-            }
+            // Sumar ganancias y ventas para el comprador visible
+            rowEarnings += 5; // Ajuste basado en el costo de cada comprador visible
+            rowSales += 1;
         });
 
-        // Update total earnings in the HTML
-        document.getElementById("total_earnings").textContent = totalEarnings.toFixed(2);
+        // Mostrar u ocultar la fila según si hay compradores visibles que cumplen los filtros
+        row.style.display = showRow ? "" : "none";
 
-        document.querySelector(".download-button-container form").addEventListener("submit", function() {
-            document.getElementById("download_start_date").value = document.getElementById("filter_start_date").value;
-            document.getElementById("download_end_date").value = document.getElementById("filter_end_date").value;
-            document.getElementById("download_category_name").value = document.getElementById("filter_category").value;
-            document.getElementById("download_username").value = document.getElementById("filter_username").value;
-        });
+        // Actualizar las celdas de ventas y ganancias de la fila actual
+        row.cells[1].textContent = showRow ? rowSales : 0;
+        row.cells[2].textContent = showRow ? `$${rowEarnings.toFixed(2)}` : "$0.00";
+
+        // Sumar ganancias solo para las filas que cumplen los filtros
+        if (showRow) {
+            totalEarnings += rowEarnings;
+        }
+    });
+
+    // Actualizar el total de ganancias en el HTML
+    document.getElementById("total_earnings").textContent = totalEarnings.toFixed(2);
+}
+
+function downloadExcel() {
+    // Obtener el usuario seleccionado en el filtro
+    const selectedUser = document.getElementById("filter_username").value.toLowerCase();
+
+    // Obtener solo las filas visibles en la tabla
+    const tableRows = Array.from(document.querySelectorAll("#category_table tbody tr"))
+        .filter(row => row.style.display !== "none");  // Filtrar por visibilidad directamente
+
+    console.log("Filas visibles para exportar:", tableRows);
+
+    // Recolectar datos de cada fila visible
+    const tableData = tableRows.map(row => {
+        // Filtrar compradores según el usuario seleccionado
+        const filteredBuyers = Array.from(row.cells[3].querySelectorAll(".buyer-info"))
+            .filter(buyer => buyer.style.display !== "none")  // Solo compradores visibles
+            .map(buyer => buyer.textContent.trim());
+
+        const ventas = parseInt(row.cells[1].textContent.trim(), 10);
+        const ganancias = parseFloat(row.cells[2].textContent.trim().replace('$', ''));
+
+        return {
+            categoria: row.cells[0].textContent.trim(),
+            ventas: ventas,
+            ganancias: ganancias,
+            compradores: filteredBuyers
+        };
+    }).filter(item => item.ventas > 0 || item.ganancias > 0 || item.compradores.length > 0);
+
+    console.log("Datos recopilados para exportar:", tableData);
+
+    if (tableData.length === 0) {
+        alert("No hay datos para exportar.");
+        return;
     }
+
+    // Enviar datos filtrados al backend para generar el archivo Excel
+    fetch("{% url 'download-sold-categories' %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ category_data: tableData })
+    })
+    .then(response => response.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "categorias_vendidas.xlsx";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    });
+}
+
+
 </script>
 {% endblock %}
-
