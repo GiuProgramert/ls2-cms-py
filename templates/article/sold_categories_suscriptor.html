@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block headblock %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/sold_categories_suscriptor.css' %}">
+{% endblock headblock %}
+
+{% block content %}
+
+<div class="top-buttons-container">
+    <form method="GET" action="{% url 'sold-categories-suscriptor' %}">
+        <input type="hidden" name="view_type" value="list">
+        <button type="submit" class="btn btn-secondary">Ver en forma de tabla</button>
+    </form>    
+</div>
+
+<div class="custom-date-filter">
+    <form method="GET" action="{% url 'sold-categories-suscriptor' %}">
+        <label for="start_date">Desde:</label>
+        <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
+        
+        <label for="end_date">Hasta:</label>
+        <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
+
+        <button type="submit" class="btn btn-primary">Aplicar Filtro</button>
+    </form>
+</div>
+
+<!-- Date Range Filter Buttons -->
+<div class="button-container">
+    <form method="GET" action="{% url 'sold-categories-suscriptor' %}">
+        <input type="hidden" name="date_range" value="24h">
+        <button type="submit" {% if date_range == '24h' %}class="active"{% endif %}>Ultimas 24 Horas</button>
+    </form>
+    <form method="GET" action="{% url 'sold-categories-suscriptor' %}">
+        <input type="hidden" name="date_range" value="7d">
+        <button type="submit" {% if date_range == '7d' %}class="active"{% endif %}>Ultima Semana</button>
+    </form>
+    <form method="GET" action="{% url 'sold-categories-suscriptor' %}">
+        <input type="hidden" name="date_range" value="30d">
+        <button type="submit" {% if date_range == '30d' %}class="active"{% endif %}>Ultimo Mes</button>
+    </form>
+    <form method="GET" action="{% url 'sold-categories-suscriptor' %}">
+        <input type="hidden" name="date_range" value="365d">
+        <button type="submit" {% if date_range == '365d' %}class="active"{% endif %}>Ultimo Año</button>
+    </form>
+    <form method="GET" action="{% url 'sold-categories-suscriptor' %}">
+        <input type="hidden" name="date_range" value="all">
+        <button type="submit" {% if date_range == 'all' %}class="active"{% endif %}>Todas</button>
+    </form>
+</div>
+
+<div class="chart-container">
+    <canvas id="categoriesChart"></canvas>
+</div>
+
+<div class="total-earnings">
+    <h3>Total gastado: ${{ total_general }}</h3>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    var categories = {{ categories|safe }};
+    var payments_prices = {{ payments_prices|safe }};
+</script>
+<script src="{% static 'scripts/sold_categories_suscriptor.js' %}"></script>
+
+
+{% endblock %}
+

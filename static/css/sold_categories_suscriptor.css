@@ -1,0 +1,45 @@
+/* Make the chart responsive and fit within the viewport */
+.chart-container {
+  width: 100%;
+  height: 60vh; /* Adjust to 60% of the viewport height */
+  max-width: 100%;
+}
+
+/* Make the buttons appear side by side */
+.button-container {
+  display: flex;
+  gap: 10px; /* Add some spacing between the buttons */
+}
+
+/* Button styles */
+button {
+  padding: 10px 15px;
+  margin: 0;
+  border: none;
+  background-color: #f0f0f0;
+  color: black;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+button:hover {
+  color: white;
+}
+
+button.active {
+  background-color: #4caf50;
+  color: white;
+}
+
+.top-buttons-container {
+  display: flex;
+  gap: 20px; /* Space between the buttons */
+  margin-bottom: 20px; /* Space below the buttons */
+}
+
+.custom-date-filter {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 20px;
+}

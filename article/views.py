@@ -3,7 +3,6 @@ import stripe
 import os
 import openpyxl
 from openpyxl.utils import get_column_letter
-from django.http import HttpResponse
 
 from datetime import datetime
 from collections import defaultdict
@@ -44,8 +43,8 @@ from django.db.models import Count
 from django.db.models import Sum
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.core import serializers
 
-import user
 from user.models import CustomUser
 import json
 from django.views.decorators.csrf import csrf_exempt
@@ -956,12 +955,28 @@ def category_create(request):
     if request.method == "POST":
         form = CategoryForm(request.POST)
         if form.is_valid():
-            form.save()
+            # Crear una instancia de Category sin guardarla aún
+            category = form.save(commit=False)
+            # Asigna el ID del usuario al campo createdBy
+            category.createdBy = request.user.id
+            # Guarda la instancia en la base de datos
+            category.save()
             return redirect("category-list")
     else:
         form = CategoryForm()
 
     return render(request, "article/category_form.html", {"form": form})
+
+    """
+    if request.method == "POST":
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("category-list")
+    else:
+        form = CategoryForm()
+
+    return render(request, "article/category_form.html", {"form": form})"""
 
 
 def category_update(request, pk):
@@ -1114,50 +1129,63 @@ def dislike_article(request, pk):
 
 
 def stripe_checkout(request, pk):
-    # Obtener la categoría o devolver 404 si no existe
-    category = get_object_or_404(Category, id=pk)
+    try:
+        # Verifica si existe un pago completado
+        payment_exists = Payment.objects.filter(
+            user=request.user, category=pk, status="completed"
+        ).exists()
 
-    # Asignar el precio basado en la categoría (esto depende de tu lógica)
-    # Aquí suponemos que la categoría tiene un campo "price" (precio)
-    price_in_cents = int(category.price * 100)  # Convertir a centavos si es necesario
+        if payment_exists:
+            # Si se encuentra el pago y tiene estado "completed", ir a exists.html
+            return render(request, "article/exists.html")
 
-    # Crear el ítem para Stripe Checkout con base en la categoría
-    line_items = [
-        {
-            "price_data": {
-                "currency": "usd",
-                "product_data": {
-                    "name": category.name,  # Usamos el nombre de la categoría
+        # Obtener la categoría o devolver 404 si no existe
+        category = get_object_or_404(Category, id=pk)
+
+        # Asignar el precio basado en la categoría
+        price_in_cents = int(category.price * 100)  # Convertir a centavos si es necesario
+
+        # Crear el ítem para Stripe Checkout con base en la categoría
+        line_items = [
+            {
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {
+                        "name": category.name,
+                    },
+                    "unit_amount": price_in_cents,
                 },
-                "unit_amount": price_in_cents,  # Precio en centavos
-            },
-            "quantity": 1,  # Se asume una cantidad de 1 categoría a pagar
-        }
-    ]
+                "quantity": 1,
+            }
+        ]
 
-    # Crear un nuevo registro de pago con estado 'pending'
+        # Crear la sesión de Stripe Checkout
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode="payment",
+            success_url=f'{os.environ.get("URL")}/categories/{category.pk}/success/',
+            cancel_url=f'{os.environ.get("URL")}/categories/{category.pk}/cancel/',
+        )
 
-    # Crear la sesión de Stripe Checkout
-    session = stripe.checkout.Session.create(
-        payment_method_types=["card"],
-        line_items=line_items,  # Enviamos el ítem con la categoría
-        mode="payment",
-        success_url=f'{os.environ.get("URL")}/categories/{category.pk}/success/',
-        cancel_url=f'{os.environ.get("URL")}/categories/{category.pk}/cancel/',
-    )
+        # Crear un nuevo registro de pago con estado 'pending'
+        Payment.objects.create(
+            user=request.user,
+            category=category,
+            price=category.price,  # Usar el precio de la categoría
+            stripe_payment_id=session.id,
+            status="pending",
+        )
 
-    # print(session)
+        return JsonResponse({"id": session.id})
 
-    # Crear un nuevo registro de pago con estado 'pending'
-    Payment.objects.create(
-        user=request.user,
-        category=category,
-        price=5.00,  # Ajustar el monto según sea necesario
-        stripe_payment_id=session.id,  # Almacenar el PaymentIntent ID
-        status="pending",  # Inicialmente en 'pending'
-    )
+    except ObjectDoesNotExist:
+        # Si no existe la categoría, devuelve un error 404
+        return JsonResponse({"error": "Category does not exist"}, status=404)
 
-    return JsonResponse({"id": session.id})
+    except Exception as e:
+        # Manejar cualquier otro error
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 def checkout_page(request, pk):
@@ -1233,6 +1261,11 @@ def payment_cancel(request, pk):
     payment.save()
     return render(request, "article/cancel.html")
 
+def category_exists(request, pk):
+    category = get_object_or_404(Category, id=pk)
+    user = request.user
+    return render(request, "article/exists.html")
+
 
 @login_required
 def sold_categories(request):
@@ -1246,7 +1279,6 @@ def sold_categories(request):
     end_date_str = request.GET.get("end_date", None)
     category_name = request.GET.get("category_name", "")
     username = request.GET.get("username", "")
-
 
     # Set the filter for the date range
     filter_kwargs = {}
@@ -1270,7 +1302,7 @@ def sold_categories(request):
 
     # Filter payments based on the selected date range and status 'completed'
     payments = Payment.objects.filter(status="completed", **filter_kwargs)
-    
+
     if category_name:
         payments = payments.filter(category__name__icontains=category_name)
     if username:
@@ -1309,7 +1341,7 @@ def sold_categories(request):
         if view_type == "list"
         else "article/sold_categories.html"
     )
-    
+
     # Cálculo del total general de ganancias
     total_general = sum(item["total_earnings"] for item in categories_sales)
 
@@ -1345,6 +1377,75 @@ def sold_categories(request):
             "username": username,
             "all_categories": all_categories,
             "all_users": all_users,
+        },
+    )
+
+
+@csrf_exempt
+@login_required
+def sold_categories_suscriptor(request):
+    if not request.user.tiene_permisos([PermissionEnum.VER_CATEGORIAS]):
+        return redirect("forbidden")
+
+    # Get the selected date range from the request (default is 'all')
+    date_range = request.GET.get("date_range", "all")
+    view_type = request.GET.get("view_type", "default")
+    start_date_str = request.GET.get("start_date", None)
+    end_date_str = request.GET.get("end_date", None)
+
+    # Set the filter for the date range
+    filter_kwargs = {"user": request.user}
+
+    if date_range == "24h":
+        filter_kwargs["date_paid__gte"] = timezone.now() - timedelta(hours=24)
+    elif date_range == "7d":
+        filter_kwargs["date_paid__gte"] = timezone.now() - timedelta(days=7)
+    elif date_range == "30d":
+        filter_kwargs["date_paid__gte"] = timezone.now() - timedelta(days=30)
+    elif date_range == "365d":
+        filter_kwargs["date_paid__gte"] = timezone.now() - timedelta(days=365)
+
+    if start_date_str and end_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
+            filter_kwargs["date_paid__range"] = (start_date, end_date)
+        except ValueError:
+            # Handle invalid date format
+            return HttpResponseBadRequest("Invalid date format. Use YYYY-MM-DD.")
+
+    payments = Payment.objects.filter(status="completed", **filter_kwargs).order_by(
+        "date_paid"
+    )
+
+    # using mayment make a query to get the price and the category
+    payments_prices = [payment.price for payment in payments]
+
+    categories_refs = Category.objects.filter(
+        pk__in=payments.values_list("category", flat=True)
+    ).distinct()
+
+    categories = [category.name for category in categories_refs]
+
+    template_name = (
+        "article/view_sold_categories_suscriptor.html"
+        if view_type == "list"
+        else "article/sold_categories_suscriptor.html"
+    )
+
+    total_general = sum(payments_prices)
+
+    return render(
+        request,
+        template_name,
+        {
+            "payments": payments,
+            "payments_prices": payments_prices,
+            "date_range": date_range,  # Pass the selected date range to the template
+            "start_date": start_date_str,
+            "end_date": end_date_str,
+            "categories": categories,
+            "total_general": total_general,
         },
     )
 
@@ -1405,3 +1506,65 @@ def download_sold_categories(request):
 
         return response
     return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+@login_required
+def download_sold_categories_suscriptor(request):
+    if not request.user.tiene_permisos([PermissionEnum.VER_CATEGORIAS]):
+        return redirect("forbidden")
+
+    # Obtener filtros de la solicitud
+    start_date_str = request.GET.get("start_date", None)
+    end_date_str = request.GET.get("end_date", None)
+
+    # Construir los filtros de usuarios y fechas para la lista de compradores filtrados
+    filter_kwargs = {"status": "completed", "user": request.user}
+    if start_date_str and end_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
+            filter_kwargs["date_paid__range"] = (start_date, end_date)
+        except ValueError:
+            return HttpResponseBadRequest("Invalid date format. Use YYYY-MM-DD.")
+
+    payments = Payment.objects.filter(**filter_kwargs).order_by("date_paid")
+
+    # using mayment make a query to get the price and the category
+    payments_prices = [payment.price for payment in payments]
+
+    total_general = sum(payments_prices)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+
+    ws.title = "Compras por categoría"
+
+    headers = ["Categoría", "Medio de pago", "Precio", "Compradores (Fecha y Hora)"]
+    ws.append(headers)
+
+    for payment in payments:
+        ws.append(
+            [
+                payment.category.name,
+                "Tarjeta",
+                f"${payment.price:.2f}",
+                f"{payment.date_paid.strftime('%Y-%m-%d %H:%M:%S')}",
+            ]
+        )
+
+    ws.append([])
+    ws.append(["Total gastado", f"${total_general:.2f}"])
+
+    # Ajustar ancho de columnas para mejor legibilidad
+    for col in ws.columns:
+        max_length = max(len(str(cell.value)) for cell in col)
+        ws.column_dimensions[get_column_letter(col[0].column)].width = max_length
+
+    # Crear la respuesta como archivo Excel
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="categorias_compradas.xlsx"'
+    wb.save(response)
+
+    return response
