@@ -106,6 +106,7 @@ button {
     padding: 10px 15px;
     margin: 0;
     border: none;
+    color: black;
     background-color: #f0f0f0;
     cursor: pointer;
     border-radius: 5px;
@@ -113,6 +114,10 @@ button {
 
 button.active {
     background-color: #4caf50;
+    color: white;
+}
+
+button:hover {
     color: white;
 }
 
@@ -133,13 +138,20 @@ button.active {
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    
+    const getRandomColor = () =>
+        `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(
+            Math.random() * 255
+        )}, ${Math.floor(Math.random() * 255)}, 0.5)`;
 
     var ctx = document.getElementById('categoriesChart').getContext('2d');
     var categories = {{ categories|safe }};
     var sales = {{ sales|safe }};
     var buyersPerCategory = {{ buyers_per_category|safe }};
     var earnings = {{ earnings|safe }};
+
+    const barColors = Array(window.sales.length)
+        .fill()
+        .map(getRandomColor);
 
     // Gráfico de barras
     var categoriesChart = new Chart(ctx, {
@@ -149,8 +161,8 @@ button.active {
             datasets: [{
                 label: 'numero de ventas',
                 data: sales,
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: barColors, // Set random colors here
+                borderColor: barColors.map((color) => color.replace("0.5", "1")),
                 borderWidth: 1
             }]
         },

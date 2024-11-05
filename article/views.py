@@ -3,7 +3,6 @@ import stripe
 import os
 import openpyxl
 from openpyxl.utils import get_column_letter
-from django.http import HttpResponse
 
 from datetime import datetime
 from collections import defaultdict
@@ -44,8 +43,8 @@ from django.db.models import Count
 from django.db.models import Sum
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.core import serializers
 
-import user
 from user.models import CustomUser
 
 
@@ -1243,7 +1242,6 @@ def sold_categories(request):
     category_name = request.GET.get("category_name", "")
     username = request.GET.get("username", "")
 
-
     # Set the filter for the date range
     filter_kwargs = {}
     if date_range == "24h":
@@ -1266,7 +1264,7 @@ def sold_categories(request):
 
     # Filter payments based on the selected date range and status 'completed'
     payments = Payment.objects.filter(status="completed", **filter_kwargs)
-    
+
     if category_name:
         payments = payments.filter(category__name__icontains=category_name)
     if username:
@@ -1305,7 +1303,7 @@ def sold_categories(request):
         if view_type == "list"
         else "article/sold_categories.html"
     )
-    
+
     # Cálculo del total general de ganancias
     total_general = sum(item["total_earnings"] for item in categories_sales)
 
@@ -1341,6 +1339,74 @@ def sold_categories(request):
             "username": username,
             "all_categories": all_categories,
             "all_users": all_users,
+        },
+    )
+
+
+@login_required
+def sold_categories_suscriptor(request):
+    if not request.user.tiene_permisos([PermissionEnum.VER_CATEGORIAS]):
+        return redirect("forbidden")
+
+    # Get the selected date range from the request (default is 'all')
+    date_range = request.GET.get("date_range", "all")
+    view_type = request.GET.get("view_type", "default")
+    start_date_str = request.GET.get("start_date", None)
+    end_date_str = request.GET.get("end_date", None)
+
+    # Set the filter for the date range
+    filter_kwargs = {"user": request.user}
+
+    if date_range == "24h":
+        filter_kwargs["date_paid__gte"] = timezone.now() - timedelta(hours=24)
+    elif date_range == "7d":
+        filter_kwargs["date_paid__gte"] = timezone.now() - timedelta(days=7)
+    elif date_range == "30d":
+        filter_kwargs["date_paid__gte"] = timezone.now() - timedelta(days=30)
+    elif date_range == "365d":
+        filter_kwargs["date_paid__gte"] = timezone.now() - timedelta(days=365)
+
+    if start_date_str and end_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
+            filter_kwargs["date_paid__range"] = (start_date, end_date)
+        except ValueError:
+            # Handle invalid date format
+            return HttpResponseBadRequest("Invalid date format. Use YYYY-MM-DD.")
+
+    payments = Payment.objects.filter(status="completed", **filter_kwargs).order_by(
+        "date_paid"
+    )
+
+    # using mayment make a query to get the price and the category
+    payments_prices = [payment.price for payment in payments]
+
+    categories_refs = Category.objects.filter(
+        pk__in=payments.values_list("category", flat=True)
+    ).distinct()
+
+    categories = [category.name for category in categories_refs]
+
+    template_name = (
+        "article/view_sold_categories_suscriptor.html"
+        if view_type == "list"
+        else "article/sold_categories_suscriptor.html"
+    )
+
+    total_general = sum(payments_prices)
+
+    return render(
+        request,
+        template_name,
+        {
+            "payments": payments,
+            "payments_prices": payments_prices,
+            "date_range": date_range,  # Pass the selected date range to the template
+            "start_date": start_date_str,
+            "end_date": end_date_str,
+            "categories": categories,
+            "total_general": total_general,
         },
     )
 
@@ -1396,19 +1462,27 @@ def download_sold_categories(request):
     # Añadir filas en el formato especificado solo para categorías con compradores filtrados
     for item in categories_sales:
         category_name = item["category__name"]
-        total_sales = item["total_sales"]  # Ventas totales sin aplicar filtros de usuario
-        total_earnings = item["total_earnings"]  # Ganancias totales sin aplicar filtros de usuario
+        total_sales = item[
+            "total_sales"
+        ]  # Ventas totales sin aplicar filtros de usuario
+        total_earnings = item[
+            "total_earnings"
+        ]  # Ganancias totales sin aplicar filtros de usuario
 
         # Obtener todos los compradores de la categoría sin filtros
         all_buyers = [
             f"{purchase['user__username']} - Costo: ${purchase['price']:.2f} (Fecha: {purchase['date_paid'].strftime('%Y-%m-%d')} Hora: {purchase['date_paid'].strftime('%H:%M:%S')})"
-            for purchase in all_payments.filter(category__name=category_name).values("user__username", "price", "date_paid")
+            for purchase in all_payments.filter(category__name=category_name).values(
+                "user__username", "price", "date_paid"
+            )
         ]
 
         # Obtener compradores filtrados por categoría específica
         filtered_buyers = [
             f"{purchase['user__username']} - Costo: ${purchase['price']:.2f} (Fecha: {purchase['date_paid'].strftime('%Y-%m-%d')} Hora: {purchase['date_paid'].strftime('%H:%M:%S')})"
-            for purchase in payments_filtered.filter(category__name=category_name).values("user__username", "price", "date_paid")
+            for purchase in payments_filtered.filter(
+                category__name=category_name
+            ).values("user__username", "price", "date_paid")
         ]
 
         # Solo agregar la categoría si tiene compradores que cumplen con los filtros
@@ -1417,12 +1491,14 @@ def download_sold_categories(request):
             total_earnings_filtered += total_earnings
 
             # Agregar la categoría al Excel
-            ws.append([
-                category_name,
-                total_sales,
-                f"${total_earnings:.2f}",
-                ", ".join(all_buyers)  # Mostrar todos los compradores
-            ])
+            ws.append(
+                [
+                    category_name,
+                    total_sales,
+                    f"${total_earnings:.2f}",
+                    ", ".join(all_buyers),  # Mostrar todos los compradores
+                ]
+            )
 
     # Escribir el total de ganancias filtradas al final de la hoja
     ws.append([])
@@ -1434,8 +1510,72 @@ def download_sold_categories(request):
         ws.column_dimensions[get_column_letter(col[0].column)].width = max_length
 
     # Crear la respuesta como archivo Excel
-    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
     response["Content-Disposition"] = 'attachment; filename="categorias_vendidas.xlsx"'
+    wb.save(response)
+
+    return response
+
+
+@login_required
+def download_sold_categories_suscriptor(request):
+    if not request.user.tiene_permisos([PermissionEnum.VER_CATEGORIAS]):
+        return redirect("forbidden")
+
+    # Obtener filtros de la solicitud
+    start_date_str = request.GET.get("start_date", None)
+    end_date_str = request.GET.get("end_date", None)
+
+    # Construir los filtros de usuarios y fechas para la lista de compradores filtrados
+    filter_kwargs = {"status": "completed", "user": request.user}
+    if start_date_str and end_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
+            filter_kwargs["date_paid__range"] = (start_date, end_date)
+        except ValueError:
+            return HttpResponseBadRequest("Invalid date format. Use YYYY-MM-DD.")
+
+    payments = Payment.objects.filter(**filter_kwargs).order_by("date_paid")
+
+    # using mayment make a query to get the price and the category
+    payments_prices = [payment.price for payment in payments]
+
+    total_general = sum(payments_prices)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+
+    ws.title = "Compras por categoría"
+
+    headers = ["Categoría", "Medio de pago", "Precio", "Compradores (Fecha y Hora)"]
+    ws.append(headers)
+
+    for payment in payments:
+        ws.append(
+            [
+                payment.category.name,
+                "Tarjeta",
+                f"${payment.price:.2f}",
+                f"{payment.date_paid.strftime('%Y-%m-%d %H:%M:%S')}",
+            ]
+        )
+
+    ws.append([])
+    ws.append(["Total gastado", f"${total_general:.2f}"])
+
+    # Ajustar ancho de columnas para mejor legibilidad
+    for col in ws.columns:
+        max_length = max(len(str(cell.value)) for cell in col)
+        ws.column_dimensions[get_column_letter(col[0].column)].width = max_length
+
+    # Crear la respuesta como archivo Excel
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="categorias_compradas.xlsx"'
     wb.save(response)
 
     return response

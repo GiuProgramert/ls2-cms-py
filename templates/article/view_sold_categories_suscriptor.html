@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block headblock %}
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/view_sold_categories_suscriptor.css' %}">
+{% endblock headblock %}
+
+{% block content %}
+
+<h2>Lista de Categorías Compradas</h2>
+
+<div class="custom-date-filter">
+    <form method="GET" action="{% url 'sold-categories-suscriptor' %}">
+        <label for="start_date">Desde:</label>
+        <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
+        
+        <label for="end_date">Hasta:</label>
+        <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
+
+        <input type="hidden" name="view_type" value="list">
+
+        <button type="submit" class="btn btn-primary">Aplicar Filtro</button>
+    </form>
+</div>
+
+<!-- Table for Displaying Sold Categories -->
+<table id="category_table">
+    <thead>
+        <tr>
+            <th>Categoría</th>
+            <th>Medio de pago</th>
+            <th>Precio</th>
+            <th>Compradores (Fecha y Hora)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for payment in payments %}
+            <tr>
+                <td>{{ payment.category.name }}</td>
+                <td>Tarjeta</td>
+                <td>$ {{ payment.price }}</td>
+                <td>{{ payment.date_paid }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="total-earnings">
+    <h3>Total gastado: ${{ total_general }}</h3>
+</div>
+
+<div class="download-button-container">
+    <form method="GET" action="{% url 'download-sold-categories-suscriptor' %}">
+        <input type="hidden" name="start_date" id="download_start_date">
+        <input type="hidden" name="end_date" id="download_end_date">
+        <button type="submit" class="btn btn-primary">Descargar lista de categorías compradas</button>
+    </form>
+</div>
+
+{% endblock %}
