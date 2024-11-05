@@ -35,3 +35,6 @@ class PermissionEnum(str, Enum):
     MANEJO_ROLES = "manejo_roles"
     MANEJAR_CATEGORIAS = "manejar_categorias" # Solamente para admins
     VER_CATEGORIAS = "ver_categorias" # Ver todas las categorias usado para comprar categorías 
+    
+    # Ver kanban de estados de articulos
+    VER_KANBAN = "ver_kanban"
