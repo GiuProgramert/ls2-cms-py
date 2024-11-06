@@ -135,10 +135,12 @@ button:hover {
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const getRandomColor = () =>
-        `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(
-            Math.random() * 255
-        )}, ${Math.floor(Math.random() * 255)}, 0.5)`;
+
+    function getRandomColor() {
+        return `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.5)`;
+    }
+
+    
 
     var ctx = document.getElementById('categoriesChart').getContext('2d');
     var categories = {{ categories|safe }};
@@ -146,11 +148,17 @@ button:hover {
     var buyersPerCategory = {{ buyers_per_category|safe }};
     var earnings = {{ earnings|safe }};
 
-    const barColors = Array(window.sales.length)
+    const barColors = Array(categories.length)
         .fill()
         .map(getRandomColor);
 
-    // Gráfico de barras
+    // Creating an object to map categories to their colors
+    var categoryColorMap = {};
+    categories.forEach((category, index) => {
+        categoryColorMap[category] = barColors[index];
+    });
+
+    // Bar Chart
     var categoriesChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -158,14 +166,14 @@ button:hover {
             datasets: [{
                 label: 'numero de ventas',
                 data: sales,
-                backgroundColor: barColors, // Set random colors here
+                backgroundColor: barColors,
                 borderColor: barColors.map((color) => color.replace("0.5", "1")),
                 borderWidth: 1
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,  // Allow the chart to resize dynamically
+            maintainAspectRatio: false,
             scales: {
                 y: {
                     beginAtZero: true,
@@ -177,7 +185,18 @@ button:hover {
             },
             plugins: {
                 legend: {
-                    position: 'top'
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        generateLabels: function(chart) {
+                            return categories.map((category, index) => ({
+                                text: category,
+                                fillStyle: barColors[index],
+                                strokeStyle: barColors[index],
+                                lineWidth: 1,
+                            }));
+                        }
+                    }
                 },
                 title: {
                     display: true,
@@ -185,13 +204,11 @@ button:hover {
                 },
                 tooltip: {
                     callbacks: {
-
                         beforeLabel: function(tooltipItem) {
                             var category = tooltipItem.label;
-                            var totalEarnings = earnings[tooltipItem.dataIndex] || 0;  // Verifica que el valor exista
+                            var totalEarnings = earnings[tooltipItem.dataIndex] || 0;
                             return 'Total de la categoría: $' + totalEarnings.toFixed(2);
                         },
-
                         afterLabel: function(tooltipItem) {
                             var category = tooltipItem.label;
                             var buyers = buyersPerCategory[category] || [];
@@ -202,6 +219,7 @@ button:hover {
             }
         }
     });
+
 
     // Función para mostrar el gráfico circular
 function showPieChart() {
