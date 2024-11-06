@@ -122,7 +122,9 @@ function applyFilters() {
             const endDateString = endDate ? endDate.toISOString().split('T')[0] : null;
 
             // Filtrar por usuario
-            if (selectedUsername && !buyerText.includes(selectedUsername)) {
+            const extractedUsername = buyerText.split(" - ")[0].trim(); // Extract the part before the first " - "
+
+            if (selectedUsername && extractedUsername.toLowerCase() !== selectedUsername.toLowerCase()) {
                 buyer.style.display = "none";
                 return;
             }
