@@ -194,6 +194,23 @@ def home(request):
 
     favorite_articles = favorite_articles.order_by(order_by)
     normal_articles = normal_articles.order_by(order_by)
+
+    for article in favorite_articles:
+        # Calcular la calificación promedio
+        ratings = ArticleVote.objects.filter(article=article)
+        avg_rating = ratings.aggregate(Avg("rating"))["rating__avg"]
+        
+        # Asignar el promedio de calificación como un atributo del artículo
+        article.avg_rating = round(avg_rating, 1) if avg_rating is not None else None
+
+    for article in normal_articles:
+        # Calcular la calificación promedio
+        ratings = ArticleVote.objects.filter(article=article)
+        avg_rating = ratings.aggregate(Avg("rating"))["rating__avg"]
+        
+        # Asignar el promedio de calificación como un atributo del artículo
+        article.avg_rating = round(avg_rating, 1) if avg_rating is not None else None
+
     # Crear una lista con todos los articulos
     all_articles = favorite_articles.union(normal_articles)
     all_articles = all_articles.order_by(order_by)
