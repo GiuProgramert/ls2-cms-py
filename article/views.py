@@ -1315,7 +1315,8 @@ def sold_categories(request):
     if start_date_str and end_date_str:
         try:
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
-            end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
+            # Set end_date to include the end of the day (23:59:59)
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(hours=23, minutes=59, seconds=59)
             filter_kwargs["date_paid__range"] = (start_date, end_date)
         except ValueError:
             # Handle invalid date format
@@ -1325,9 +1326,9 @@ def sold_categories(request):
     payments = Payment.objects.filter(status="completed", **filter_kwargs)
 
     if category_name:
-        payments = payments.filter(category__name__icontains=category_name)
+        payments = payments.filter(category__name__iexact=category_name)  # Change from __icontains to __iexact
     if username:
-        payments = payments.filter(user__username__icontains=username)
+        payments = payments.filter(user__username__iexact=username)  # Change from __icontains to __iexact
 
     # Group by category name and count the number of payments associated with each category
     categories_sales = (
