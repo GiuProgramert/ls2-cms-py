@@ -1152,6 +1152,21 @@ def dislike_article(request, pk):
 
 
 def stripe_checkout(request, pk):
+    """
+    Vista que maneja el proceso de pago con Stripe.
+
+    Verifica si el usuario ya ha completado un pago para la categoría. Si no,
+    inicia una sesión de Stripe Checkout para procesar el pago y crea un registro
+    de pago pendiente en la base de datos.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID de la categoría para la que se realiza el pago.
+
+    Returns:
+        JsonResponse: Respuesta con el ID de la sesión de Stripe o un mensaje
+                      de error en caso de fallo.
+    """
     try:
         # Verifica si existe un pago completado
         payment_exists = Payment.objects.filter(
@@ -1214,6 +1229,19 @@ def stripe_checkout(request, pk):
 
 
 def checkout_page(request, pk):
+    """
+    Vista que muestra la página de pago para una categoría específica.
+
+    Verifica si el usuario ya ha completado un pago para la categoría y,
+    de ser así, redirige a la página de confirmación.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID de la categoría para la que se realiza el pago.
+
+    Returns:
+        HttpResponse: Renderiza la plantilla 'article/checkout.html' o 'article/exists.html'.
+    """
     try:
         Payment.objects.filter(
             user=request.user, category=pk, status="completed"
@@ -1232,6 +1260,20 @@ def checkout_page(request, pk):
 
 
 def payment_success(request, pk):
+    """
+    Vista que maneja la confirmación de un pago exitoso.
+
+    Verifica el estado del pago, actualiza la base de datos, y envía un correo de
+    confirmación al usuario.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID de la categoría pagada.
+
+    Returns:
+        HttpResponse: Renderiza la plantilla 'article/success.html' o 'article/cancel.html'
+                      en caso de error.
+    """
     category = get_object_or_404(Category, id=pk)
     user = request.user
 
@@ -1279,6 +1321,18 @@ def payment_success(request, pk):
 
 
 def payment_cancel(request, pk):
+    """
+    Vista que maneja la cancelación de un pago.
+
+    Marca el pago como cancelado en la base de datos y muestra la página de cancelación.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID de la categoría relacionada al pago cancelado.
+
+    Returns:
+        HttpResponse: Renderiza la plantilla 'article/cancel.html'.
+    """
     category = get_object_or_404(Category, id=pk)
     user = request.user
     payment = Payment.objects.filter(user=user, category=category).latest("date_paid")
@@ -1288,6 +1342,18 @@ def payment_cancel(request, pk):
 
 
 def category_exists(request, pk):
+    """
+    Vista que verifica si una categoría específica existe.
+
+    Muestra la página correspondiente si se encuentra la categoría.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID de la categoría a verificar.
+
+    Returns:
+        HttpResponse: Renderiza la plantilla 'article/exists.html'.
+    """
     category = get_object_or_404(Category, id=pk)
     user = request.user
     return render(request, "article/exists.html")
@@ -1295,6 +1361,17 @@ def category_exists(request, pk):
 
 @login_required
 def sold_categories(request):
+    """
+    Vista que muestra las categorías vendidas y estadísticas relacionadas.
+
+    Permite filtrar las ventas por rango de fechas y nombre de categoría o usuario.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+
+    Returns:
+        HttpResponse: Renderiza la plantilla 'article/view_sold_categories.html' o 'article/sold_categories.html'.
+    """
     if not request.user.tiene_permisos([PermissionEnum.VER_CATEGORIAS_PAGO]):
         return redirect("forbidden")
 
@@ -1411,6 +1488,17 @@ def sold_categories(request):
 @csrf_exempt
 @login_required
 def sold_categories_suscriptor(request):
+    """
+    Vista que muestra las categorías vendidas a las que un suscriptor ha accedido.
+
+    Filtra los resultados por fechas y muestra las estadísticas de los pagos realizados.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+
+    Returns:
+        HttpResponse: Renderiza la plantilla 'article/view_sold_categories_suscriptor.html' o 'article/sold_categories_suscriptor.html'.
+    """
     if not request.user.tiene_permisos([PermissionEnum.VER_CATEGORIAS]):
         return redirect("forbidden")
 
@@ -1480,6 +1568,18 @@ def sold_categories_suscriptor(request):
 @csrf_exempt
 @login_required
 def download_sold_categories(request):
+    """
+    Vista que permite la descarga de un archivo Excel con información de ventas por categoría.
+
+    Procesa los datos enviados desde el frontend y genera un archivo con las categorías, ventas,
+    ganancias y compradores.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+
+    Returns:
+        HttpResponse: Respuesta con el archivo Excel para descarga.
+    """
     if request.method == "POST":
         data = json.loads(request.body).get("category_data", [])
 
@@ -1538,6 +1638,15 @@ def download_sold_categories(request):
 
 @login_required
 def download_sold_categories_suscriptor(request):
+    """
+    Vista que permite a un suscriptor descargar un archivo Excel con detalles de sus compras.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+
+    Returns:
+        HttpResponse: Respuesta con el archivo Excel para descarga.
+    """
     if not request.user.tiene_permisos([PermissionEnum.VER_CATEGORIAS]):
         return redirect("forbidden")
 
