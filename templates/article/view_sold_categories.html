@@ -3,8 +3,8 @@
 {% block content %}
 
 <div style="margin-top: 20px;">
-    <button type="button" onclick="window.location.href='http://127.0.0.1:8000/article/sold-categories/'" class="btn" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; cursor: pointer;">
-        Ir a los graficos
+    <button type="button" onclick="window.location.href='{% url 'sold-categories' %}'" class="btn" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; cursor: pointer;">
+        Ir a los gráficos
     </button>
 </div>
 
@@ -122,7 +122,9 @@ function applyFilters() {
             const endDateString = endDate ? endDate.toISOString().split('T')[0] : null;
 
             // Filtrar por usuario
-            if (selectedUsername && !buyerText.includes(selectedUsername)) {
+            const extractedUsername = buyerText.split(" - ")[0].trim(); // Extract the part before the first " - "
+
+            if (selectedUsername && extractedUsername.toLowerCase() !== selectedUsername.toLowerCase()) {
                 buyer.style.display = "none";
                 return;
             }
