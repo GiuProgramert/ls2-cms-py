@@ -51,7 +51,6 @@ from django.views.decorators.csrf import csrf_exempt
 from openpyxl import Workbook
 
 
-
 # Configura Stripe con la clave secreta
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -271,7 +270,7 @@ def article_create(request):
                 body=request.POST.get("body"), autor=request.user, article=article
             )
 
-            return redirect("home")
+            return redirect("article-detail", pk=article.id)
 
     return render(request, "article/article_form.html", {"form": ArticleForm})
 
@@ -313,7 +312,7 @@ def article_update(request, pk):
                 body=request.POST.get("body"), autor=request.user, article=article
             )
 
-            return redirect("home")
+            return redirect("article-detail", pk=article.id)
     else:
         form = ArticleForm(instance=article)
 
@@ -600,7 +599,10 @@ def article_detail(request, pk):
         ) or is_admin
 
         # General edit permission (either editor or author)
-        can_edit = can_edit_as_editor or can_edit_as_author
+        can_edit = (can_edit_as_editor or can_edit_as_author) and article.state in [
+            ArticleStates.DRAFT.value,
+            ArticleStates.REVISION.value,
+        ]
 
         # Can publish only if the user has permission to moderate articles
         can_publish = request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
@@ -654,14 +656,14 @@ def article_to_revision(request, pk):
 
     is_admin = request.user.roles.filter(name="Administrador").exists()
     is_autor = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
-    is_editor = request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS])
-    is_publisher = request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
+    # is_editor = request.user.tiene_permisos([PermissionEnum.EDITAR_ARTICULOS])
+    # is_publisher = request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS])
 
     # Solo el autor (cuando el estado es DRAFT) o el admin puede cambiar a REVISIÓN
     if (
         is_admin
         or (is_autor and article.state == ArticleStates.DRAFT.value)
-        or ((is_editor or is_publisher) and article.state == ArticleStates.EDITED.value)
+        # or ((is_editor or is_publisher) and article.state == ArticleStates.EDITED.value)
     ):
         article.change_state(ArticleStates.REVISION.value)
         return redirect("article-detail", pk=pk)
@@ -1147,7 +1149,9 @@ def stripe_checkout(request, pk):
         category = get_object_or_404(Category, id=pk)
 
         # Asignar el precio basado en la categoría
-        price_in_cents = int(category.price * 100)  # Convertir a centavos si es necesario
+        price_in_cents = int(
+            category.price * 100
+        )  # Convertir a centavos si es necesario
 
         # Crear el ítem para Stripe Checkout con base en la categoría
         line_items = [
@@ -1264,6 +1268,7 @@ def payment_cancel(request, pk):
     payment.status = "cancelled"
     payment.save()
     return render(request, "article/cancel.html")
+
 
 def category_exists(request, pk):
     category = get_object_or_404(Category, id=pk)
@@ -1459,7 +1464,7 @@ def sold_categories_suscriptor(request):
 def download_sold_categories(request):
     if request.method == "POST":
         data = json.loads(request.body).get("category_data", [])
-        
+
         # Agregar una impresión para ver el contenido recibido del frontend
 
         # Crear un archivo Excel y hoja de trabajo
@@ -1487,12 +1492,9 @@ def download_sold_categories(request):
                 total_earnings_filtered += total_earnings
 
                 # Agregar la categoría con los compradores al archivo Excel
-                ws.append([
-                    category_name,
-                    total_sales,
-                    f"${total_earnings:.2f}",
-                    buyers
-                ])
+                ws.append(
+                    [category_name, total_sales, f"${total_earnings:.2f}", buyers]
+                )
 
         # Escribir el total de ganancias al final de la hoja
         ws.append([])
@@ -1504,8 +1506,12 @@ def download_sold_categories(request):
             ws.column_dimensions[get_column_letter(col[0].column)].width = max_length
 
         # Crear la respuesta como archivo Excel
-        response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        response["Content-Disposition"] = 'attachment; filename="categorias_vendidas.xlsx"'
+        response = HttpResponse(
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        response["Content-Disposition"] = (
+            'attachment; filename="categorias_vendidas.xlsx"'
+        )
         wb.save(response)
 
         return response

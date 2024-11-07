@@ -467,9 +467,11 @@ class PruebasGestionArticulo(TestCase):
 
         response = self.client.post(reverse("article-create"), data)
 
+        new_article = Article.objects.get(title="New Article")
+
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse("home"))
         self.assertTrue(Article.objects.filter(title="New Article").exists())
+        self.assertRedirects(response, reverse("article-detail", args=[new_article.pk]))
 
     def test_crear_articulo_autenticado_sin_permiso(self):
         """
@@ -501,7 +503,7 @@ class PruebasGestionArticulo(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse("home"))
+        self.assertRedirects(response, reverse("article-detail", args=[self.article.pk]))
 
         # Verificar que el artículo fue actualizado
         self.article.refresh_from_db()
