@@ -11,8 +11,10 @@ from article.models import (
     ArticleContent,
     ArticleVote,
     ArticleStates,
+    ArticlesToPublish,
 )
 from article.forms import CategoryForm
+import warnings
 
 
 User = get_user_model()
@@ -606,6 +608,22 @@ class PruebasGestionArticulo(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.article.shares_number, 1)
+    
+    def test_programar_publicacion_articulo_autenticado_con_permiso(self):
+        """
+        Verifica que un usuario con permiso pueda programar la publicación de un artículo.
+        """
+        self.client.login(username="articleuser", password="articlepassword")
+        data = {"to_publish_date": "2024-12-01 10:00:00"}
+    
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            response = self.client.post(reverse("article-to-published-schedule", args=[self.article.pk]), data)
+    
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("article-detail", args=[self.article.pk]))
+        self.assertTrue(ArticlesToPublish.objects.filter(article=self.article).exists())
+
 
 
 class CasoDePruebaVotoArticulo(TestCase):
