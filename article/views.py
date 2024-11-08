@@ -148,21 +148,25 @@ def home(request):
     order_by = request.GET.get("order_by", "published_at")
     order_direction = request.GET.get("order_direction", "desc")
     time_range = request.GET.get("time_range", "all")
-
+    # Variable para verificar si alguno de los filtros tiene un valor distinto al predeterminado
+    filter_active = False   # Falso por defecto
     if form.is_valid():
         selected_tag = form.cleaned_data.get("tags")
         selected_category = form.cleaned_data.get("category")
         selected_category_type = form.cleaned_data.get("category_type")
 
         if selected_tag:
+            filter_active = True
             favorite_articles = favorite_articles.filter(tags__name__in=[selected_tag])
             normal_articles = normal_articles.filter(tags__name__in=[selected_tag])
 
         if selected_category:
+            filter_active = True
             favorite_articles = favorite_articles.filter(category=selected_category)
             normal_articles = normal_articles.filter(category=selected_category)
 
         if selected_category_type and selected_category_type != "all":
+            filter_active = True
             favorite_articles = favorite_articles.filter(
                 category__type=selected_category_type
             )
@@ -188,6 +192,7 @@ def home(request):
             )
 
     if search_query:
+        filter_active = True
         favorite_articles = favorite_articles.filter(
             Q(title__icontains=search_query)
             | Q(description__icontains=search_query)
@@ -245,6 +250,7 @@ def home(request):
             "time_range": time_range,
             "normal_categories": normal_categories_ids,
             "favorite_categories": favorite_categories_ids,
+            "filter_active": filter_active,
         },
     )
 
