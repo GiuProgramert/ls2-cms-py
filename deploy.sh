@@ -180,6 +180,8 @@ python manage.py migrate
 if [ "$ENVIRONMENT" == "dev" ]; then
     echo "Loading initial data..."
     python manage.py runserver
+
+    exit 0
 fi
 
 echo "-------------------------------------------------------"
