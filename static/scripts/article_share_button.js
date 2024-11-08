@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
           close: true,
           className: "toast",
           style: {
-            background: "#ffa500",
+            background: "#0f9d58",
           },
         })
         .showToast();
