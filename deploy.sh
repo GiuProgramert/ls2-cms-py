@@ -177,66 +177,65 @@ echo "-------------------------------------------------------"
 echo "Running database migrations..."
 python manage.py migrate
 
-echo "-------------------------------------------------------"
-
-# check if $ENVIROMENT is prod
-if [ "$ENVIRONMENT" == "prod" ]; then
-    echo "Collecting static files..."
-
-    echo "Collecting static files..."
-    cat > /etc/nginx/sites-available/cms_py << 'EOF'
-    server {
-        listen 80;
-        server_name 142.93.1.225;
-
-        location = /favicon.ico { access_log off; log_not_found off; }
-        location /static/ {
-            alias /root/ls2-cms-py/static/;
-        }
-
-        location / {
-            include proxy_params;
-            proxy_pass http://unix:/root/ls2-cms-py/cms_py.sock;
-        }
-    }
-    EOF
-
-    cat > /etc/systemd/system/gunicorn.service << 'EOF'
-    [Unit]
-    Description=gunicorn daemon for CMS Py
-    After=network.target
-
-    [Service]
-    User=root
-    Group=www-data
-    UMask=007
-    WorkingDirectory=/root/ls2-cms-py
-    ExecStart=/root/ls2-cms-py/env/bin/gunicorn --workers 3 --bind unix:/root/ls2-cms-py/cms_py.sock cms_py.wsgi:application
-
-    [Install]
-    WantedBy=multi-user.target
-    EOF
-
-    sudo systemctl daemon-reload
-    sudo systemctl start gunicorn
-    sudo systemctl enable gunicorn
-
-    echo "-------------------------------------------------------"
-
-    # Restart services
-    echo "Restarting Gunicorn..."
-    sudo systemctl restart gunicorn
-
-    echo "-------------------------------------------------------"
-
-    echo "Restarting Nginx..."
-    sudo systemctl restart nginx
-
-    echo "-------------------------------------------------------"
-
-    echo "Deployment completed successfully!"  
+if [ "$ENVIRONMENT" == "dev" ]; then
+    echo "Loading initial data..."
+    python manage.py runserver
 fi
 
 echo "-------------------------------------------------------"
 
-echo "inicializing server"
+# check if $ENVIROMENT is prod
+echo "Collecting static files..."
+
+echo "Collecting static files..."
+cat > /etc/nginx/sites-available/cms_py << 'EOF'
+server {
+    listen 80;
+    server_name 142.93.1.225;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location /static/ {
+        alias /root/ls2-cms-py/static/;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/root/ls2-cms-py/cms_py.sock;
+    }
+}
+EOF
+
+cat > /etc/systemd/system/gunicorn.service << 'EOF'
+[Unit]
+Description=gunicorn daemon for CMS Py
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+UMask=007
+WorkingDirectory=/root/ls2-cms-py
+ExecStart=/root/ls2-cms-py/env/bin/gunicorn --workers 3 --bind unix:/root/ls2-cms-py/cms_py.sock cms_py.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl start gunicorn
+sudo systemctl enable gunicorn
+
+echo "-------------------------------------------------------"
+
+# Restart services
+echo "Restarting Gunicorn..."
+sudo systemctl restart gunicorn
+
+echo "-------------------------------------------------------"
+
+echo "Restarting Nginx..."
+sudo systemctl restart nginx
+
+echo "-------------------------------------------------------"
+
+echo "Deployment completed successfully!"  
