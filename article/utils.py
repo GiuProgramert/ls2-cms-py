@@ -1,14 +1,21 @@
-# utils.py
-
 import os
+import cloudinary.uploader
 
 from django.core.files.storage import default_storage
 
 
-import cloudinary.uploader
-
-
 def mdeditor_upload_handler(filename, content):
+    """
+    Realiza la subida de un archivo a Cloudinary.
+
+    params:
+        filename -- Nombre del archivo.
+        content -- Contenido del archivo.
+
+    return:
+        URL de la imagen subida.
+    """
+
     # Generate a unique filename
     name, ext = os.path.splitext(filename)
     filename = f"{name}_{default_storage.get_available_name(filename)}"

@@ -8,6 +8,16 @@ from notification.utils import send_email
 
 @login_required
 def kanban_view(request):
+    """
+    Función que renderiza la vista del kanban.
+
+    Args:
+        request (HttpRequest): La petición HTTP.
+
+    Returns:
+        HttpResponse: La respuesta HTTP.
+    """
+
     draft_articles = Article.objects.filter(state=ArticleStates.DRAFT.value)
     revision_articles = Article.objects.filter(state=ArticleStates.REVISION.value)
     edited_articles = Article.objects.filter(state=ArticleStates.EDITED.value)
@@ -65,6 +75,7 @@ def kanban_send_message(request):
     Returns:
         HttpResponse: La respuesta HTTP.
     """
+
     if request.method == "POST":
         is_admin = request.user.roles.filter(name="Administrador").exists()
 

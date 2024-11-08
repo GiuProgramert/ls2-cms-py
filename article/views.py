@@ -43,7 +43,6 @@ from django.db.models import Count
 from django.db.models import Sum
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.core import serializers
 
 from user.models import CustomUser
 import json
@@ -56,6 +55,21 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 def home(request):
+    """
+    Vista que muestra la página de inicio.
+
+    Muestra una lista de artículos, permitiendo filtrar y ordenar los resultados.
+    Los usuarios autenticados pueden ver artículos de categorías gratuitas y de
+    categorías por suscripción o pago, siempre y cuando hayan realizado el pago
+    correspondiente.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+
+    Returns:
+        HttpResponse: Renderiza la plantilla 'article/home.html'.
+    """
+
     categories = Category.objects.all()
 
     if not request.user.is_authenticated:
@@ -198,7 +212,7 @@ def home(request):
         # Calcular la calificación promedio
         ratings = ArticleVote.objects.filter(article=article)
         avg_rating = ratings.aggregate(Avg("rating"))["rating__avg"]
-        
+
         # Asignar el promedio de calificación como un atributo del artículo
         article.avg_rating = round(avg_rating, 1) if avg_rating is not None else None
 
@@ -206,7 +220,7 @@ def home(request):
         # Calcular la calificación promedio
         ratings = ArticleVote.objects.filter(article=article)
         avg_rating = ratings.aggregate(Avg("rating"))["rating__avg"]
-        
+
         # Asignar el promedio de calificación como un atributo del artículo
         article.avg_rating = round(avg_rating, 1) if avg_rating is not None else None
 
@@ -678,8 +692,7 @@ def article_to_revision(request, pk):
 
     # Solo el autor (cuando el estado es DRAFT) o el admin puede cambiar a REVISIÓN
     if (
-        is_admin
-        or (is_autor and article.state == ArticleStates.DRAFT.value)
+        is_admin or (is_autor and article.state == ArticleStates.DRAFT.value)
         # or ((is_editor or is_publisher) and article.state == ArticleStates.EDITED.value)
     ):
         article.change_state(ArticleStates.REVISION.value)
@@ -899,7 +912,24 @@ def category_list(request):
 
 
 @login_required
+
 def toggle_favorite_category(request, pk):
+    """    
+    Cambia el estado de favorito de una categoría para el usuario autenticado.
+    Esta vista maneja el cambio del estado de favorito de una categoría para el usuario
+    que realiza la solicitud. Si la categoría ya está marcada como favorita, se eliminará
+    de los favoritos. Si no está marcado como favorito, se agregará a los favoritos.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+        pk (int): El ID de la categoría.
+    Returns:
+        JsonResponse: Un objeto JSON con la clave "status" y el valor correspondiente:
+            - {"status": "removed"} si la categoría estaba marcada como favorita y se ha eliminado.
+            - {"status": "added"} si la categoría no estaba marcada como favorita y se ha agregado.
+        HttpResponseBadRequest: Si la solicitud no es válida.
+    """    
+
     if request.method == "POST":
         category = Category.objects.get(id=pk)
         favorite, created = FavoriteCategory.objects.get_or_create(
@@ -1398,7 +1428,9 @@ def sold_categories(request):
         try:
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
             # Set end_date to include the end of the day (23:59:59)
-            end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(hours=23, minutes=59, seconds=59)
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d") + timedelta(
+                hours=23, minutes=59, seconds=59
+            )
             filter_kwargs["date_paid__range"] = (start_date, end_date)
         except ValueError:
             # Handle invalid date format
@@ -1408,9 +1440,13 @@ def sold_categories(request):
     payments = Payment.objects.filter(status="completed", **filter_kwargs)
 
     if category_name:
-        payments = payments.filter(category__name__iexact=category_name)  # Change from __icontains to __iexact
+        payments = payments.filter(
+            category__name__iexact=category_name
+        )  # Change from __icontains to __iexact
     if username:
-        payments = payments.filter(user__username__iexact=username)  # Change from __icontains to __iexact
+        payments = payments.filter(
+            user__username__iexact=username
+        )  # Change from __icontains to __iexact
 
     # Group by category name and count the number of payments associated with each category
     categories_sales = (

@@ -29,6 +29,7 @@ def send_email(to, subject, html):
     Excepciones:
         En caso de error, se captura la excepción y se imprime un mensaje de error.
     """
+    
     try:
         # Create MIMEMultipart message
         msg = MIMEMultipart()

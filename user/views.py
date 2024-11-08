@@ -16,6 +16,18 @@ from django.contrib.auth import update_session_auth_hash
 
 
 def login_view(request):
+    """
+    Maneja la vista de inicio de sesión.
+    Si la solicitud es un POST, procesa el formulario enviado para iniciar sesión.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP que se está procesando.
+
+    Returns:
+        HttpResponse: Renderiza la plantilla 'user/login.html' con el formulario de inicio de sesión.
+                        Si el inicio de sesión es exitoso, redirige a la página 'home'.
+    """
+
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")

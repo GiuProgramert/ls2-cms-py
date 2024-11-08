@@ -20,6 +20,8 @@ class PermissionEnum(str, Enum):
         - EVALUAR_ARTICULOS: Permite calificar artículos (ej. dar me gusta).
         - MANEJO_ROLES: Permite gestionar roles de usuario.
         - MANEJAR_CATEGORIAS: Permite manejar categorías de artículos.
+        - VER_CATEGORIAS: Permite ver todas las categorías.
+        - VER_KANBAN: Permite ver el kanban de estados de artículos.
     """
 
     VER_INICIO = "ver_inicio"

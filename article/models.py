@@ -76,7 +76,6 @@ class Category(models.Model):
     price = models.FloatField(default=0.0, null=True)
     createdBy = models.IntegerField(null=True)  # Quita el valor predeterminado
 
-
     def has_purchased_category(self, user):
         """
         Verifica si el usuario ha comprado una categoría específica.
@@ -257,6 +256,16 @@ class UserCategoryPurchase(models.Model):
 
 
 class ArticleVote(models.Model):
+    """
+    Clase que representa el voto de un usuario en un artículo.
+    
+    Attributes:
+        user (ForeignKey): El usuario que votó.
+        article (ForeignKey): El artículo que recibió el voto.
+        vote (IntegerField): El voto del usuario.
+        rating (IntegerField): La calificación del usuario.
+    """
+
     LIKE = 1
     DISLIKE = -1
     VOTE_CHOICES = [
@@ -287,6 +296,18 @@ class ArticleVote(models.Model):
 
 
 class Payment(models.Model):
+    """
+    Modelo que representa un pago realizado por un usuario.
+
+    Attributes:
+        user (ForeignKey): El usuario que realizó el pago.
+        category (ForeignKey): La categoría que fue comprada.
+        price (DecimalField): Precio de la categoría en el momento de la compra.
+        date_paid (DateTimeField): Fecha en la que se realizó el pago.
+        stripe_payment_id (CharField): ID del pago en Stripe.
+        status (CharField): Estado del pago.
+    """
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     price = models.FloatField(default=0.00, null=True)
