@@ -27,9 +27,9 @@ echo "Starting deployment process..."
 
 echo "-------------------------------------------------------"
 
-if ! command -v python3.10 &> /dev/null; then
+if ! command -v python3 &> /dev/null; then
     echo "Python 3.10 not found. Installing..."
-    sudo apt install -y python3.10 python3.10-venv python3.10-dev
+    sudo apt install -y python3
 fi
 
 if ! command -v pip3 &> /dev/null; then
