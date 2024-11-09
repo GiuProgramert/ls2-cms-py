@@ -1448,25 +1448,37 @@ def sold_categories(request):
     if category_name:
         payments = payments.filter(
             category__name__iexact=category_name
-        )  # Change from __icontains to __iexact
+        )
     if username:
         payments = payments.filter(
             user__username__iexact=username
-        )  # Change from __icontains to __iexact
+        )
 
     # Group by category name and count the number of payments associated with each category
     categories_sales = (
-        payments.values("category__name")  # Group by category name
+        payments.values("category__name")
         .annotate(
             total_sales=Count("category"), total_earnings=Sum("price")
-        )  # Count the number of purchases per category
-        .order_by("-total_sales")  # Order from most sold to least sold
+        )
+        .order_by("-total_sales")
     )
 
     # Extract category names and corresponding sales for the graph
     categories = [item["category__name"] for item in categories_sales]
     sales = [item["total_sales"] for item in categories_sales]
     earnings = [item["total_earnings"] for item in categories_sales]
+
+    # New variables to track earnings by date for the bar chart
+    date_sales = (
+        payments.values("date_paid__date")
+        .annotate(total_earnings=Sum("price"))
+        .order_by("date_paid__date")
+    )
+
+    # Extract dates and total earnings for new chart
+    dates = [item["date_paid__date"] for item in date_sales]
+    dates = [item.strftime("%Y-%m-%d") for item in dates]
+    total_earnings_by_date = [item["total_earnings"] for item in date_sales]
 
     # Get the list of users who bought each category
     buyers_per_category = {
@@ -1505,6 +1517,13 @@ def sold_categories(request):
             for item in categories_sales
         ],
     )
+    
+    category_sales_by_date = {}
+    for category in categories:
+        category_sales_by_date[category] = [
+            payments.filter(category__name=category, date_paid__date=date).aggregate(Sum('price'))['price__sum'] or 0
+            for date in dates
+        ]
 
     return render(
         request,
@@ -1513,9 +1532,11 @@ def sold_categories(request):
             "categories": categories,
             "sales": sales,
             "earnings": earnings,
+            "dates_json": json.dumps(dates),  # Serialize dates to JSON format
+            "total_earnings_by_date_json": json.dumps(total_earnings_by_date),  # Serialize earnings data
             "buyers_per_category": buyers_per_category,
             "category_data": category_data,
-            "date_range": date_range,  # Pass the selected date range to the template
+            "date_range": date_range,
             "start_date": start_date_str,
             "end_date": end_date_str,
             "total_general": total_general,
@@ -1523,6 +1544,7 @@ def sold_categories(request):
             "username": username,
             "all_categories": all_categories,
             "all_users": all_users,
+            "category_sales_by_date_json": json.dumps(category_sales_by_date),
         },
     )
 
