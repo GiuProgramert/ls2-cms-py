@@ -4,7 +4,6 @@
 
 <div class="custom-filters">
     <form method="GET" action="{% url 'sold-categories' %}" style="display: flex; align-items: center; gap: 10px;">
-        
         <!-- Category Dropdown -->
         <label for="category_name">Nombre De La Categoria:</label>
         <select id="category_name" name="category_name">
@@ -80,7 +79,6 @@
 </div>
 
 <style>
-/* Chart container to keep charts responsive */
 .chart-container {
     display: block;
     width: 100%;
@@ -92,12 +90,11 @@
 canvas {
     margin: 0;
     padding: 0;
-    width: 100%; /* Adjust to full width */
-    max-width: 100%; /* Maximize to container width */
-    height: 400px; /* Adjust as necessary */
+    width: 100%;
+    max-width: 100%;
+    height: 400px;
 }
 
-/* Button styles */
 .button-container {
     display: flex;
     flex-wrap: wrap;
@@ -143,12 +140,7 @@ button:hover {
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-
-    function getRandomColor() {
-        return `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.5)`;
-    }
-
-    // Initialize the bar chart
+    // Bar Chart
     var ctx = document.getElementById('categoriesChart').getContext('2d');
     var pieCtx = document.getElementById('pieChart').getContext('2d');
 
@@ -156,48 +148,57 @@ button:hover {
     var sales = {{ sales|safe }};
     var earnings = {{ earnings|safe }};
 
-    const barColors = Array(categories.length).fill().map(() => getRandomColor());
+    var dates = JSON.parse('{{ dates_json|safe }}');
+    var totalEarningsByDate = JSON.parse('{{ total_earnings_by_date_json|safe }}');
 
-    // Bar Chart
     var categoriesChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: categories,
+            labels: dates,
             datasets: [{
-                label: 'Numero de ventas',
-                data: sales,
-                backgroundColor: barColors,
-                borderColor: barColors.map((color) => color.replace("0.5", "1")),
+                label: 'Total Ganado por Categoría',
+                data: totalEarningsByDate,
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
                 borderWidth: 1
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            layout: {
-                padding: 0
-            },
             scales: {
                 x: {
-                    ticks: {
-                        maxRotation: categories.length > 5 ? 45 : 0,
-                        minRotation: 0
+                    title: {
+                        display: true,
+                        text: 'Fechas'
                     }
                 },
                 y: {
                     beginAtZero: true,
-                    suggestedMax: Math.max(...sales) + 1,
-                    title: { display: true, text: 'Número de Compradores' }
+                    title: {
+                        display: true,
+                        text: 'Monto Total Vendido'
+                    }
                 }
             },
             plugins: {
-                legend: { display: true, position: 'top' },
-                title: { display: true, text: 'Grafico de las categorias vendidas' }
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                title: {
+                    display: true,
+                    text: 'Monto Total Vendido por Fechas'
+                }
             }
         }
     });
 
-    // Pie Chart
+    // Pie Chart (unchanged)
+    var pieCtx = document.getElementById('pieChart').getContext('2d');
+    var categories = {{ categories|safe }};
+    var earnings = {{ earnings|safe }};
+
     new Chart(pieCtx, {
         type: 'pie',
         data: {
@@ -211,9 +212,6 @@ button:hover {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            layout: {
-                padding: 0
-            },
             plugins: {
                 legend: {
                     position: 'top'
@@ -225,6 +223,5 @@ button:hover {
             }
         }
     });
-
 </script>
 {% endblock %}
