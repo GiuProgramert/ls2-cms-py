@@ -140,24 +140,6 @@ button:hover {
         return `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.5)`;
     }
 
-    
-
-    var ctx = document.getElementById('categoriesChart').getContext('2d');
-    var categories = {{ categories|safe }};
-    var sales = {{ sales|safe }};
-    var buyersPerCategory = {{ buyers_per_category|safe }};
-    var earnings = {{ earnings|safe }};
-
-    const barColors = Array(categories.length)
-        .fill()
-        .map(getRandomColor);
-
-    // Creating an object to map categories to their colors
-    var categoryColorMap = {};
-    categories.forEach((category, index) => {
-        categoryColorMap[category] = barColors[index];
-    });
-
     // Bar Chart
     var categoriesChart = new Chart(ctx, {
         type: 'bar',
