@@ -1517,6 +1517,13 @@ def sold_categories(request):
             for item in categories_sales
         ],
     )
+    
+    category_sales_by_date = {}
+    for category in categories:
+        category_sales_by_date[category] = [
+            payments.filter(category__name=category, date_paid__date=date).aggregate(Sum('price'))['price__sum'] or 0
+            for date in dates
+        ]
 
     return render(
         request,
@@ -1537,6 +1544,7 @@ def sold_categories(request):
             "username": username,
             "all_categories": all_categories,
             "all_users": all_users,
+            "category_sales_by_date_json": json.dumps(category_sales_by_date),
         },
     )
 

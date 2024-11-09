@@ -76,6 +76,9 @@
     <div style="width: 100%;">
         <canvas id="pieChart"></canvas>
     </div>
+    <div style="width: 100%; margin-bottom: 20px;">
+        <canvas id="categoriesLineChart"></canvas>
+    </div>
 </div>
 
 <style>
@@ -143,13 +146,24 @@ button:hover {
     // Bar Chart
     var ctx = document.getElementById('categoriesChart').getContext('2d');
     var pieCtx = document.getElementById('pieChart').getContext('2d');
+    var lineCtx = document.getElementById('categoriesLineChart').getContext('2d');
 
     var categories = {{ categories|safe }};
     var sales = {{ sales|safe }};
     var earnings = {{ earnings|safe }};
-
     var dates = JSON.parse('{{ dates_json|safe }}');
     var totalEarningsByDate = JSON.parse('{{ total_earnings_by_date_json|safe }}');
+    var categoryLineData = JSON.parse('{{ category_sales_by_date_json|safe }}');
+    var lineDates = JSON.parse('{{ dates_json|safe }}');
+
+    var lineDatasets = Object.keys(categoryLineData).map((category, index) => {
+        return {
+            label: category,
+            data: categoryLineData[category],
+            borderColor: `hsl(${index * 30}, 70%, 50%)`, // Ensure unique colors
+            fill: false
+        };
+    });
 
     var categoriesChart = new Chart(ctx, {
         type: 'bar',
@@ -219,6 +233,43 @@ button:hover {
                 title: {
                     display: true,
                     text: 'Distribución de ganancias por categoría'
+                }
+            }
+        }
+    });
+
+    var categoriesLineChart = new Chart(lineCtx, {
+        type: 'line',
+        data: {
+            labels: lineDates,
+            datasets: lineDatasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Fechas'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Monto Total Vendido'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
                 }
             }
         }
