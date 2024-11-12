@@ -1771,65 +1771,67 @@ def download_sold_categories_suscriptor(request):
     return response
 
 def article_stats(request):
-    # Filter articles for the likes chart (only articles with likes and in "Publicado" state)
-    articles_with_likes = Article.objects.filter(
-        likes_number__gt=0, state=ArticleStates.PUBLISHED.value
-    ).order_by('-likes_number')
+    # Get filter parameters from the request
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    author_id = request.GET.get('author')
+    category_id = request.GET.get('category')
 
-    # Filter articles for the dislikes chart (only articles with dislikes and in "Publicado" state)
-    articles_with_dislikes = Article.objects.filter(
-        dislikes_number__gt=0, state=ArticleStates.PUBLISHED.value
-    ).order_by('-dislikes_number')
+    # Base query for published articles
+    articles_query = Article.objects.filter(state=ArticleStates.PUBLISHED.value)
 
-    # Filter articles for the average rating chart (only published articles with ratings)
-    articles_with_ratings = Article.objects.filter(
-        state=ArticleStates.PUBLISHED.value
-    ).annotate(avg_rating=Avg('articlevote__rating')).filter(avg_rating__isnull=False).order_by('-avg_rating')
+    # Apply date filter with full day range
+    if start_date:
+        start_date_parsed = datetime.strptime(start_date, "%Y-%m-%d")
+        articles_query = articles_query.filter(published_at__gte=start_date_parsed)
+    if end_date:
+        end_date_parsed = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(hours=23, minutes=59, seconds=59)
+        articles_query = articles_query.filter(published_at__lte=end_date_parsed)
 
-    # Filter articles for the average visualizations chart (only published articles with views)
-    articles_with_views = Article.objects.filter(
-        views_number__gt=0, state=ArticleStates.PUBLISHED.value
-    ).order_by('-views_number')
+    # Apply author filter
+    if author_id:
+        articles_query = articles_query.filter(autor_id=author_id)
 
-    # Filter articles for the shares chart (only published articles with shares)
-    articles_with_shares = Article.objects.filter(
-        shares_number__gt=0, state=ArticleStates.PUBLISHED.value
-    ).order_by('-shares_number')
+    # Apply category filter
+    if category_id:
+        articles_query = articles_query.filter(category_id=category_id)
 
-    # Prepare data for the likes chart
+    # Prepare data for charts (filter articles with likes, dislikes, etc.)
+    articles_with_likes = articles_query.filter(likes_number__gt=0).order_by('-likes_number')
+    articles_with_dislikes = articles_query.filter(dislikes_number__gt=0).order_by('-dislikes_number')
+    articles_with_ratings = articles_query.annotate(avg_rating=Avg('articlevote__rating')).filter(avg_rating__isnull=False).order_by('-avg_rating')
+    articles_with_views = articles_query.filter(views_number__gt=0).order_by('-views_number')
+    articles_with_shares = articles_query.filter(shares_number__gt=0).order_by('-shares_number')
+
+    # Prepare data dictionaries for charts
     likes_data = {
         "titles": [article.title for article in articles_with_likes],
         "likes": [article.likes_number for article in articles_with_likes],
     }
-
-    # Prepare data for the dislikes chart
     dislikes_data = {
         "titles": [article.title for article in articles_with_dislikes],
         "dislikes": [article.dislikes_number for article in articles_with_dislikes],
     }
-
-    # Prepare data for the average rating chart
     avg_rating_data = {
         "titles": [article.title for article in articles_with_ratings],
         "ratings": [article.avg_rating for article in articles_with_ratings],
     }
-
-    # Prepare data for the average visualizations chart
     avg_views_data = {
         "titles": [article.title for article in articles_with_views],
         "views": [article.views_number for article in articles_with_views],
     }
-
-    # Prepare data for the shares chart
     shares_data = {
         "titles": [article.title for article in articles_with_shares],
         "shares": [article.shares_number for article in articles_with_shares],
     }
 
+    # Render the template with data and filter options
     return render(request, 'article/article_chart.html', {
         "likes_data": likes_data,
         "dislikes_data": dislikes_data,
         "avg_rating_data": avg_rating_data,
         "avg_views_data": avg_views_data,
-        "shares_data": shares_data
+        "shares_data": shares_data,
+        "authors": CustomUser.objects.all(),  # Assuming CustomUser model is used for authors
+        "categories": Category.objects.all(),
     })
