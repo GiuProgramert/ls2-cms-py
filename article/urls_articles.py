@@ -42,6 +42,7 @@ urlpatterns = [
     path("<int:pk>/like/", views.like_article, name="like-article"),
     path("<int:pk>/dislike/", views.dislike_article, name="dislike-article"),
     path("sold-categories/", views.sold_categories, name="sold-categories"),
+    path("likes-dislikes-chart/", views.article_stats, name="article-stats"),
     path(
         "sold-categories-suscriptor/",
         views.sold_categories_suscriptor,

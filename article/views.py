@@ -1769,3 +1769,31 @@ def download_sold_categories_suscriptor(request):
     wb.save(response)
 
     return response
+
+def article_stats(request):
+    # Filter articles for the likes chart (only articles with likes and in "Publicado" state)
+    articles_with_likes = Article.objects.filter(
+        likes_number__gt=0, state=ArticleStates.PUBLISHED.value
+    ).order_by('-likes_number')
+
+    # Filter articles for the dislikes chart (only articles with dislikes and in "Publicado" state)
+    articles_with_dislikes = Article.objects.filter(
+        dislikes_number__gt=0, state=ArticleStates.PUBLISHED.value
+    ).order_by('-dislikes_number')
+
+    # Prepare data for the likes chart
+    likes_data = {
+        "titles": [article.title for article in articles_with_likes],
+        "likes": [article.likes_number for article in articles_with_likes],
+    }
+
+    # Prepare data for the dislikes chart
+    dislikes_data = {
+        "titles": [article.title for article in articles_with_dislikes],
+        "dislikes": [article.dislikes_number for article in articles_with_dislikes],
+    }
+
+    return render(request, 'article/article_chart.html', {
+        "likes_data": likes_data,
+        "dislikes_data": dislikes_data
+    })

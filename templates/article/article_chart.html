@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Cantidad de likes por articulo</h2>
+  <canvas id="likesChart"></canvas>
+
+  <h2>Cantidad de dislikes por articulo</h2>
+  <canvas id="dislikesChart"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Data for likes chart
+    const likesData = {{ likes_data|safe }};
+    const likesCtx = document.getElementById('likesChart').getContext('2d');
+    new Chart(likesCtx, {
+      type: 'bar',
+      data: {
+        labels: likesData.titles,
+        datasets: [
+          {
+            label: 'Likes',
+            data: likesData.likes,
+            backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Articulos'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Numero de likes'
+            }
+          }
+        }
+      }
+    });
+
+    // Data for dislikes chart
+    const dislikesData = {{ dislikes_data|safe }};
+    const dislikesCtx = document.getElementById('dislikesChart').getContext('2d');
+    new Chart(dislikesCtx, {
+      type: 'bar',
+      data: {
+        labels: dislikesData.titles,
+        datasets: [
+          {
+            label: 'Dislikes',
+            data: dislikesData.dislikes,
+            backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Articulos'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Numero de dislikes'
+            }
+          }
+        }
+      }
+    });
+  </script>
+{% endblock %}
