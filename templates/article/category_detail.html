@@ -22,8 +22,10 @@
 
 <a href="{% url 'category-list' %}">Volver a la lista</a>
 <br><br>
-<!-- Botón de pago -->
-<button id="checkout-button">Pagar por esta Categoría</button>
+{% if category.type == "pay" %}
+    <!-- Botón de pago -->
+    <button id="checkout-button">Pagar por esta Categoría</button>
+{% endif %}
 </div>
 
 <script>
