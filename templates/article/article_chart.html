@@ -43,11 +43,19 @@
         .charts-container {
             display: grid;
             grid-template-columns: repeat(2, 1fr); /* Two columns */
-            gap: 2rem; /* Adjust spacing between charts */
+            gap: 1.5rem; /* Adjust spacing between charts */
         }
 
         .full-width-chart {
             grid-column: span 2; /* Makes the chart span two columns */
+        }
+
+        .charts-container canvas {
+            max-height: 200px; /* Reduce the chart height */
+        }
+
+        .full-width-chart canvas {
+            max-height: 180px; /* Slightly smaller for full-width charts */
         }
     </style>
 
