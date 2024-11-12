@@ -1791,6 +1791,11 @@ def article_stats(request):
         views_number__gt=0, state=ArticleStates.PUBLISHED.value
     ).order_by('-views_number')
 
+    # Filter articles for the shares chart (only published articles with shares)
+    articles_with_shares = Article.objects.filter(
+        shares_number__gt=0, state=ArticleStates.PUBLISHED.value
+    ).order_by('-shares_number')
+
     # Prepare data for the likes chart
     likes_data = {
         "titles": [article.title for article in articles_with_likes],
@@ -1815,9 +1820,16 @@ def article_stats(request):
         "views": [article.views_number for article in articles_with_views],
     }
 
+    # Prepare data for the shares chart
+    shares_data = {
+        "titles": [article.title for article in articles_with_shares],
+        "shares": [article.shares_number for article in articles_with_shares],
+    }
+
     return render(request, 'article/article_chart.html', {
         "likes_data": likes_data,
         "dislikes_data": dislikes_data,
         "avg_rating_data": avg_rating_data,
-        "avg_views_data": avg_views_data
+        "avg_views_data": avg_views_data,
+        "shares_data": shares_data
     })

@@ -13,6 +13,9 @@
   <h2>Article Average Views Comparison</h2>
   <canvas id="avgViewsChart"></canvas>
 
+  <h2>Article Shares Comparison</h2>
+  <canvas id="sharesChart"></canvas>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     // Data for likes chart
@@ -70,13 +73,13 @@
           x: {
             title: {
               display: true,
-              text: 'Articles'
+              text: 'Articulos'
             }
           },
           y: {
             title: {
               display: true,
-              text: 'Number of Dislikes'
+              text: 'Numero de dislikes'
             }
           }
         }
@@ -92,7 +95,7 @@
         labels: avgRatingData.titles,
         datasets: [
           {
-            label: 'Average Rating',
+            label: 'Puntaje promedio',
             data: avgRatingData.ratings,
             backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
           }
@@ -104,13 +107,13 @@
           x: {
             title: {
               display: true,
-              text: 'Articles'
+              text: 'Articulos'
             }
           },
           y: {
             title: {
               display: true,
-              text: 'Average Rating'
+              text: 'Puntaje promedio'
             }
           }
         }
@@ -126,7 +129,7 @@
         labels: avgViewsData.titles,
         datasets: [
           {
-            label: 'Average Views',
+            label: 'Visualizaciones',
             data: avgViewsData.views,
             backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
           }
@@ -138,13 +141,47 @@
           x: {
             title: {
               display: true,
-              text: 'Articles'
+              text: 'Articulos'
             }
           },
           y: {
             title: {
               display: true,
-              text: 'Number of Views'
+              text: 'Numero de visualizaciones'
+            }
+          }
+        }
+      }
+    });
+
+    // Data for shares chart
+    const sharesData = {{ shares_data|safe }};
+    const sharesCtx = document.getElementById('sharesChart').getContext('2d');
+    new Chart(sharesCtx, {
+      type: 'bar',
+      data: {
+        labels: sharesData.titles,
+        datasets: [
+          {
+            label: 'Compartidos',
+            data: sharesData.shares,
+            backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Articulos'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Numero de veces que fue compartido'
             }
           }
         }
