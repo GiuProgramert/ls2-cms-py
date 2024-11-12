@@ -10,6 +10,9 @@
   <h2>Article Average Rating Comparison</h2>
   <canvas id="avgRatingChart"></canvas>
 
+  <h2>Article Average Views Comparison</h2>
+  <canvas id="avgViewsChart"></canvas>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     // Data for likes chart
@@ -108,6 +111,40 @@
             title: {
               display: true,
               text: 'Average Rating'
+            }
+          }
+        }
+      }
+    });
+
+    // Data for average views chart
+    const avgViewsData = {{ avg_views_data|safe }};
+    const avgViewsCtx = document.getElementById('avgViewsChart').getContext('2d');
+    new Chart(avgViewsCtx, {
+      type: 'bar',
+      data: {
+        labels: avgViewsData.titles,
+        datasets: [
+          {
+            label: 'Average Views',
+            data: avgViewsData.views,
+            backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Articles'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Number of Views'
             }
           }
         }

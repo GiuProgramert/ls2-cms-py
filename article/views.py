@@ -1786,6 +1786,11 @@ def article_stats(request):
         state=ArticleStates.PUBLISHED.value
     ).annotate(avg_rating=Avg('articlevote__rating')).filter(avg_rating__isnull=False).order_by('-avg_rating')
 
+    # Filter articles for the average visualizations chart (only published articles with views)
+    articles_with_views = Article.objects.filter(
+        views_number__gt=0, state=ArticleStates.PUBLISHED.value
+    ).order_by('-views_number')
+
     # Prepare data for the likes chart
     likes_data = {
         "titles": [article.title for article in articles_with_likes],
@@ -1804,8 +1809,15 @@ def article_stats(request):
         "ratings": [article.avg_rating for article in articles_with_ratings],
     }
 
+    # Prepare data for the average visualizations chart
+    avg_views_data = {
+        "titles": [article.title for article in articles_with_views],
+        "views": [article.views_number for article in articles_with_views],
+    }
+
     return render(request, 'article/article_chart.html', {
         "likes_data": likes_data,
         "dislikes_data": dislikes_data,
-        "avg_rating_data": avg_rating_data
+        "avg_rating_data": avg_rating_data,
+        "avg_views_data": avg_views_data
     })
