@@ -9,15 +9,19 @@
         <label for="end_date">Hasta:</label>
         <input type="date" id="end_date" name="end_date" value="{{ request.GET.end_date }}">
 
-        <label for="author">Autor:</label>
-        <select id="author" name="author">
-            <option value="">Todos</option>
-            {% for author in authors %}
-                <option value="{{ author.id }}" {% if author.id|stringformat:"s" == request.GET.author %}selected{% endif %}>
-                    {{ author.username }}
-                </option>
-            {% endfor %}
-        </select>
+        {% if is_admin %}
+            <label for="author">Autor:</label>
+            <select id="author" name="author">
+                <option value="">Todos</option>
+                {% for author in authors %}
+                    <option value="{{ author.id }}" {% if author.id|stringformat:"s" == request.GET.author %}selected{% endif %}>
+                        {{ author.username }}
+                    </option>
+                {% endfor %}
+            </select>
+        {% else %}
+            <input type="hidden" id="author" name="author" value="{{ request.user.id }}">
+        {% endif %}
 
         <label for="category">Categoría:</label>
         <select id="category" name="category">
