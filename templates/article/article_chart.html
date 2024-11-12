@@ -25,7 +25,7 @@
             {% for category in categories %}
                 <option value="{{ category.id }}" {% if category.id|stringformat:"s" == request.GET.category %}selected{% endif %}>
                     {{ category.name }}
-            </option>
+                </option>
             {% endfor %}
         </select>
 
@@ -33,199 +33,221 @@
     </form>
 
     <style>
-  form {
-    display: flex;
-    gap: 1rem; /* Adjust spacing between filters as needed */
-    align-items: center;
-    margin-bottom: 1rem;
-  }
+        form {
+            display: flex;
+            gap: 1rem; /* Adjust spacing between filters as needed */
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Two columns */
+            gap: 2rem; /* Adjust spacing between charts */
+        }
+
+        .full-width-chart {
+            grid-column: span 2; /* Makes the chart span two columns */
+        }
     </style>
 
-  <h2>Cantidad de likes por articulo</h2>
-  <canvas id="likesChart"></canvas>
+    <div class="charts-container">
+        <div>
+            <h2>Cantidad de likes por articulo</h2>
+            <canvas id="likesChart"></canvas>
+        </div>
 
-  <h2>Cantidad de dislikes por articulo</h2>
-  <canvas id="dislikesChart"></canvas>
+        <div>
+            <h2>Cantidad de dislikes por articulo</h2>
+            <canvas id="dislikesChart"></canvas>
+        </div>
 
-  <h2>Article Average Rating Comparison</h2>
-  <canvas id="avgRatingChart"></canvas>
+        <div class="full-width-chart">
+            <h2>Cantidad de vistas por articulo</h2>
+            <canvas id="avgViewsChart"></canvas>
+        </div>
 
-  <h2>Article Average Views Comparison</h2>
-  <canvas id="avgViewsChart"></canvas>
+        <div>
+            <h2>Promedio de puntajes por articulos</h2>
+            <canvas id="avgRatingChart"></canvas>
+        </div>
 
-  <h2>Article Shares Comparison</h2>
-  <canvas id="sharesChart"></canvas>
+        <div>
+            <h2>Cantidad de veces que un articulo fue compartido</h2>
+            <canvas id="sharesChart"></canvas>
+        </div>
+    </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    // Data for likes chart
-    const likesData = {{ likes_data|safe }};
-    const likesCtx = document.getElementById('likesChart').getContext('2d');
-    new Chart(likesCtx, {
-      type: 'bar',
-      data: {
-        labels: likesData.titles,
-        datasets: [
-          {
-            label: 'Likes',
-            data: likesData.likes,
-            backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'Articulos'
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Data for likes chart
+        const likesData = {{ likes_data|safe }};
+        const likesCtx = document.getElementById('likesChart').getContext('2d');
+        new Chart(likesCtx, {
+            type: 'bar',
+            data: {
+                labels: likesData.titles,
+                datasets: [
+                    {
+                        label: 'Likes',
+                        data: likesData.likes,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Articulos'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Numero de likes'
+                        }
+                    }
+                }
             }
-          },
-          y: {
-            title: {
-              display: true,
-              text: 'Numero de likes'
-            }
-          }
-        }
-      }
-    });
+        });
 
-    // Data for dislikes chart
-    const dislikesData = {{ dislikes_data|safe }};
-    const dislikesCtx = document.getElementById('dislikesChart').getContext('2d');
-    new Chart(dislikesCtx, {
-      type: 'bar',
-      data: {
-        labels: dislikesData.titles,
-        datasets: [
-          {
-            label: 'Dislikes',
-            data: dislikesData.dislikes,
-            backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'Articulos'
+        // Data for dislikes chart
+        const dislikesData = {{ dislikes_data|safe }};
+        const dislikesCtx = document.getElementById('dislikesChart').getContext('2d');
+        new Chart(dislikesCtx, {
+            type: 'bar',
+            data: {
+                labels: dislikesData.titles,
+                datasets: [
+                    {
+                        label: 'Dislikes',
+                        data: dislikesData.dislikes,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Articulos'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Numero de dislikes'
+                        }
+                    }
+                }
             }
-          },
-          y: {
-            title: {
-              display: true,
-              text: 'Numero de dislikes'
-            }
-          }
-        }
-      }
-    });
+        });
 
-    // Data for average rating chart
-    const avgRatingData = {{ avg_rating_data|safe }};
-    const avgRatingCtx = document.getElementById('avgRatingChart').getContext('2d');
-    new Chart(avgRatingCtx, {
-      type: 'bar',
-      data: {
-        labels: avgRatingData.titles,
-        datasets: [
-          {
-            label: 'Puntaje promedio',
-            data: avgRatingData.ratings,
-            backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'Articulos'
+        // Data for average rating chart
+        const avgRatingData = {{ avg_rating_data|safe }};
+        const avgRatingCtx = document.getElementById('avgRatingChart').getContext('2d');
+        new Chart(avgRatingCtx, {
+            type: 'bar',
+            data: {
+                labels: avgRatingData.titles,
+                datasets: [
+                    {
+                        label: 'Puntaje promedio',
+                        data: avgRatingData.ratings,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Articulos'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Puntaje promedio'
+                        }
+                    }
+                }
             }
-          },
-          y: {
-            title: {
-              display: true,
-              text: 'Puntaje promedio'
-            }
-          }
-        }
-      }
-    });
+        });
 
-    // Data for average views chart
-    const avgViewsData = {{ avg_views_data|safe }};
-    const avgViewsCtx = document.getElementById('avgViewsChart').getContext('2d');
-    new Chart(avgViewsCtx, {
-      type: 'bar',
-      data: {
-        labels: avgViewsData.titles,
-        datasets: [
-          {
-            label: 'Visualizaciones',
-            data: avgViewsData.views,
-            backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'Articulos'
+        // Data for average views chart
+        const avgViewsData = {{ avg_views_data|safe }};
+        const avgViewsCtx = document.getElementById('avgViewsChart').getContext('2d');
+        new Chart(avgViewsCtx, {
+            type: 'bar',
+            data: {
+                labels: avgViewsData.titles,
+                datasets: [
+                    {
+                        label: 'Visualizaciones',
+                        data: avgViewsData.views,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Articulos'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Numero de visualizaciones'
+                        }
+                    }
+                }
             }
-          },
-          y: {
-            title: {
-              display: true,
-              text: 'Numero de visualizaciones'
-            }
-          }
-        }
-      }
-    });
+        });
 
-    // Data for shares chart
-    const sharesData = {{ shares_data|safe }};
-    const sharesCtx = document.getElementById('sharesChart').getContext('2d');
-    new Chart(sharesCtx, {
-      type: 'bar',
-      data: {
-        labels: sharesData.titles,
-        datasets: [
-          {
-            label: 'Compartidos',
-            data: sharesData.shares,
-            backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            title: {
-              display: true,
-              text: 'Articulos'
+        // Data for shares chart
+        const sharesData = {{ shares_data|safe }};
+        const sharesCtx = document.getElementById('sharesChart').getContext('2d');
+        new Chart(sharesCtx, {
+            type: 'bar',
+            data: {
+                labels: sharesData.titles,
+                datasets: [
+                    {
+                        label: 'Compartidos',
+                        data: sharesData.shares,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Articulos'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Numero de veces que fue compartido'
+                        }
+                    }
+                }
             }
-          },
-          y: {
-            title: {
-              display: true,
-              text: 'Numero de veces que fue compartido'
-            }
-          }
-        }
-      }
-    });
-  </script>
+        });
+    </script>
 {% endblock %}
