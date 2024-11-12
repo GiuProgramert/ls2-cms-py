@@ -1771,6 +1771,8 @@ def download_sold_categories_suscriptor(request):
     return response
 
 def article_stats(request):
+    current_user = request.user
+    is_admin = current_user.roles.filter(name="Administrador").exists()
     # Get filter parameters from the request
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
@@ -1779,6 +1781,12 @@ def article_stats(request):
 
     # Base query for published articles
     articles_query = Article.objects.filter(state=ArticleStates.PUBLISHED.value)
+    
+    if is_admin:  # Check if the user is an admin
+        articles_query = Article.objects.filter(state=ArticleStates.PUBLISHED.value)
+    else:
+        # Non-admin users can only see their own articles
+        articles_query = Article.objects.filter(state=ArticleStates.PUBLISHED.value, autor_id=current_user.id)
 
     # Apply date filter with full day range
     if start_date:
@@ -1834,4 +1842,5 @@ def article_stats(request):
         "shares_data": shares_data,
         "authors": CustomUser.objects.all(),  # Assuming CustomUser model is used for authors
         "categories": Category.objects.all(),
+        "is_admin": is_admin,
     })
