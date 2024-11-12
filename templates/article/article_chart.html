@@ -7,6 +7,9 @@
   <h2>Cantidad de dislikes por articulo</h2>
   <canvas id="dislikesChart"></canvas>
 
+  <h2>Article Average Rating Comparison</h2>
+  <canvas id="avgRatingChart"></canvas>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     // Data for likes chart
@@ -64,13 +67,47 @@
           x: {
             title: {
               display: true,
-              text: 'Articulos'
+              text: 'Articles'
             }
           },
           y: {
             title: {
               display: true,
-              text: 'Numero de dislikes'
+              text: 'Number of Dislikes'
+            }
+          }
+        }
+      }
+    });
+
+    // Data for average rating chart
+    const avgRatingData = {{ avg_rating_data|safe }};
+    const avgRatingCtx = document.getElementById('avgRatingChart').getContext('2d');
+    new Chart(avgRatingCtx, {
+      type: 'bar',
+      data: {
+        labels: avgRatingData.titles,
+        datasets: [
+          {
+            label: 'Average Rating',
+            data: avgRatingData.ratings,
+            backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Articles'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Average Rating'
             }
           }
         }

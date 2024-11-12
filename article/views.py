@@ -1781,6 +1781,11 @@ def article_stats(request):
         dislikes_number__gt=0, state=ArticleStates.PUBLISHED.value
     ).order_by('-dislikes_number')
 
+    # Filter articles for the average rating chart (only published articles with ratings)
+    articles_with_ratings = Article.objects.filter(
+        state=ArticleStates.PUBLISHED.value
+    ).annotate(avg_rating=Avg('articlevote__rating')).filter(avg_rating__isnull=False).order_by('-avg_rating')
+
     # Prepare data for the likes chart
     likes_data = {
         "titles": [article.title for article in articles_with_likes],
@@ -1793,7 +1798,14 @@ def article_stats(request):
         "dislikes": [article.dislikes_number for article in articles_with_dislikes],
     }
 
+    # Prepare data for the average rating chart
+    avg_rating_data = {
+        "titles": [article.title for article in articles_with_ratings],
+        "ratings": [article.avg_rating for article in articles_with_ratings],
+    }
+
     return render(request, 'article/article_chart.html', {
         "likes_data": likes_data,
-        "dislikes_data": dislikes_data
+        "dislikes_data": dislikes_data,
+        "avg_rating_data": avg_rating_data
     })
