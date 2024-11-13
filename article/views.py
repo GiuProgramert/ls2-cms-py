@@ -402,7 +402,7 @@ def article_update_history(request, pk):
             body=article_content.body, autor=request.user, article=article
         )
 
-        return redirect("home")
+        return redirect("article-detail", pk=article.pk)
 
     article = get_object_or_404(Article, pk=pk)
     article_contents_ref = ArticleContent.objects.filter(article=article).order_by(
