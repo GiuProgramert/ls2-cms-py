@@ -43,22 +43,20 @@
     <thead>
         <tr>
             <th>Categoría</th>
-            <th>Ventas</th>
-            <th>Ganancias</th>
-            <th>Compradores (Fecha y Hora)</th>
+            <th>Comprador</th>
+            <th>Costo</th>
+            <th>Fecha y Hora</th>
+            <th>Medio de Pago</th> <!-- Existing column -->
         </tr>
     </thead>
     <tbody>
-        {% for category, sales, earning, buyers in category_data %}
+        {% for item in detailed_category_data %}
         <tr>
-            <td>{{ category }}</td>
-            <td>{{ sales }}</td>
-            <td class="earning">${{ earning }}</td>
-            <td>
-                {% for buyer in buyers %}
-                    <div class="buyer-info">{{ buyer }}</div>
-                {% endfor %}
-            </td>
+            <td>{{ item.category }}</td>
+            <td>{{ item.buyer }}</td>
+            <td>${{ item.cost }}</td>
+            <td data-original-datetime="{{ item.datetime }}">{{ item.datetime }}</td>
+            <td>{{ item.medio_pago }}</td> <!-- Existing column -->
         </tr>
         {% endfor %}
     </tbody>
@@ -92,113 +90,78 @@ function applyFilters() {
     const selectedCategory = document.getElementById("filter_category").value.toLowerCase();
     const selectedUsername = document.getElementById("filter_username").value.toLowerCase();
 
-    const startDate = startDateStr ? new Date(startDateStr) : null;
-    const endDate = endDateStr ? new Date(endDateStr) : null;
+    // Convert start date to 00:00:00 and end date to 23:59:59 for full-day inclusion
+    const startDate = startDateStr ? new Date(startDateStr + "T00:00:00") : null;
+    const endDate = endDateStr ? new Date(endDateStr + "T23:59:59") : null;
 
     const rows = document.querySelectorAll("#category_table tbody tr");
     let totalEarnings = 0;
 
     rows.forEach(row => {
         const category = row.cells[0].textContent.toLowerCase();
-        const buyers = row.cells[3].querySelectorAll(".buyer-info");
+        const buyer = row.cells[1].textContent.toLowerCase();
+        const cost = parseFloat(row.cells[2].textContent.replace('$', ''));
+        const dateTimeStr = row.cells[3].getAttribute('data-original-datetime');  // Use the original value for filtering
+        const dateTime = new Date(dateTimeStr);
 
-        let rowEarnings = 0;
-        let rowSales = 0;
-        let showRow = false;
+        let showRow = true;
 
-        // Filtrar por categoría
+        // Filter by category
         if (selectedCategory && selectedCategory !== category) {
-            row.style.display = "none";
-            return; // Saltar al siguiente row si la categoría no coincide
+            showRow = false;
         }
 
-        buyers.forEach(buyer => {
-            const buyerText = buyer.textContent.toLowerCase();
-            const dateMatch = buyerText.match(/fecha: (\d{4}-\d{2}-\d{2})/);
-            const buyerDate = dateMatch ? new Date(dateMatch[1]) : null;
+        // Filter by username
+        if (selectedUsername && selectedUsername !== buyer) {
+            showRow = false;
+        }
 
-            const buyerDateString = buyerDate ? buyerDate.toISOString().split('T')[0] : null;
-            const startDateString = startDate ? startDate.toISOString().split('T')[0] : null;
-            const endDateString = endDate ? endDate.toISOString().split('T')[0] : null;
-
-            // Filtrar por usuario
-            const extractedUsername = buyerText.split(" - ")[0].trim(); // Extract the part before the first " - "
-
-            if (selectedUsername && extractedUsername.toLowerCase() !== selectedUsername.toLowerCase()) {
-                buyer.style.display = "none";
-                return;
+        // Filter by date, ensuring full day coverage
+        if (startDate && endDate && dateTime) {
+            if (dateTime < startDate || dateTime > endDate) {
+                showRow = false;
             }
+        }
 
-            // Filtrar por fecha
-            if (startDate && endDate && buyerDateString) {
-                if (buyerDateString < startDateString || buyerDateString > endDateString) {
-                    buyer.style.display = "none";
-                    return;
-                }
-            }
-
-            // Si el comprador pasa todos los filtros, hacerlo visible y contar la ganancia y venta
-            buyer.style.display = "";
-            showRow = true;
-
-            // Sumar ganancias y ventas para el comprador visible
-            rowEarnings += 5; // Ajuste basado en el costo de cada comprador visible
-            rowSales += 1;
-        });
-
-        // Mostrar u ocultar la fila según si hay compradores visibles que cumplen los filtros
+        // Show or hide the row based on filters
         row.style.display = showRow ? "" : "none";
 
-        // Actualizar las celdas de ventas y ganancias de la fila actual
-        row.cells[1].textContent = showRow ? rowSales : 0;
-        row.cells[2].textContent = showRow ? `$${rowEarnings.toFixed(2)}` : "$0.00";
-
-        // Sumar ganancias solo para las filas que cumplen los filtros
+        // Update total earnings only for visible rows
         if (showRow) {
-            totalEarnings += rowEarnings;
+            totalEarnings += cost;
         }
     });
 
-    // Actualizar el total de ganancias en el HTML
+    // Update total earnings in the HTML
     document.getElementById("total_earnings").textContent = totalEarnings.toFixed(2);
 }
 
 function downloadExcel() {
-    // Obtener el usuario seleccionado en el filtro
-    const selectedUser = document.getElementById("filter_username").value.toLowerCase();
-
-    // Obtener solo las filas visibles en la tabla
+    // Get only the visible rows in the table
     const tableRows = Array.from(document.querySelectorAll("#category_table tbody tr"))
-        .filter(row => row.style.display !== "none");  // Filtrar por visibilidad directamente
+        .filter(row => row.style.display !== "none");  // Filter by visibility
 
-    console.log("Filas visibles para exportar:", tableRows);
+    console.log("Visible rows for export:", tableRows);
 
-    // Recolectar datos de cada fila visible
+    // Collect data from each visible row
     const tableData = tableRows.map(row => {
-        // Filtrar compradores según el usuario seleccionado
-        const filteredBuyers = Array.from(row.cells[3].querySelectorAll(".buyer-info"))
-            .filter(buyer => buyer.style.display !== "none")  // Solo compradores visibles
-            .map(buyer => buyer.textContent.trim());
-
-        const ventas = parseInt(row.cells[1].textContent.trim(), 10);
-        const ganancias = parseFloat(row.cells[2].textContent.trim().replace('$', ''));
-
         return {
             categoria: row.cells[0].textContent.trim(),
-            ventas: ventas,
-            ganancias: ganancias,
-            compradores: filteredBuyers
+            comprador: row.cells[1].textContent.trim(),
+            costo: parseFloat(row.cells[2].textContent.trim().replace('$', '')),
+            fechaHora: row.cells[3].textContent.trim(),  // Already formatted as 'YYYY-MM-DD HH:MM:SS'
+            medioPago: row.cells[4].textContent.trim()
         };
-    }).filter(item => item.ventas > 0 || item.ganancias > 0 || item.compradores.length > 0);
+    }).filter(item => item.costo > 0 || item.comprador);  // Ensure data validity
 
-    console.log("Datos recopilados para exportar:", tableData);
+    console.log("Collected data for export:", tableData);
 
     if (tableData.length === 0) {
         alert("No hay datos para exportar.");
         return;
     }
 
-    // Enviar datos filtrados al backend para generar el archivo Excel
+    // Send filtered data to the backend for generating the Excel file
     fetch("{% url 'download-sold-categories' %}", {
         method: "POST",
         headers: {
@@ -219,6 +182,27 @@ function downloadExcel() {
     });
 }
 
+document.addEventListener("DOMContentLoaded", function() {
+    // Format dates for display in the 'Fecha y Hora' column
+    const dateCells = document.querySelectorAll("#category_table tbody tr td[data-original-datetime]");
 
+    dateCells.forEach(cell => {
+        const originalDateStr = cell.getAttribute('data-original-datetime').trim();
+        if (originalDateStr) {
+            // Parse the original date string (assumes format 'YYYY-MM-DD HH:MM:SS')
+            const dateObj = new Date(originalDateStr);
+
+            if (!isNaN(dateObj.getTime())) {
+                // Format the date as '13 de octubre del 2024 a las 14:00:52'
+                const options = { day: 'numeric', month: 'long', year: 'numeric' };
+                const formattedDate = dateObj.toLocaleDateString('es-ES', options);
+                const formattedTime = dateObj.toLocaleTimeString('es-ES');
+
+                // Display the formatted date and time without modifying the original data attribute
+                cell.textContent = `${formattedDate} a las ${formattedTime}`;
+            }
+        }
+    });
+});
 </script>
 {% endblock %}
