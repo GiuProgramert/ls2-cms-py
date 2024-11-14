@@ -1647,65 +1647,51 @@ def sold_categories_suscriptor(request):
 @login_required
 def download_sold_categories(request):
     """
-    Vista que permite la descarga de un archivo Excel con información de ventas por categoría.
-
-    Procesa los datos enviados desde el frontend y genera un archivo con las categorías, ventas,
-    ganancias y compradores.
-
-    Args:
-        request (HttpRequest): La solicitud HTTP.
-
-    Returns:
-        HttpResponse: Respuesta con el archivo Excel para descarga.
+    View to download an Excel file containing detailed sales information.
+    Processes the data from the frontend and generates a file with the formatted details.
     """
     if request.method == "POST":
         data = json.loads(request.body).get("category_data", [])
 
-        # Agregar una impresión para ver el contenido recibido del frontend
-
-        # Crear un archivo Excel y hoja de trabajo
+        # Create an Excel workbook and worksheet
         wb = Workbook()
         ws = wb.active
         ws.title = "Ventas por Categoría"
 
-        # Escribir encabezados
-        headers = ["Categoria", "Ventas", "Ganancias", "Compradores (Fecha y Hora)", "Medio de Pago"]
+        # Write headers
+        headers = ["Categoría", "Comprador", "Costo", "Fecha y Hora", "Medio de Pago"]
         ws.append(headers)
 
-        # Variable para acumular el total de ganancias
-        total_earnings_filtered = 0
+        # Variable to accumulate total earnings
+        total_earnings = 0
 
-        # Añadir filas en el formato especificado según los datos enviados
+        # Add rows based on the detailed_category_data sent from the frontend
         for item in data:
-            category_name = item["categoria"]
-            total_sales = int(item["ventas"])
-            total_earnings = float(item["ganancias"])
-            buyers = ", ".join(item["compradores"])
-            
-            if total_sales > 0 and total_earnings > 0:
-                total_earnings_filtered += total_earnings
-                
-                # Add 'Tarjeta de crédito' to the new column in the row
-                ws.append(
-                    [category_name, total_sales, f"${total_earnings:.2f}", buyers, "Tarjeta de crédito"]
-                )
+            total_earnings += item['costo']  # Accumulate cost for total earnings
+            ws.append([
+                item["categoria"],
+                item["comprador"],
+                f"${item['costo']:.2f}",
+                item["fechaHora"],  # Already formatted as 'YYYY-MM-DD HH:MM:SS'
+                item["medioPago"]
+            ])
 
-        # Escribir el total de ganancias al final de la hoja
+        # Add a blank row for separation
         ws.append([])
-        ws.append(["Total Ganancias", f"${total_earnings_filtered:.2f}"])
 
-        # Ajustar ancho de columnas para mejor legibilidad
+        # Write total earnings at the end of the sheet
+        ws.append(["Total de Ganancias", "", f"${total_earnings:.2f}"])
+
+        # Adjust column widths for better readability
         for col in ws.columns:
             max_length = max(len(str(cell.value)) for cell in col)
             ws.column_dimensions[get_column_letter(col[0].column)].width = max_length
 
-        # Crear la respuesta como archivo Excel
+        # Create the response for the Excel file download
         response = HttpResponse(
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-        response["Content-Disposition"] = (
-            'attachment; filename="categorias_vendidas.xlsx"'
-        )
+        response["Content-Disposition"] = 'attachment; filename="categorias_vendidas.xlsx"'
         wb.save(response)
 
         return response

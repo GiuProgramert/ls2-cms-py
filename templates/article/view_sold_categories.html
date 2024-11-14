@@ -136,41 +136,31 @@ function applyFilters() {
 }
 
 function downloadExcel() {
-    // Obtener el usuario seleccionado en el filtro
-    const selectedUser = document.getElementById("filter_username").value.toLowerCase();
-
-    // Obtener solo las filas visibles en la tabla
+    // Get only the visible rows in the table
     const tableRows = Array.from(document.querySelectorAll("#category_table tbody tr"))
-        .filter(row => row.style.display !== "none");  // Filtrar por visibilidad directamente
+        .filter(row => row.style.display !== "none");  // Filter by visibility
 
-    console.log("Filas visibles para exportar:", tableRows);
+    console.log("Visible rows for export:", tableRows);
 
-    // Recolectar datos de cada fila visible
+    // Collect data from each visible row
     const tableData = tableRows.map(row => {
-        // Filtrar compradores según el usuario seleccionado
-        const filteredBuyers = Array.from(row.cells[3].querySelectorAll(".buyer-info"))
-            .filter(buyer => buyer.style.display !== "none")  // Solo compradores visibles
-            .map(buyer => buyer.textContent.trim());
-
-        const ventas = parseInt(row.cells[1].textContent.trim(), 10);
-        const ganancias = parseFloat(row.cells[2].textContent.trim().replace('$', ''));
-
         return {
             categoria: row.cells[0].textContent.trim(),
-            ventas: ventas,
-            ganancias: ganancias,
-            compradores: filteredBuyers
+            comprador: row.cells[1].textContent.trim(),
+            costo: parseFloat(row.cells[2].textContent.trim().replace('$', '')),
+            fechaHora: row.cells[3].textContent.trim(),  // Already formatted as 'YYYY-MM-DD HH:MM:SS'
+            medioPago: row.cells[4].textContent.trim()
         };
-    }).filter(item => item.ventas > 0 || item.ganancias > 0 || item.compradores.length > 0);
+    }).filter(item => item.costo > 0 || item.comprador);  // Ensure data validity
 
-    console.log("Datos recopilados para exportar:", tableData);
+    console.log("Collected data for export:", tableData);
 
     if (tableData.length === 0) {
         alert("No hay datos para exportar.");
         return;
     }
 
-    // Enviar datos filtrados al backend para generar el archivo Excel
+    // Send filtered data to the backend for generating the Excel file
     fetch("{% url 'download-sold-categories' %}", {
         method: "POST",
         headers: {
