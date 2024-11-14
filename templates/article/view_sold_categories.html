@@ -55,7 +55,7 @@
             <td>{{ item.category }}</td>
             <td>{{ item.buyer }}</td>
             <td>${{ item.cost }}</td>
-            <td>{{ item.datetime }}</td>
+            <td data-original-datetime="{{ item.datetime }}">{{ item.datetime }}</td>
             <td>{{ item.medio_pago }}</td> <!-- Existing column -->
         </tr>
         {% endfor %}
@@ -101,7 +101,8 @@ function applyFilters() {
         const category = row.cells[0].textContent.toLowerCase();
         const buyer = row.cells[1].textContent.toLowerCase();
         const cost = parseFloat(row.cells[2].textContent.replace('$', ''));
-        const dateTime = new Date(row.cells[3].textContent);
+        const dateTimeStr = row.cells[3].getAttribute('data-original-datetime');  // Use the original value for filtering
+        const dateTime = new Date(dateTimeStr);
 
         let showRow = true;
 
@@ -181,6 +182,27 @@ function downloadExcel() {
     });
 }
 
+document.addEventListener("DOMContentLoaded", function() {
+    // Format dates for display in the 'Fecha y Hora' column
+    const dateCells = document.querySelectorAll("#category_table tbody tr td[data-original-datetime]");
 
+    dateCells.forEach(cell => {
+        const originalDateStr = cell.getAttribute('data-original-datetime').trim();
+        if (originalDateStr) {
+            // Parse the original date string (assumes format 'YYYY-MM-DD HH:MM:SS')
+            const dateObj = new Date(originalDateStr);
+
+            if (!isNaN(dateObj.getTime())) {
+                // Format the date as '13 de octubre del 2024 a las 14:00:52'
+                const options = { day: 'numeric', month: 'long', year: 'numeric' };
+                const formattedDate = dateObj.toLocaleDateString('es-ES', options);
+                const formattedTime = dateObj.toLocaleTimeString('es-ES');
+
+                // Display the formatted date and time without modifying the original data attribute
+                cell.textContent = `${formattedDate} a las ${formattedTime}`;
+            }
+        }
+    });
+});
 </script>
 {% endblock %}
