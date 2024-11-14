@@ -46,10 +46,11 @@
             <th>Ventas</th>
             <th>Ganancias</th>
             <th>Compradores (Fecha y Hora)</th>
+            <th>Medio de Pago</th> <!-- New Column -->
         </tr>
     </thead>
     <tbody>
-        {% for category, sales, earning, buyers in category_data %}
+        {% for category, sales, earning, buyers, medio_pago in category_data %}
         <tr>
             <td>{{ category }}</td>
             <td>{{ sales }}</td>
@@ -59,6 +60,7 @@
                     <div class="buyer-info">{{ buyer }}</div>
                 {% endfor %}
             </td>
+            <td>{{ medio_pago }}</td> <!-- Display the new value -->
         </tr>
         {% endfor %}
     </tbody>

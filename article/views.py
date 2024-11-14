@@ -1516,6 +1516,7 @@ def sold_categories(request):
             ]
             for item in categories_sales
         ],
+        ["Tarjeta de crédito"] * len(categories_sales)  # New column value
     )
     
     category_sales_by_date = {}
@@ -1655,7 +1656,7 @@ def download_sold_categories(request):
         ws.title = "Ventas por Categoría"
 
         # Escribir encabezados
-        headers = ["Categoria", "Ventas", "Ganancias", "Compradores (Fecha y Hora)"]
+        headers = ["Categoria", "Ventas", "Ganancias", "Compradores (Fecha y Hora)", "Medio de Pago"]
         ws.append(headers)
 
         # Variable para acumular el total de ganancias
@@ -1667,15 +1668,13 @@ def download_sold_categories(request):
             total_sales = int(item["ventas"])
             total_earnings = float(item["ganancias"])
             buyers = ", ".join(item["compradores"])
-
-            # Solo añadir categorías que ya vienen con datos válidos desde el HTML
+            
             if total_sales > 0 and total_earnings > 0:
-                # Sumar las ganancias al total
                 total_earnings_filtered += total_earnings
-
-                # Agregar la categoría con los compradores al archivo Excel
+                
+                # Add 'Tarjeta de crédito' to the new column in the row
                 ws.append(
-                    [category_name, total_sales, f"${total_earnings:.2f}", buyers]
+                    [category_name, total_sales, f"${total_earnings:.2f}", buyers, "Tarjeta de crédito"]
                 )
 
         # Escribir el total de ganancias al final de la hoja
