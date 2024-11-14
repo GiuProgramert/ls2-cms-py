@@ -1525,6 +1525,18 @@ def sold_categories(request):
             payments.filter(category__name=category, date_paid__date=date).aggregate(Sum('price'))['price__sum'] or 0
             for date in dates
         ]
+        
+    detailed_category_data = [
+    {
+        "category": item["category__name"],
+        "buyer": purchase['user__username'],  # Comprador
+        "cost": purchase['price'],            # Costo
+        "datetime": purchase['date_paid'].strftime('%Y-%m-%d %H:%M:%S'),  # Formatted date and time
+        "medio_pago": "Tarjeta de crédito"    # Existing column for payment method
+    }
+    for item in categories_sales
+    for purchase in payments.filter(category__name=item["category__name"]).values("user__username", "price", "date_paid")
+]
 
     return render(
         request,
@@ -1546,6 +1558,7 @@ def sold_categories(request):
             "all_categories": all_categories,
             "all_users": all_users,
             "category_sales_by_date_json": json.dumps(category_sales_by_date),
+            "detailed_category_data": detailed_category_data,  # New variable with additional details
         },
     )
 
