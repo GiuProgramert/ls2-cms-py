@@ -621,7 +621,7 @@ def article_detail(request, pk):
         is_admin = request.user.roles.filter(name="Administrador").exists()
 
         # Check if the user is the author of the article
-        is_author = article.autor == request.user
+        is_author = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
 
         # Determine if the user can inactivate (either admin or author)
         can_inactivate = is_admin or is_author
@@ -723,7 +723,7 @@ def article_to_published(request, pk):
         [PermissionEnum.MODERAR_ARTICULOS]
     )
     is_moderated = article.category.is_moderated
-    is_author = article.autor == request.user
+    is_author = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
 
     # Solo el publicador o el admin puede cambiar a PUBLICADO
     if is_moderated:
@@ -762,7 +762,7 @@ def article_to_publish_schedule(request, pk):
         [PermissionEnum.MODERAR_ARTICULOS]
     )
     is_moderated = article.category.is_moderated
-    is_author = article.autor == request.user
+    is_author = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
 
     # Solo el publicador o el admin puede cambiar a PUBLICADO
     if is_moderated:
