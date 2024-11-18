@@ -103,7 +103,9 @@
                     {
                         label: 'Likes',
                         data: likesData.likes,
-                        backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)', // Blue color
+                        barPercentage: 1.0, // Increase to make bars wider
+                        categoryPercentage: 0.8
                     }
                 ]
             },
@@ -111,6 +113,7 @@
                 responsive: true,
                 scales: {
                     x: {
+                        display: false,
                         title: {
                             display: true,
                             text: 'Articulos'
@@ -120,7 +123,8 @@
                         title: {
                             display: true,
                             text: 'Numero de likes'
-                        }
+                        },
+                        beginAtZero: true
                     }
                 }
             }
@@ -137,7 +141,9 @@
                     {
                         label: 'Dislikes',
                         data: dislikesData.dislikes,
-                        backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)', // Blue color
+                        barPercentage: 1.0, // Increase to make bars wider
+                        categoryPercentage: 0.8
                     }
                 ]
             },
@@ -145,6 +151,7 @@
                 responsive: true,
                 scales: {
                     x: {
+                        display: false,
                         title: {
                             display: true,
                             text: 'Articulos'
@@ -154,7 +161,8 @@
                         title: {
                             display: true,
                             text: 'Numero de dislikes'
-                        }
+                        },
+                        beginAtZero: true
                     }
                 }
             }
@@ -171,7 +179,9 @@
                     {
                         label: 'Puntaje promedio',
                         data: avgRatingData.ratings,
-                        backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)', // Blue color
+                        barPercentage: 1.0, // Increase to make bars wider
+                        categoryPercentage: 0.8
                     }
                 ]
             },
@@ -179,6 +189,7 @@
                 responsive: true,
                 scales: {
                     x: {
+                        display: false,
                         title: {
                             display: true,
                             text: 'Articulos'
@@ -188,7 +199,8 @@
                         title: {
                             display: true,
                             text: 'Puntaje promedio'
-                        }
+                        },
+                        beginAtZero: true
                     }
                 }
             }
@@ -205,7 +217,9 @@
                     {
                         label: 'Visualizaciones',
                         data: avgViewsData.views,
-                        backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)', // Blue color
+                        barPercentage: 1.0, // Increase to make bars wider
+                        categoryPercentage: 0.8
                     }
                 ]
             },
@@ -213,6 +227,7 @@
                 responsive: true,
                 scales: {
                     x: {
+                        display: false,
                         title: {
                             display: true,
                             text: 'Articulos'
@@ -222,7 +237,8 @@
                         title: {
                             display: true,
                             text: 'Numero de visualizaciones'
-                        }
+                        },
+                        beginAtZero: true
                     }
                 }
             }
@@ -239,14 +255,23 @@
                     {
                         label: 'Compartidos',
                         data: sharesData.shares,
-                        backgroundColor: 'rgba(54, 162, 235, 0.7)' // Blue color
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)', // Blue color
+                        barPercentage: 1.0, // Increase to make bars wider
+                        categoryPercentage: 0.8
                     }
                 ]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        left: 30 // Increase this value as needed
+                    }
+                },
                 scales: {
                     x: {
+                        display: false,
                         title: {
                             display: true,
                             text: 'Articulos'
@@ -255,8 +280,12 @@
                     y: {
                         title: {
                             display: true,
-                            text: 'Numero de veces que fue compartido'
-                        }
+                            text: 'Numero de veces que fue compartido',
+                            font: {
+                                size: 10 // Adjust font size if needed
+                            }
+                        },
+                        beginAtZero: true
                     }
                 }
             }
