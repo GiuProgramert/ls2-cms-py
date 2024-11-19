@@ -7,6 +7,13 @@
 
 {% block content %}
 
+<div class="return-to-chart-button">
+    <form method="GET" action="{% url 'sold-categories-suscriptor' %}">
+        <button type="submit" class="btn btn-secondary">Volver al gráfico</button>
+    </form>
+</div>
+
+
 <h2>Lista de Categorías Compradas</h2>
 
 <div class="custom-date-filter">
