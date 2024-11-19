@@ -34,7 +34,7 @@
         <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
 
         <!-- Apply Filters Button -->
-        <button type="submit" class="btn btn-primary">Apply Filters</button>
+        <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
     </form>
 </div>
 
@@ -203,6 +203,20 @@ button:hover {
                 title: {
                     display: true,
                     text: 'Monto Total Vendido por Fecha'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += `$${context.parsed.y.toLocaleString()}`;
+                            }
+                            return label;
+                        }
+                    }
                 }
             }
         }
@@ -233,11 +247,27 @@ button:hover {
                 title: {
                     display: true,
                     text: 'Distribución de ganancias por categoría'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.raw !== null) {
+                                label += `$${context.raw.toLocaleString()}`;
+                            }
+                            return label;
+                        }
+                    }
                 }
             }
         }
     });
 
+    // Line Chart
+    // Line Chart
     var categoriesLineChart = new Chart(lineCtx, {
         type: 'line',
         data: {
@@ -269,7 +299,19 @@ button:hover {
                 },
                 tooltip: {
                     mode: 'index',
-                    intersect: false
+                    intersect: false,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += `$${context.parsed.y.toLocaleString()}`; // Adds a dollar sign and formats the number
+                            }
+                            return label;
+                        }
+                    }
                 }
             }
         }
