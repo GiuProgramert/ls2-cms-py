@@ -1200,9 +1200,10 @@ def stripe_checkout(request, pk):
         pk (int): El ID de la categoría para la que se realiza el pago.
 
     Returns:
-        JsonResponse: Respuesta con el ID de la sesión de Stripe o un mensaje
-                      de error en caso de fallo.
+        JsonResponse: Respuesta con el ID de la sesión de Stripe o una señal para redirigir
+                      en caso de que el pago ya esté completado.
     """
+    print("Vista stripe_checkout llamada con éxito")
     try:
         # Verifica si existe un pago completado
         payment_exists = Payment.objects.filter(
@@ -1210,16 +1211,15 @@ def stripe_checkout(request, pk):
         ).exists()
 
         if payment_exists:
-            # Si se encuentra el pago y tiene estado "completed", ir a exists.html
-            return render(request, "article/exists.html")
+            print("Pago ya existe, redirigiendo a exists.html")  # Verificar condición
+            # Retorna una respuesta JSON que indica que ya se realizó el pago
+            return JsonResponse({"redirect": "exists"}, status=200)
 
         # Obtener la categoría o devolver 404 si no existe
         category = get_object_or_404(Category, id=pk)
 
         # Asignar el precio basado en la categoría
-        price_in_cents = int(
-            category.price * 100
-        )  # Convertir a centavos si es necesario
+        price_in_cents = int(category.price * 100)  # Convertir a centavos si es necesario
 
         # Crear el ítem para Stripe Checkout con base en la categoría
         line_items = [
@@ -1252,6 +1252,8 @@ def stripe_checkout(request, pk):
             stripe_payment_id=session.id,
             status="pending",
         )
+        
+        print("Creando sesión de pago")  # Verificar flujo
 
         return JsonResponse({"id": session.id})
 
