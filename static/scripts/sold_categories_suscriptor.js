@@ -4,11 +4,13 @@ const ctx = document.getElementById("categoriesChart").getContext("2d");
 const earnings = window.earnings || [];
 const buyersPerCategory = window.buyersPerCategory || {};
 
+// Function to generate random colors
 const getRandomColor = () =>
   `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(
     Math.random() * 255
   )}, ${Math.floor(Math.random() * 255)}, 0.5)`;
-  
+
+// Generate random colors for each category
 const barColors = Array(window.payments_prices.length)
   .fill()
   .map(getRandomColor);
@@ -21,7 +23,7 @@ const categoriesChart = new Chart(ctx, {
       {
         label: "Monto gastado por categoría",
         data: window.payments_prices,
-        backgroundColor: barColors, // Set random colors here
+        backgroundColor: barColors,
         borderColor: barColors.map((color) => color.replace("0.5", "1")),
         borderWidth: 1,
       },
@@ -46,6 +48,20 @@ const categoriesChart = new Chart(ctx, {
           label: function (context) {
             // Customize tooltip label
             return `Monto gastado ${context.raw} $`;
+          },
+        },
+      },
+      legend: {
+        display: true,
+        labels: {
+          generateLabels: function (chart) {
+            const dataset = chart.data.datasets[0];
+            return chart.data.labels.map((label, index) => ({
+              text: label,
+              fillStyle: dataset.backgroundColor[index],
+              strokeStyle: dataset.borderColor[index],
+              lineWidth: 1,
+            }));
           },
         },
       },
