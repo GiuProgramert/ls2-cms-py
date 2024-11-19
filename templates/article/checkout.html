@@ -1,4 +1,4 @@
-{% extends "base.html" %} 
+{% extends "base.html" %}
 {% block headblock %}
 {% load static %}
 <script src="https://js.stripe.com/v3/"></script>
@@ -6,7 +6,7 @@
 {% endblock headblock %}
 {% block content %}
     <h1>Pagar por la Categoría</h1>
-    
+
     <!-- Botón de pago -->
     <button id="checkout-button">Pagar por esta Categoría</button>
 
@@ -32,13 +32,15 @@
                 return response.json();
             })
             .then(function (sessionData) {
-                // Redirigir a Stripe Checkout usando el ID de la sesión devuelta por la vista de Django
-                return stripe.redirectToCheckout({ sessionId: sessionData.id });
-            })
-            .then(function (result) {
-                if (result.error) {
-                    // Muestra un error si ocurre algún problema durante la redirección
-                    alert(result.error.message);
+                console.log("Datos de la sesión recibidos:", sessionData);
+                if (sessionData.redirect === "exists") {
+                    // Redirigir al usuario a la página `exists.html`
+                    window.location.href = `/categories/${categoryId}/exists/`;  // Asegúrate de que esta ruta sea correcta
+                } else if (sessionData.id) {
+                    // Continuar con el proceso de Stripe Checkout
+                    return stripe.redirectToCheckout({ sessionId: sessionData.id });
+                }else {
+                    console.error("No se recibió un sessionId válido:", sessionData);
                 }
             })
             .catch(function (error) {
