@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# !================================================================================
+# !Obtieniendo variables necesarias para ejecución del script
+# !================================================================================
+
+
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 <environment> <tag>"
     echo "environment: dev or prod"
@@ -15,6 +20,9 @@ if [[ "$ENVIRONMENT" != "dev" && "$ENVIRONMENT" != "prod" ]]; then
     exit 1
 fi
 
+# ?fin ============================================================================
+# ?================================================================================
+
 echo "Deploying to environment: $ENVIRONMENT"
 echo "Using tag: $TAG"
 
@@ -23,9 +31,11 @@ echo "Starting deployment for $ENVIRONMENT with tag $TAG..."
 # Exit on error
 set -e
 
-echo "Starting deployment process..."
+# !================================================================================
+# !Instalando dependencias necesarias
+# !================================================================================
 
-echo "-------------------------------------------------------"
+echo "Starting deployment process..."
 
 if ! command -v python3 &> /dev/null; then
     echo "Python 3.10 not found. Installing..."
@@ -42,7 +52,12 @@ if ! command -v nginx &> /dev/null; then
     sudo apt install -y nginx
 fi
 
-echo "-------------------------------------------------------"
+# ?fin ============================================================================
+# ?================================================================================
+
+# !================================================================================
+# !Creación de archivo de variables de entorno
+# !================================================================================
 
 echo "Creating .env file"
 
@@ -58,11 +73,11 @@ DEBUG=True
 SECRET_KEY="3$to!ng$gy34mt-my+n)9)&s066sppoo$l)^_j7w-slvc8n)2k"
 
 # Database
-DB_NAME=cms_py
-DB_USER=root
-DB_PASSWORD="#^cuz)aczl!-5m8$s*g^=v_ce93^6n*xa6+z9%g#4x$(^^ke_r"
-DB_HOST=localhost
-DB_PORT=5432
+DB_NAME=$DB_NAME
+DB_USER=$DB_USER
+DB_PASSWORD="$DB_PASSWORD"
+DB_HOST=$DB_HOST
+DB_PORT=$DB_PORT
 
 # Resend
 RESEND_API_KEY=api_key
@@ -81,11 +96,16 @@ EOF
 
 echo "file created"
 
-echo "-------------------------------------------------------"
+# ?fin ============================================================================
+# ?================================================================================
+
+# !================================================================================
+# !Creación de Base de datos
+# !================================================================================
 
 echo "Creating database"
 
-# Update and install PostgreSQL
+# Actualización e instalación de postgres
 if ! command -v psql &> /dev/null; then
     echo "PostgreSQL not found. Installing..."
     sudo apt update
@@ -94,10 +114,11 @@ else
     echo "PostgreSQL is already installed."
 fi
 
-# Start PostgreSQL service
+# Inicializando servicio de posgres
 echo "Starting PostgreSQL service..."
 sudo systemctl start postgresql
 sudo systemctl enable postgresql
+
 
 echo "Configuring the database..."
 
@@ -112,6 +133,7 @@ else
     echo "Datase ${DB_NAME} exist."
 fi
 
+# Verificar sí el usuario de la base de datos existe
 DB_EXISTS=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname = '${DB_USER}'")
 
 if [[ -z "$DB_EXISTS" ]]; then
@@ -123,13 +145,16 @@ else
     echo "User ${DB_NAME} exist."
 fi
 
-echo "-------------------------------------------------------"
+# ?fin ============================================================================
+# ?================================================================================
+
+# !================================================================================
+# !Obteniendo cambios de la Tag
+# !================================================================================
 
 # Stash local changes in settings.py
 echo "Saving local changes in settings.py"
 git stash
-
-echo "-------------------------------------------------------"
 
 # Pull latest changes from main branch
 echo "Pulling latest changes..."
@@ -143,17 +168,20 @@ git checkout $TAG
 echo "Merging tag '$TAG' into current branch..."
 git merge $TAG
 
-echo "-------------------------------------------------------"
-
 # Stash add 
 echo "Restoring local changes in settings.py"
 git stash apply
 
-echo "-------------------------------------------------------"
+# ?fin ============================================================================
+# ?================================================================================
+
+# !================================================================================
+# !Creación de variables de entorno
+# !================================================================================
 
 echo "creating virtual environment"
 
-# Create virtual environment
+# Creación de variables de entorno
 if [ ! -d "env" ]; then
     echo "Creating virtual environment..."
     python3 -m venv env
@@ -161,21 +189,36 @@ else
     echo "Virtual environment already exists."
 fi
 
-# Activate virtual environment
+# Activación de variables de entorno
 echo "Activating virtual environment..."
 source env/bin/activate
 
-echo "-------------------------------------------------------"
+# ?fin ============================================================================
+# ?================================================================================
 
-# Install/update dependencies
+# !================================================================================
+# !Instalar o actualizar dependencias
+# !================================================================================
+
 echo "Installing/updating dependencies..."
 pip install -r requirements.txt
 
-echo "-------------------------------------------------------"
+# ?fin ============================================================================
+# ?================================================================================
 
-# Run database migrations
+# !================================================================================
+# !Configuración Inicial Django
+# !================================================================================
+
 echo "Running database migrations..."
 python manage.py migrate
+
+# ?fin ============================================================================
+# ?================================================================================
+
+# !================================================================================
+# !Ejecución del script para Desarrollo
+# !================================================================================
 
 if [ "$ENVIRONMENT" == "dev" ]; then
     echo "Loading initial data..."
@@ -184,9 +227,13 @@ if [ "$ENVIRONMENT" == "dev" ]; then
     exit 0
 fi
 
-echo "-------------------------------------------------------"
+# ?fin ============================================================================
+# ?================================================================================
 
-# check if $ENVIROMENT is prod
+# !================================================================================
+# !Ejecución del script para Producción
+# !================================================================================
+
 cat > /etc/nginx/sites-available/cms_py << 'EOF'
 server {
     listen 80;
@@ -224,17 +271,14 @@ sudo systemctl daemon-reload
 sudo systemctl start gunicorn
 sudo systemctl enable gunicorn
 
-echo "-------------------------------------------------------"
-
 # Restart services
 echo "Restarting Gunicorn..."
 sudo systemctl restart gunicorn
 
-echo "-------------------------------------------------------"
-
 echo "Restarting Nginx..."
 sudo systemctl restart nginx
 
-echo "-------------------------------------------------------"
-
 echo "Deployment completed successfully!"  
+
+# ?fin ============================================================================
+# ?================================================================================
