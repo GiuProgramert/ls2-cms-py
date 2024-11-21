@@ -22,8 +22,10 @@
 
 <a href="{% url 'category-list' %}">Volver a la lista</a>
 <br><br>
-<!-- Botón de pago -->
-<button id="checkout-button">Pagar por esta Categoría</button>
+{% if category.type == "pay" %}
+    <!-- Botón de pago -->
+    <button id="checkout-button">Pagar por esta Categoría</button>
+{% endif %}
 </div>
 
 <script>
@@ -36,29 +38,31 @@
     const categoryId = "{{ category.id }}";  // ID de la categoría directamente desde el contexto
 
     checkoutButton.addEventListener("click", function () {
-        // Enviar la solicitud POST con el ID de la categoría
-        fetch(`/categories/crear-checkout-session/${categoryId}/`, {  // URL con el ID de la categoría
+        fetch(`/categories/crear-checkout-session/${categoryId}/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "X-CSRFToken": "{{ csrf_token }}",  // Incluye el CSRF token para la solicitud POST en Django
+                "X-CSRFToken": "{{ csrf_token }}",
             },
         })
         .then(function (response) {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
             return response.json();
         })
         .then(function (sessionData) {
-            // Redirigir a Stripe Checkout usando el ID de la sesión devuelta por la vista de Django
-            return stripe.redirectToCheckout({ sessionId: sessionData.id });
-        })
-        .then(function (result) {
-            if (result.error) {
-                // Muestra un error si ocurre algún problema durante la redirección
-                alert(result.error.message);
+            console.log("Datos de la sesión recibidos:", sessionData);
+            if (sessionData.redirect === "exists") {
+                window.location.href = `/categories/${categoryId}/exists/`;  // Verifica que esta ruta sea correcta
+            } else if (sessionData.id) {
+                return stripe.redirectToCheckout({ sessionId: sessionData.id });
+            } else {
+                console.error("No se recibió un sessionId válido:", sessionData);
             }
         })
         .catch(function (error) {
-            console.error("Error:", error);
+            console.error("Error en la solicitud fetch:", error);
         });
     });
 </script>

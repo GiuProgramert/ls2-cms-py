@@ -50,6 +50,15 @@
           <br>
         {% endif %}
 
+        {% if user.is_authenticated %}
+          <li class="navbar-item">
+            <a href="{% url 'article-stats' %}" class="text-white block">
+              <i class="fa-solid fa-chart-bar"></i> Estadisticas de articulos
+            </a>
+          </li>
+          <br>
+        {% endif %}
+
         {% if user.is_authenticated and "ver_categorias" in permisos %}
           <li class="navbar-item">
             <a href="{% url 'sold-categories-suscriptor' %}" class="text-white block"><i class="fa-solid fa-sack-dollar"></i>Categorias Compradas</a>
@@ -65,10 +74,12 @@
         <br>
         {% endif %}
         {% if user.is_authenticated %}
-        <li class="navbar-item">
-          <a href="/categories" class="text-white block"><i class="fa-solid fa-list"></i>Categorías</a>
-        </li>
-        <br>
+          {% if "manejar_categorias" in permisos or "ver_categorias" in permisos%}
+            <li class="navbar-item">
+              <a href="/categories" class="text-white block"><i class="fa-solid fa-list"></i>Categorías</a>
+            </li>
+            <br>
+          {% endif %}
         {% endif %}
         {% if "manejo_roles" in permisos %}
         <li class="navbar-item">

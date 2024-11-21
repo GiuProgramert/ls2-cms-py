@@ -33,7 +33,7 @@
       <a href="{% url 'article-to-draft' pk=article.id %}" class="detail-link pasar-borrador">Pasar a Borrador</a>
     {% endif %}
 
-    {% if can_publish and article.state == 'e' or can_edit_as_author and article.state == 'd' %}
+    {% if is_admin and article.state == 'e' or can_edit_as_author and article.state == 'd' %}
       <a href="{% url 'article-to-revision' pk=article.id %}" class="detail-link">Pasar a Revisión</a>
     {% endif %}
 

@@ -402,7 +402,7 @@ def article_update_history(request, pk):
             body=article_content.body, autor=request.user, article=article
         )
 
-        return redirect("home")
+        return redirect("article-detail", pk=article.pk)
 
     article = get_object_or_404(Article, pk=pk)
     article_contents_ref = ArticleContent.objects.filter(article=article).order_by(
@@ -621,7 +621,7 @@ def article_detail(request, pk):
         is_admin = request.user.roles.filter(name="Administrador").exists()
 
         # Check if the user is the author of the article
-        is_author = article.autor == request.user
+        is_author = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
 
         # Determine if the user can inactivate (either admin or author)
         can_inactivate = is_admin or is_author
@@ -723,7 +723,7 @@ def article_to_published(request, pk):
         [PermissionEnum.MODERAR_ARTICULOS]
     )
     is_moderated = article.category.is_moderated
-    is_author = article.autor == request.user
+    is_author = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
 
     # Solo el publicador o el admin puede cambiar a PUBLICADO
     if is_moderated:
@@ -762,7 +762,7 @@ def article_to_publish_schedule(request, pk):
         [PermissionEnum.MODERAR_ARTICULOS]
     )
     is_moderated = article.category.is_moderated
-    is_author = article.autor == request.user
+    is_author = request.user.tiene_permisos([PermissionEnum.CREAR_ARTICULOS])
 
     # Solo el publicador o el admin puede cambiar a PUBLICADO
     if is_moderated:
@@ -1200,9 +1200,10 @@ def stripe_checkout(request, pk):
         pk (int): El ID de la categoría para la que se realiza el pago.
 
     Returns:
-        JsonResponse: Respuesta con el ID de la sesión de Stripe o un mensaje
-                      de error en caso de fallo.
+        JsonResponse: Respuesta con el ID de la sesión de Stripe o una señal para redirigir
+                      en caso de que el pago ya esté completado.
     """
+    print("Vista stripe_checkout llamada con éxito")
     try:
         # Verifica si existe un pago completado
         payment_exists = Payment.objects.filter(
@@ -1210,16 +1211,15 @@ def stripe_checkout(request, pk):
         ).exists()
 
         if payment_exists:
-            # Si se encuentra el pago y tiene estado "completed", ir a exists.html
-            return render(request, "article/exists.html")
+            print("Pago ya existe, redirigiendo a exists.html")  # Verificar condición
+            # Retorna una respuesta JSON que indica que ya se realizó el pago
+            return JsonResponse({"redirect": "exists"}, status=200)
 
         # Obtener la categoría o devolver 404 si no existe
         category = get_object_or_404(Category, id=pk)
 
         # Asignar el precio basado en la categoría
-        price_in_cents = int(
-            category.price * 100
-        )  # Convertir a centavos si es necesario
+        price_in_cents = int(category.price * 100)  # Convertir a centavos si es necesario
 
         # Crear el ítem para Stripe Checkout con base en la categoría
         line_items = [
@@ -1252,6 +1252,8 @@ def stripe_checkout(request, pk):
             stripe_payment_id=session.id,
             status="pending",
         )
+        
+        print("Creando sesión de pago")  # Verificar flujo
 
         return JsonResponse({"id": session.id})
 
@@ -1448,25 +1450,37 @@ def sold_categories(request):
     if category_name:
         payments = payments.filter(
             category__name__iexact=category_name
-        )  # Change from __icontains to __iexact
+        )
     if username:
         payments = payments.filter(
             user__username__iexact=username
-        )  # Change from __icontains to __iexact
+        )
 
     # Group by category name and count the number of payments associated with each category
     categories_sales = (
-        payments.values("category__name")  # Group by category name
+        payments.values("category__name")
         .annotate(
             total_sales=Count("category"), total_earnings=Sum("price")
-        )  # Count the number of purchases per category
-        .order_by("-total_sales")  # Order from most sold to least sold
+        )
+        .order_by("-total_sales")
     )
 
     # Extract category names and corresponding sales for the graph
     categories = [item["category__name"] for item in categories_sales]
     sales = [item["total_sales"] for item in categories_sales]
     earnings = [item["total_earnings"] for item in categories_sales]
+
+    # New variables to track earnings by date for the bar chart
+    date_sales = (
+        payments.values("date_paid__date")
+        .annotate(total_earnings=Sum("price"))
+        .order_by("date_paid__date")
+    )
+
+    # Extract dates and total earnings for new chart
+    dates = [item["date_paid__date"] for item in date_sales]
+    dates = [item.strftime("%Y-%m-%d") for item in dates]
+    total_earnings_by_date = [item["total_earnings"] for item in date_sales]
 
     # Get the list of users who bought each category
     buyers_per_category = {
@@ -1504,7 +1518,27 @@ def sold_categories(request):
             ]
             for item in categories_sales
         ],
+        ["Tarjeta de crédito"] * len(categories_sales)  # New column value
     )
+    
+    category_sales_by_date = {}
+    for category in categories:
+        category_sales_by_date[category] = [
+            payments.filter(category__name=category, date_paid__date=date).aggregate(Sum('price'))['price__sum'] or 0
+            for date in dates
+        ]
+        
+    detailed_category_data = [
+    {
+        "category": item["category__name"],
+        "buyer": purchase['user__username'],  # Comprador
+        "cost": purchase['price'],            # Costo
+        "datetime": purchase['date_paid'].strftime('%Y-%m-%d %H:%M:%S'),  # Formatted date and time
+        "medio_pago": "Tarjeta de crédito"    # Existing column for payment method
+    }
+    for item in categories_sales
+    for purchase in payments.filter(category__name=item["category__name"]).values("user__username", "price", "date_paid")
+]
 
     return render(
         request,
@@ -1513,9 +1547,11 @@ def sold_categories(request):
             "categories": categories,
             "sales": sales,
             "earnings": earnings,
+            "dates_json": json.dumps(dates),  # Serialize dates to JSON format
+            "total_earnings_by_date_json": json.dumps(total_earnings_by_date),  # Serialize earnings data
             "buyers_per_category": buyers_per_category,
             "category_data": category_data,
-            "date_range": date_range,  # Pass the selected date range to the template
+            "date_range": date_range,
             "start_date": start_date_str,
             "end_date": end_date_str,
             "total_general": total_general,
@@ -1523,6 +1559,8 @@ def sold_categories(request):
             "username": username,
             "all_categories": all_categories,
             "all_users": all_users,
+            "category_sales_by_date_json": json.dumps(category_sales_by_date),
+            "detailed_category_data": detailed_category_data,  # New variable with additional details
         },
     )
 
@@ -1611,67 +1649,51 @@ def sold_categories_suscriptor(request):
 @login_required
 def download_sold_categories(request):
     """
-    Vista que permite la descarga de un archivo Excel con información de ventas por categoría.
-
-    Procesa los datos enviados desde el frontend y genera un archivo con las categorías, ventas,
-    ganancias y compradores.
-
-    Args:
-        request (HttpRequest): La solicitud HTTP.
-
-    Returns:
-        HttpResponse: Respuesta con el archivo Excel para descarga.
+    View to download an Excel file containing detailed sales information.
+    Processes the data from the frontend and generates a file with the formatted details.
     """
     if request.method == "POST":
         data = json.loads(request.body).get("category_data", [])
 
-        # Agregar una impresión para ver el contenido recibido del frontend
-
-        # Crear un archivo Excel y hoja de trabajo
+        # Create an Excel workbook and worksheet
         wb = Workbook()
         ws = wb.active
         ws.title = "Ventas por Categoría"
 
-        # Escribir encabezados
-        headers = ["Categoria", "Ventas", "Ganancias", "Compradores (Fecha y Hora)"]
+        # Write headers
+        headers = ["Categoría", "Comprador", "Costo", "Fecha y Hora", "Medio de Pago"]
         ws.append(headers)
 
-        # Variable para acumular el total de ganancias
-        total_earnings_filtered = 0
+        # Variable to accumulate total earnings
+        total_earnings = 0
 
-        # Añadir filas en el formato especificado según los datos enviados
+        # Add rows based on the detailed_category_data sent from the frontend
         for item in data:
-            category_name = item["categoria"]
-            total_sales = int(item["ventas"])
-            total_earnings = float(item["ganancias"])
-            buyers = ", ".join(item["compradores"])
+            total_earnings += item['costo']  # Accumulate cost for total earnings
+            ws.append([
+                item["categoria"],
+                item["comprador"],
+                f"${item['costo']:.2f}",
+                item["fechaHora"],  # Already formatted as 'YYYY-MM-DD HH:MM:SS'
+                item["medioPago"]
+            ])
 
-            # Solo añadir categorías que ya vienen con datos válidos desde el HTML
-            if total_sales > 0 and total_earnings > 0:
-                # Sumar las ganancias al total
-                total_earnings_filtered += total_earnings
-
-                # Agregar la categoría con los compradores al archivo Excel
-                ws.append(
-                    [category_name, total_sales, f"${total_earnings:.2f}", buyers]
-                )
-
-        # Escribir el total de ganancias al final de la hoja
+        # Add a blank row for separation
         ws.append([])
-        ws.append(["Total Ganancias", f"${total_earnings_filtered:.2f}"])
 
-        # Ajustar ancho de columnas para mejor legibilidad
+        # Write total earnings at the end of the sheet
+        ws.append(["Total de Ganancias", "", f"${total_earnings:.2f}"])
+
+        # Adjust column widths for better readability
         for col in ws.columns:
             max_length = max(len(str(cell.value)) for cell in col)
             ws.column_dimensions[get_column_letter(col[0].column)].width = max_length
 
-        # Crear la respuesta como archivo Excel
+        # Create the response for the Excel file download
         response = HttpResponse(
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-        response["Content-Disposition"] = (
-            'attachment; filename="categorias_vendidas.xlsx"'
-        )
+        response["Content-Disposition"] = 'attachment; filename="categorias_vendidas.xlsx"'
         wb.save(response)
 
         return response
@@ -1747,3 +1769,78 @@ def download_sold_categories_suscriptor(request):
     wb.save(response)
 
     return response
+
+def article_stats(request):
+    current_user = request.user
+    is_admin = current_user.roles.filter(name="Administrador").exists()
+    # Get filter parameters from the request
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    author_id = request.GET.get('author')
+    category_id = request.GET.get('category')
+
+    # Base query for published articles
+    articles_query = Article.objects.filter(state=ArticleStates.PUBLISHED.value)
+    
+    if is_admin:  # Check if the user is an admin
+        articles_query = Article.objects.filter(state=ArticleStates.PUBLISHED.value)
+    else:
+        # Non-admin users can only see their own articles
+        articles_query = Article.objects.filter(state=ArticleStates.PUBLISHED.value, autor_id=current_user.id)
+
+    # Apply date filter with full day range
+    if start_date:
+        start_date_parsed = datetime.strptime(start_date, "%Y-%m-%d")
+        articles_query = articles_query.filter(published_at__gte=start_date_parsed)
+    if end_date:
+        end_date_parsed = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(hours=23, minutes=59, seconds=59)
+        articles_query = articles_query.filter(published_at__lte=end_date_parsed)
+
+    # Apply author filter
+    if author_id:
+        articles_query = articles_query.filter(autor_id=author_id)
+
+    # Apply category filter
+    if category_id:
+        articles_query = articles_query.filter(category_id=category_id)
+
+    # Prepare data for charts (filter articles with likes, dislikes, etc.)
+    articles_with_likes = articles_query.filter(likes_number__gt=0).order_by('-likes_number')
+    articles_with_dislikes = articles_query.filter(dislikes_number__gt=0).order_by('-dislikes_number')
+    articles_with_ratings = articles_query.annotate(avg_rating=Avg('articlevote__rating')).filter(avg_rating__isnull=False).order_by('-avg_rating')
+    articles_with_views = articles_query.filter(views_number__gt=0).order_by('-views_number')
+    articles_with_shares = articles_query.filter(shares_number__gt=0).order_by('-shares_number')
+
+    # Prepare data dictionaries for charts
+    likes_data = {
+        "titles": [article.title for article in articles_with_likes],
+        "likes": [article.likes_number for article in articles_with_likes],
+    }
+    dislikes_data = {
+        "titles": [article.title for article in articles_with_dislikes],
+        "dislikes": [article.dislikes_number for article in articles_with_dislikes],
+    }
+    avg_rating_data = {
+        "titles": [article.title for article in articles_with_ratings],
+        "ratings": [article.avg_rating for article in articles_with_ratings],
+    }
+    avg_views_data = {
+        "titles": [article.title for article in articles_with_views],
+        "views": [article.views_number for article in articles_with_views],
+    }
+    shares_data = {
+        "titles": [article.title for article in articles_with_shares],
+        "shares": [article.shares_number for article in articles_with_shares],
+    }
+
+    # Render the template with data and filter options
+    return render(request, 'article/article_chart.html', {
+        "likes_data": likes_data,
+        "dislikes_data": dislikes_data,
+        "avg_rating_data": avg_rating_data,
+        "avg_views_data": avg_views_data,
+        "shares_data": shares_data,
+        "authors": CustomUser.objects.all(),  # Assuming CustomUser model is used for authors
+        "categories": Category.objects.all(),
+        "is_admin": is_admin,
+    })
