@@ -58,4 +58,6 @@ urlpatterns = [
         views.download_sold_categories_suscriptor,
         name="download-sold-categories-suscriptor",
     ),
+
+     path("manage-featured-articles/", views.manage_featured_articles, name="manage-featured-articles"),
 ]

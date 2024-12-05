@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Gestionar Artículos Destacados</h1>
+
+<!-- Tabla de Artículos Destacados -->
+<h2>Artículos Destacados</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Título</th>
+            <th>Acción</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for article in featured_articles %}
+        <tr>
+            <td>{{ article.title }}</td>
+            <td>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="article_id" value="{{ article.id }}">
+                    <input type="hidden" name="action" value="remove">
+                    <button type="submit">Quitar de destacados</button>
+                </form>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="2">No hay artículos destacados.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Tabla de Artículos Publicados -->
+<h2>Artículos Publicados</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Título</th>
+            <th>Acción</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for article in non_featured_articles %}
+        <tr>
+            <td>{{ article.title }}</td>
+            <td>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="article_id" value="{{ article.id }}">
+                    <input type="hidden" name="action" value="add">
+                    <button type="submit">Destacar</button>
+                </form>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="2">No hay artículos disponibles para destacar.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
