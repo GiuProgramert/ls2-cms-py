@@ -2,6 +2,7 @@ import mistune
 import stripe
 import os
 import openpyxl
+import re
 from openpyxl.utils import get_column_letter
 
 from datetime import datetime
@@ -24,6 +25,7 @@ from article.forms import (
     ArticleForm,
     CategorySearchForm,
     ArticleFilterForm,
+    FeaturedArticleForm,
 )
 from roles.utils import PermissionEnum
 from notification.utils import send_email
@@ -133,7 +135,7 @@ def home(request):
         if category.id not in favorite_categories_ids
     ]
 
-    # Filtrar artículos en dos conjuntos: favoritos y normales
+    # Filtrar artículos por conjunto
     favorite_articles = Article.objects.filter(
         state=ArticleStates.PUBLISHED.value, category__id__in=favorite_categories_ids
     )
@@ -141,6 +143,21 @@ def home(request):
     normal_articles = Article.objects.filter(
         state=ArticleStates.PUBLISHED.value, category__id__in=normal_categories_ids
     )
+
+    featured_articles = Article.objects.filter(
+        is_featured=True, state=ArticleStates.PUBLISHED.value, category_id__in=permited_categories_ids
+    )
+
+    img_url_reg = r'!\[.*]\((.*\.(?:jpg|jpeg|png|gif|webp|bmp|svg|tiff|ico)).*\)'
+    for fa in featured_articles:
+        fa_content = ArticleContent.objects.filter(article=fa).last()
+        fa.image_url = re.findall(img_url_reg, str(fa_content.body))
+        if not fa.image_url:
+            fa.image_url = "https://res.cloudinary.com/dr5bv93mi/image/upload/v1733425769/mdeditor/mdeditor/f1_f1.jpg.jpg"
+        else:
+            fa.image_url = fa.image_url[0]
+
+        print(f"this my image baby {fa.image_url}")
 
     # Aplicar los filtros y ordenamiento a ambos conjuntos
     form = ArticleFilterForm(request.GET or None)
@@ -243,6 +260,7 @@ def home(request):
             "favorite_articles": favorite_articles,
             "normal_articles": normal_articles,
             "all_articles": all_articles,
+            "featured_articles": featured_articles,
             "form": form,
             "search_query": search_query,
             "order_by": order_by,
@@ -849,6 +867,59 @@ def article_to_inactive(request, pk):
         return redirect("article-detail", pk=pk)
 
     return HttpResponseForbidden("No puedes editar este contenido")
+
+def manage_featured_articles(request):
+    """
+    Vista para que los administradores gestionen los artículos destacados.
+
+    Solo los usuarios autenticados y con el permiso `MODERAR_ARTICULOS` pueden
+    acceder a esta vista. Si no se cumplen las condiciones, se redirige al
+    usuario a la página de login o a la página de acceso prohibido.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+
+    Returns:
+        HttpResponse: Renderiza la plantilla 'admin/manage_featured_articles.html' o redirige.
+    """
+
+    # Verificar autenticación
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    # Verificar permisos
+    if not request.user.tiene_permisos([PermissionEnum.MODERAR_ARTICULOS]):
+        return redirect("forbidden")
+
+    # Obtener todos los artículos publicados
+    articles = Article.objects.filter(state=ArticleStates.PUBLISHED.value)
+
+    # Si el formulario se envía (POST), procesar cambios
+    if request.method == "POST":
+        article_id = request.POST.get("article_id")
+        action = request.POST.get("action")
+        article = Article.objects.filter(id=article_id, state=ArticleStates.PUBLISHED.value).first()
+
+        if article:
+            if action == "add":
+                article.is_featured = True
+            elif action == "remove":
+                article.is_featured = False
+            article.save()
+
+    # Separar los artículos destacados de los no destacados
+    featured_articles = articles.filter(is_featured=True)
+    non_featured_articles = articles.filter(is_featured=False)
+
+    return render(
+        request,
+        "article/manage_featured_articles.html",
+        {
+            "featured_articles": featured_articles,
+            "non_featured_articles": non_featured_articles,
+        },
+    )
+
 
 
 # =============================================================================

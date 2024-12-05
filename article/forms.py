@@ -142,3 +142,19 @@ class ArticleFilterForm(forms.Form):
         label="Filtrar por tipo de categoría",
         widget=forms.Select(attrs={"class": "form-control"}),
     )
+
+class FeaturedArticleForm(forms.Form):
+    """
+    Formulario para gestionar artículos destacados.
+    """
+    article_id = forms.ModelChoiceField(
+        queryset=Article.objects.filter(state="P"),  # Solo artículos publicados
+        label="Artículo",
+        empty_label="Selecciona un artículo",
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+    action = forms.ChoiceField(
+        choices=[("add", "Destacar"), ("remove", "Quitar de destacados")],
+        label="Acción",
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
