@@ -94,12 +94,20 @@
         <br>
         {% endif %}
         {% if "ver_inicio" in permisos %}
-        {% if "editar_articulos" in permisos or "crear_articulos" in permisos or "moderar_articulos" in permisos %}
-        <li class="navbar-item">
-          <a href="{% url 'article-list' %}" class="text-white block"><i class="fa-solid fa-newspaper"></i> Artículos</a>
-        </li>
-        <br>
+          {% if "editar_articulos" in permisos or "crear_articulos" in permisos or "moderar_articulos" in permisos %}
+          <li class="navbar-item">
+            <a href="{% url 'article-list' %}" class="text-white block"><i class="fa-solid fa-newspaper"></i> Artículos</a>
+          </li>
+          <br>
+          {% endif %}
         {% endif %}
+        {% if user.is_authenticated %}
+          {% if "manejo_roles" in permisos %}
+          <li class="navbar-item">
+            <a href="{% url "manage-featured-articles" %}" class="text-white block"><i class="fa-solid fa-star"></i> Manejar destacados</a>
+          </li>
+          <br>
+          {% endif %}
         {% endif %}
         {% if user.is_authenticated %}
         {% if "editar_articulos" in permisos or "crear_articulos" in permisos or "moderar_articulos" in permisos %}

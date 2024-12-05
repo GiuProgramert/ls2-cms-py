@@ -142,3 +142,4 @@ class ArticleFilterForm(forms.Form):
         label="Filtrar por tipo de categoría",
         widget=forms.Select(attrs={"class": "form-control"}),
     )
+

@@ -9,8 +9,34 @@
 
 {% block content %}
 
+<section class="articles">
+      
+  {% if featured_articles %}
+  <div class="slideshow-container">
+    {% for article in featured_articles %}
+      <div class="mySlides fade">
+        <img class="carousel" src="{{ article.image_url }}">
+        <div class="text">
+          <a href="{% url 'article-detail' article.id %}?from=home">{{ article.title }}</a>
+        </div>
+      </div>
+    {% endfor %}
+
+    <!-- Next and previous buttons -->
+    <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+    <a class="next" onclick="plusSlides(1)">&#10095;</a>
+  </div>
+  <br>
+
+  <!-- The dots/circles -->
+  <div style="text-align:center">
+    {% for article in featured_articles %}
+      <span class="dot" onclick="currentSlide({{ forloop.counter }})"></span>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
 <main class="main-container">
-  
   
   <section class="filters">
     <!-- Botón con ícono de filtro -->
@@ -74,6 +100,7 @@
     </noscript>
 </form>
 <!--Resultados de busquedas o filtros-->
+  <section class="articles">
 {% if filter_active %}
   <section class="articles">
     <div class="section-header normal-header">
@@ -205,7 +232,6 @@
 {% else %}
   <!-- Atriculos de categorias favoritas -->
   {% if 'ver_categorias_suscriptor' in permisos and favorite_categories and favorite_articles %}
-    <section class="articles">
       <div class="section-header favorite-header">
         <h3>Artículos de Categorías Favoritas</h3>
       </div>
@@ -467,6 +493,7 @@
     </aside>
   {% endif %}
 {% endif %}
+
 </main>
 
 <script>
@@ -549,5 +576,43 @@
       });
     });
   });
+
+  let slideIndex = 1;
+  slideTimer = setTimeout(plusSlides, 5000)
+
+  showSlides(slideIndex);
+
+  // Next/previous controls
+  function plusSlides(n=1) {
+    showSlides(slideIndex += n);
+  }
+
+  // Thumbnail image controls
+  function currentSlide(n) {
+    showSlides(slideIndex = n);
+  }
+
+  function showSlides(n) {
+    clearTimeout(slideTimer)
+    let i;
+    let slides = document.getElementsByClassName("mySlides");
+    let dots = document.getElementsByClassName("dot");
+    if (n > slides.length) {
+      slideIndex = 1
+    } else if (n < 1) {
+      slideIndex = slides.length
+    }
+
+    for (i = 0; i < slides.length; i++) {
+      slides[i].style.display = "none";
+    }
+    for (i = 0; i < dots.length; i++) {
+      dots[i].className = dots[i].className.replace(" active", "");
+    }
+    slides[slideIndex-1].style.display = "block";
+    dots[slideIndex-1].className += " active";
+
+    slideTimer = setTimeout(plusSlides, 5000)
+  }
 </script>
 {% endblock content %}
