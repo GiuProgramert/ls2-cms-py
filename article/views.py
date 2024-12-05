@@ -54,6 +54,21 @@ from openpyxl import Workbook
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
+def global_permissions(request):
+    """
+    Adds user permissions to the context for templates.
+    """
+    if request.user.is_authenticated:
+        permissions = [
+            permiso.name
+            for rol in request.user.roles.all()
+            for permiso in rol.permissions.all()
+        ]
+        return {'permisos': permissions}
+    
+    # Return an empty list of permissions for anonymous users
+    return {'permisos': []}
+
 def home(request):
     """
     Vista que muestra la página de inicio.
