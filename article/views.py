@@ -25,7 +25,6 @@ from article.forms import (
     ArticleForm,
     CategorySearchForm,
     ArticleFilterForm,
-    FeaturedArticleForm,
 )
 from roles.utils import PermissionEnum
 from notification.utils import send_email
