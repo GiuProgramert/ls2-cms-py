@@ -37,7 +37,7 @@
 
 <div class="list-container">
     {% if categories %}
-        {% for category in categories %}
+        {% for category in permited_categories %}
             <div class="category-item">
                 <div class="category-row">
                     <a href="{% url 'category-detail' category.id %}" class="category">{{ category.name }}</a>
@@ -48,6 +48,15 @@
                             🤍
                         {% endif %}
                     </button>
+                </div>
+                <p>Tipo: {{ category.get_type_display }}</p>
+            </div>
+        {% endfor %}
+        {% for category in not_permited_categories %}
+            <div class="category-item">
+                <div class="category-row">
+                    <a href="{% url 'category-detail' category.id %}" class="category">{{ category.name }}</a>
+                        <span class="lock-icon">🔒</span>
                 </div>
                 <p>Tipo: {{ category.get_type_display }}</p>
             </div>
