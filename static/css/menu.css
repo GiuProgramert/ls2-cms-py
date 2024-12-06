@@ -381,20 +381,24 @@ button:hover,
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+
+
+
 .article-card .author {
   font-size: 0.9rem;
   color: #666;
 }
 
 .article-card .title {
+  float: left;
   font-size: 1.5rem;
-  
+  position: absolute;
 }
 
 .article-card img {
   float: right; /* Alinear la imagen a la derecha */
-  width: 250px; /* Ancho fijo */
-  height: 250px; /* Alto fijo */
+  width: 210px; /* Ancho fijo */
+  height: 210px; /* Alto fijo */
   object-fit: cover; /* Ajusta la imagen para que no se deforme */
   margin-left: 15px; /* Espaciado a la izquierda para separarla del contenido */
   border-radius: 5px; /* Opcional: redondea los bordes */
