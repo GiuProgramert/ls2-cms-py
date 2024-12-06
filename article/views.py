@@ -57,7 +57,18 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 def global_permissions(request):
     """
-    Adds user permissions to the context for templates.
+
+    Esta vista se encarga de agregar los permisos del usuario al contexto de la plantilla,
+    permitiendo que el usuario acceda a funciones y contenido específicos según sus roles y permisos.
+
+    Si el usuario está autenticado, se obtiene la lista de permisos asociados a sus roles.
+    En caso contrario, se retorna una lista vacía de permisos para los usuarios no autenticados.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+
+    Returns:
+        dict: Un diccionario con la lista de permisos bajo la clave 'permisos'.
     """
     if request.user.is_authenticated:
         permissions = [
