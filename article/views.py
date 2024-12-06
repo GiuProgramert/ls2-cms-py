@@ -156,8 +156,6 @@ def home(request):
         else:
             fa.image_url = fa.image_url[0]
 
-        print(f"this my image baby {fa.image_url}")
-
     # Aplicar los filtros y ordenamiento a ambos conjuntos
     form = ArticleFilterForm(request.GET or None)
     search_query = request.GET.get("search", "")
@@ -959,6 +957,32 @@ def category_list(request):
         user=request.user
     ).values_list("category_id", flat=True)
 
+    user_payments = Payment.objects.filter(user=request.user)
+
+    payment_status_by_category = defaultdict(lambda: None)
+    for payment in user_payments:
+        payment_status_by_category[payment.category_id] = payment.status
+
+
+    permited_categories = [
+        category
+        for category in categories
+        if category.type
+        in (CategoryType.FREE.value, CategoryType.SUSCRIPTION.value)
+        or Payment.objects.filter(
+            category=category, user=request.user, status="completed"
+        ).exists()
+    ]
+
+    not_permited_categories = [
+            category
+            for category in categories
+            if category.type == CategoryType.PAY.value
+            and not Payment.objects.filter(
+                category=category, user=request.user, status="completed"
+            ).exists()
+        ]
+
     if form.is_valid():
         search_term = form.cleaned_data.get("search_term")
         order_by = form.cleaned_data.get("order_by", "name")
@@ -983,6 +1007,8 @@ def category_list(request):
             "categories": categories,
             "favorite_categories": favorite_categories,
             "can_create_categories": can_create_categories,
+            "permited_categories": permited_categories,
+            "not_permited_categories": not_permited_categories,
         },
     )
 

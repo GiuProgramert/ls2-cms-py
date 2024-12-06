@@ -197,3 +197,9 @@
 .category-item:last-child {
   border-bottom: none; /* Quita la línea del último elemento */
 }
+
+.lock-icon {
+  font-size: 1.5rem; /* Ajusta el tamaño para que coincida con los botones */
+  display: inline-block;
+  text-align: center;
+}
