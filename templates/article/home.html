@@ -100,7 +100,7 @@
     </noscript>
 </form>
 <!--Resultados de busquedas o filtros-->
-  <section class="articles">
+
 {% if filter_active %}
   <section class="articles">
     <div class="section-header normal-header">
@@ -232,6 +232,7 @@
 {% else %}
   <!-- Atriculos de categorias favoritas -->
   {% if 'ver_categorias_suscriptor' in permisos and favorite_categories and favorite_articles %}
+  <section class="articles">
       <div class="section-header favorite-header">
         <h3>Artículos de Categorías Favoritas</h3>
       </div>

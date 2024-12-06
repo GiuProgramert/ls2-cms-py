@@ -271,7 +271,7 @@ def home(request):
 
     # Crear una lista con todos los articulos
     all_articles = favorite_articles.union(normal_articles)
-    all_articles = all_articles.order_by(order_by)
+    #all_articles = all_articles.order_by(order_by)
 
     return render(
         request,
