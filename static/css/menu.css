@@ -130,6 +130,28 @@ body {
   padding: 0;
 }
 
+/* Tablas */
+table {
+  width: 50%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #e2e8f0; /* Borde gris claro */
+}
+
+th {
+  background-color: #edf2f7; /* Fondo gris para encabezados */
+  font-weight: 600;
+}
+
+tr:nth-child(even) {
+  background-color: #f7fafc; /* Fondo alternado para filas pares */
+}
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -367,6 +389,15 @@ button:hover,
 .article-card .title {
   font-size: 1.5rem;
   margin: 10px 0;
+}
+
+.article-card img {
+  float: right; /* Alinear la imagen a la derecha */
+  width: 250px; /* Ancho fijo */
+  height: 250px; /* Alto fijo */
+  object-fit: cover; /* Ajusta la imagen para que no se deforme */
+  margin-left: 15px; /* Espaciado a la izquierda para separarla del contenido */
+  border-radius: 5px; /* Opcional: redondea los bordes */
 }
 
 .article-card .description {

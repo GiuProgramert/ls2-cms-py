@@ -482,3 +482,16 @@ sdffsdddddddddddddddddddddddddddddddddddddddd
   from {opacity: .4; z-index:-1;}
   to {opacity: 1; z-index:-1;}
 }
+
+a {
+  display: inline-block; /* Mostrar como bloque en línea */
+  text-decoration: none; /* Quitar subrayado */
+  color: #e53e3e; /* Color del texto rojo (similar a Tailwind's red-600) */
+  font-weight: 600; /* Texto en negrita */
+  text-align: center; /* Centrar el texto */
+  transition: color 0.3s; /* Transición suave para el color */
+}
+
+a:hover {
+  color: #c53030; /* Cambiar color del texto al pasar el mouse (similar a Tailwind's red-700) */
+}
