@@ -623,6 +623,33 @@ class PruebasGestionArticulo(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("article-detail", args=[self.article.pk]))
         self.assertTrue(ArticlesToPublish.objects.filter(article=self.article).exists())
+    
+    def test_descargar_categorías_vendidas_suscriptor_autenticado_con_permiso(self):
+        """
+        Prueba que un usuario con los permisos adecuados pueda descargar las categorías vendidas como suscriptor.
+        """
+        self.client.login(username="articleuser", password="articlepassword")
+        self.user_can_manage_articles.roles.add(self.role)
+
+        # Ensure the user can log in
+        login_successful = self.client.login(username="articleuser", password="articlepassword")
+        self.assertTrue(login_successful)
+        
+        self.permission_ver_categorias = Permission.objects.create(
+            name=PermissionEnum.VER_CATEGORIAS
+        )
+        
+        self.role.permissions.add(
+            self.permission_ver_categorias,
+        )
+        
+        response = self.client.get(reverse("download-sold-categories-suscriptor"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        self.assertIn("attachment", response["Content-Disposition"])
+        self.assertTrue(response.content)  # Ensure the response has file content
+
 
 
 

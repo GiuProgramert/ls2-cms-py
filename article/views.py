@@ -57,7 +57,18 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 def global_permissions(request):
     """
-    Adds user permissions to the context for templates.
+
+    Esta vista se encarga de agregar los permisos del usuario al contexto de la plantilla,
+    permitiendo que el usuario acceda a funciones y contenido específicos según sus roles y permisos.
+
+    Si el usuario está autenticado, se obtiene la lista de permisos asociados a sus roles.
+    En caso contrario, se retorna una lista vacía de permisos para los usuarios no autenticados.
+
+    Args:
+        request (HttpRequest): La solicitud HTTP.
+
+    Returns:
+        dict: Un diccionario con la lista de permisos bajo la clave 'permisos'.
     """
     if request.user.is_authenticated:
         permissions = [
@@ -167,7 +178,7 @@ def home(request):
         fa_content = ArticleContent.objects.filter(article=fa).last()
         fa.image_url = re.findall(img_url_reg, str(fa_content.body))
         if not fa.image_url:
-            fa.image_url = "https://res.cloudinary.com/dr5bv93mi/image/upload/v1733425769/mdeditor/mdeditor/f1_f1.jpg.jpg"
+            fa.image_url = "static/images/default.jpeg"
         else:
             fa.image_url = fa.image_url[0]
 
