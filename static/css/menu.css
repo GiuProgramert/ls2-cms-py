@@ -130,6 +130,28 @@ body {
   padding: 0;
 }
 
+/* Tablas */
+table {
+  width: 50%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+}
+
+th, td {
+  padding: 6px;
+  text-align: left;
+  border: 1px solid #e2e8f0; /* Borde gris claro */
+}
+
+th {
+  background-color: #edf2f7; /* Fondo gris para encabezados */
+  font-weight: 300;
+}
+
+tr:nth-child(even) {
+  background-color: #f7fafc; /* Fondo alternado para filas pares */
+}
+
 .container {
   max-width: 1200px;
   margin: 0 auto;

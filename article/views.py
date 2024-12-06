@@ -184,6 +184,9 @@ def home(request):
 
         print(f"this my image baby {fa.image_url}")
 
+
+
+
     # Aplicar los filtros y ordenamiento a ambos conjuntos
     form = ArticleFilterForm(request.GET or None)
     search_query = request.GET.get("search", "")

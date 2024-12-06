@@ -175,6 +175,19 @@ button {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra ligera */
 }
 
+.reportar {
+  padding: 15px 20px; /* Espaciado interno */
+  background-color: #d63007; /* Color de fondo */
+  color: white; /* Color de texto */
+  font-size: 1rem; /* Tamaño del texto */
+  font-weight: 600; /* Peso del texto */
+  border: none; /* Elimina los bordes predeterminados */
+  border-radius: 6px; /* Bordes redondeados */
+  cursor: pointer; /* Cambia el cursor a mano apuntadora */
+  transition: background-color 0.3s ease, transform 0.2s ease; /* Transición suave para efectos */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+}
+
 /* Estilo al pasar el ratón por encima (hover) */
 button:hover {
   background-color: #2b6cb0; /* Color de fondo más oscuro al hacer hover */

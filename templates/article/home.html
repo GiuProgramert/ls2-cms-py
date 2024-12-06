@@ -9,35 +9,42 @@
 
 {% block content %}
 
-<section class="articles">
-      
-  {% if featured_articles %}
-  <div class="slideshow-container">
-    {% for article in featured_articles %}
-      <div class="mySlides fade">
-        <img class="carousel" src="{{ article.image_url }}">
-        <div class="text">
-          <a href="{% url 'article-detail' article.id %}?from=home">{{ article.title }}</a>
-        </div>
-      </div>
-    {% endfor %}
 
-    <!-- Next and previous buttons -->
-    <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
-    <a class="next" onclick="plusSlides(1)">&#10095;</a>
-  </div>
-  <br>
-
-  <!-- The dots/circles -->
-  <div style="text-align:center">
-    {% for article in featured_articles %}
-      <span class="dot" onclick="currentSlide({{ forloop.counter }})"></span>
-    {% endfor %}
-  </div>
-  {% endif %}
-</section>
 <main class="main-container">
+  <section class="articles">
+      
+    {% if featured_articles %}
+    <div class="section-header normal-header">
+      <h3>Articulos Destacados</h3>
+    </div>
+    <br>
+    <div class="slideshow-container">
+      
+      {% for article in featured_articles %}
+        <div class="mySlides fade">
+          <img class="carousel" src="{{ article.image_url }}">
+          <div class="text">
+            <a href="{% url 'article-detail' article.id %}?from=home">{{ article.title }}</a>
+            <p class="#10094">{{ article.description }}</p>
+          </div>
+        </div>
+      {% endfor %}
   
+      <!-- Next and previous buttons -->
+      <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+      <a class="next" onclick="plusSlides(1)">&#10095;</a>
+    </div>
+    <br>
+  
+    <!-- The dots/circles -->
+    <div style="text-align:center">
+      {% for article in featured_articles %}
+        <span class="dot" onclick="currentSlide({{ forloop.counter }})"></span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+  <br><br><br><br><br><br>
   <section class="filters">
     <!-- Botón con ícono de filtro -->
     <button id="filterToggle" class="filter-button">
@@ -112,9 +119,11 @@
           <a href="{% url 'article-detail' article.id %}?from=home">
             <h2 class="article-title">{{ article.title }}</h2>
           </a>        
+          <img class="articulos" src="static/images/default.jpeg" > 
           <p class="author">Autor: {{ article.autor.username }}</p>
           <p class="description">{{ article.description }}</p>
           <div class="article-actions">
+            
             <span><i class="fas fa-eye"></i> {{ article.views_number }}</span>
             <span><i class="fas fa-share"></i> {{ article.shares_number }}</span>
             <span><i class="fas fa-thumbs-up"></i> {{ article.likes_number }}</span>
@@ -237,12 +246,15 @@
       </div>
       {% if favorite_articles %}
         {% for article in favorite_articles %}
+        
         <div class="article-card">
           <a href="{% url 'article-detail' article.id %}?from=home">
             <h2 class="article-title">{{ article.title }}</h2>
-          </a>        
+          </a>
+          <img class="articulos" src="static/images/default.jpeg" >      
           <p class="author">Autor: {{ article.autor.username }}</p>
           <p class="description">{{ article.description }}</p>
+          
           <div class="article-actions">
             <span><i class="fas fa-eye"></i> {{ article.views_number }}</span>
             <span><i class="fas fa-share"></i> {{ article.shares_number }}</span>
@@ -376,8 +388,10 @@
         <a href="{% url 'article-detail' article.id %}?from=home">
           <h2 class="article-title">{{ article.title }}</h2>
         </a>        
+        <img class="articulos" src="static/images/default.jpeg" > 
         <p class="author">Autor: {{ article.autor.username }}</p>
         <p class="description">{{ article.description }}</p>
+        
         <div class="article-actions">
           <span><i class="fas fa-eye"></i> {{ article.views_number }}</span>
           <span><i class="fas fa-share"></i> {{ article.shares_number }}</span>
