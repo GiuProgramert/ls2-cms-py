@@ -1299,7 +1299,6 @@ def stripe_checkout(request, pk):
         JsonResponse: Respuesta con el ID de la sesión de Stripe o una señal para redirigir
                       en caso de que el pago ya esté completado.
     """
-    print("Vista stripe_checkout llamada con éxito")
     try:
         # Verifica si existe un pago completado
         payment_exists = Payment.objects.filter(
@@ -1349,8 +1348,6 @@ def stripe_checkout(request, pk):
             status="pending",
         )
         
-        print("Creando sesión de pago")  # Verificar flujo
-
         return JsonResponse({"id": session.id})
 
     except ObjectDoesNotExist:

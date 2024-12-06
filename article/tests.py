@@ -505,7 +505,9 @@ class PruebasGestionArticulo(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse("article-detail", args=[self.article.pk]))
+        self.assertRedirects(
+            response, reverse("article-detail", args=[self.article.pk])
+        )
 
         # Verificar que el artículo fue actualizado
         self.article.refresh_from_db()
@@ -601,27 +603,31 @@ class PruebasGestionArticulo(TestCase):
 
         self.client.login(username="articleuser", password="articlepassword")
         response = self.client.get(f"/article/{self.article.pk}/detail/?shared=true")
-        
+
         self.assertEqual(self.article.shares_number, 0)
 
         self.article.refresh_from_db()
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.article.shares_number, 1)
-    
+
     def test_programar_publicacion_articulo_autenticado_con_permiso(self):
         """
         Verifica que un usuario con permiso pueda programar la publicación de un artículo.
         """
         self.client.login(username="articleuser", password="articlepassword")
         data = {"to_publish_date": "2024-12-01 10:00:00"}
-    
+
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
-            response = self.client.post(reverse("article-to-published-schedule", args=[self.article.pk]), data)
-    
+            response = self.client.post(
+                reverse("article-to-published-schedule", args=[self.article.pk]), data
+            )
+
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse("article-detail", args=[self.article.pk]))
+        self.assertRedirects(
+            response, reverse("article-detail", args=[self.article.pk])
+        )
         self.assertTrue(ArticlesToPublish.objects.filter(article=self.article).exists())
     
     def test_descargar_categorías_vendidas_suscriptor_autenticado_con_permiso(self):
@@ -649,7 +655,6 @@ class PruebasGestionArticulo(TestCase):
         self.assertEqual(response["Content-Type"], "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         self.assertIn("attachment", response["Content-Disposition"])
         self.assertTrue(response.content)  # Ensure the response has file content
-
 
 
 
@@ -724,3 +729,59 @@ class CasoDePruebaVotoArticulo(TestCase):
         self.assertRedirects(
             response, reverse("article-detail", args=[self.article.pk])
         )
+
+
+class CategoriasCompradas(TestCase):
+    def setUp(self):
+        """
+        Inicializa la configuración de las pruebas
+        """
+
+        self.client = Client()
+        self.user_can_create = User.objects.create_user(
+            username="testuser", password="testpassword"
+        )
+
+        self.role = Role.objects.get(name="Suscriptor")
+
+        self.user_can_create.roles.add(self.role)
+
+        self.client.login(
+            username="testuser",
+            password="testpassword"
+        )
+
+    def test_view_requires_login(self):
+        """
+        Test para verificar que se requiere login para acceder
+        """
+
+        self.client.logout()
+        response = self.client.get(reverse("sold-categories-suscriptor"))
+        self.assertEqual(response.status_code, 302)
+
+    def test_require_ver_categorias(self):
+        """
+        Verifica sí el usuario tiene el permiso "VER_CATEOGIAS"
+        """
+
+        permission = Permission.objects.get(name=PermissionEnum.VER_CATEGORIAS)
+        self.role.permissions.remove(permission)
+
+        response = self.client.get(reverse("sold-categories-suscriptor"))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("forbidden"))
+
+    def test_default_view_parameters(self):
+        """
+        Test Para ver que trae todos los parametros necesarios para generar el gráfico
+        """
+        response = self.client.get(reverse('sold-categories-suscriptor'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'article/sold_categories_suscriptor.html')
+
+        # Check context data
+        self.assertIn('payments', response.context)
+        self.assertIn('payments_prices', response.context)
+        self.assertIn('categories', response.context)
+        self.assertIn('total_general', response.context)
