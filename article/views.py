@@ -167,7 +167,7 @@ def home(request):
         fa_content = ArticleContent.objects.filter(article=fa).last()
         fa.image_url = re.findall(img_url_reg, str(fa_content.body))
         if not fa.image_url:
-            fa.image_url = "https://res.cloudinary.com/dr5bv93mi/image/upload/v1733425769/mdeditor/mdeditor/f1_f1.jpg.jpg"
+            fa.image_url = "static/images/default.jpeg"
         else:
             fa.image_url = fa.image_url[0]
 
