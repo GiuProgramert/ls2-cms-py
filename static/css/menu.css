@@ -390,9 +390,7 @@ button:hover,
 }
 
 .article-card .title {
-  float: left;
   font-size: 1.5rem;
-  position: absolute;
 }
 
 .article-card img {
