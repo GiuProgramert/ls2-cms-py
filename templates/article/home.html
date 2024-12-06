@@ -12,14 +12,20 @@
 <section class="articles">
       
   {% if featured_articles %}
+  <div class="section-header normal-header">
+    <h3>Artículos Destacados</h3>
+  </div>
+  <br>
   <div class="slideshow-container">
     <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
 
     {% for article in featured_articles %}
+    
       <div class="mySlides fade">
         <img class="carousel" src="{{ article.image_url }}">
         <div class="text">
           <a href="{% url 'article-detail' article.id %}?from=home">{{ article.title }}</a>
+          <p>{{ article.description }}</p>
         </div>
       </div>
     {% endfor %}
@@ -111,7 +117,9 @@
         <div class="article-card">
           <a href="{% url 'article-detail' article.id %}?from=home">
             <h2 class="article-title">{{ article.title }}</h2>
-          </a>        
+          </a>
+          <img class="articulos" src="{{ article.image_url }}" >
+        
           <p class="author">Autor: {{ article.autor.username }}</p>
           <p class="description">{{ article.description }}</p>
           <div class="article-actions">
@@ -241,7 +249,8 @@
         <div class="article-card">
           <a href="{% url 'article-detail' article.id %}?from=home">
             <h2 class="article-title">{{ article.title }}</h2>
-          </a>        
+          </a>
+          <img class="articulos" src="{{ article.image_url }}" >         
           <p class="author">Autor: {{ article.autor.username }}</p>
           <p class="description">{{ article.description }}</p>
           <div class="article-actions">
@@ -377,6 +386,7 @@
         <a href="{% url 'article-detail' article.id %}?from=home">
           <h2 class="article-title">{{ article.title }}</h2>
         </a>        
+        <img class="articulos" src="{{ article.image_url }}" >
         <p class="author">Autor: {{ article.autor.username }}</p>
         <p class="description">{{ article.description }}</p>
         <div class="article-actions">
