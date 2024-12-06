@@ -118,7 +118,8 @@
           <a href="{% url 'article-detail' article.id %}?from=home">
             <h2 class="article-title">{{ article.title }}</h2>
           </a>
-          <img class="articulos" src="static/images/default.jpeg" >         
+          <img class="articulos" src="{{ article.image_url }}" >
+        
           <p class="author">Autor: {{ article.autor.username }}</p>
           <p class="description">{{ article.description }}</p>
           <div class="article-actions">
@@ -249,7 +250,7 @@
           <a href="{% url 'article-detail' article.id %}?from=home">
             <h2 class="article-title">{{ article.title }}</h2>
           </a>
-          <img class="articulos" src="static/images/default.jpeg" >         
+          <img class="articulos" src="{{ article.image_url }}" >         
           <p class="author">Autor: {{ article.autor.username }}</p>
           <p class="description">{{ article.description }}</p>
           <div class="article-actions">
@@ -385,7 +386,7 @@
         <a href="{% url 'article-detail' article.id %}?from=home">
           <h2 class="article-title">{{ article.title }}</h2>
         </a>        
-        <img class="articulos" src="static/images/default.jpeg" > 
+        <img class="articulos" src="{{ article.image_url }}" >
         <p class="author">Autor: {{ article.autor.username }}</p>
         <p class="description">{{ article.description }}</p>
         <div class="article-actions">

@@ -178,9 +178,10 @@ def home(request):
         fa_content = ArticleContent.objects.filter(article=fa).last()
         fa.image_url = re.findall(img_url_reg, str(fa_content.body))
         if not fa.image_url:
-            fa.image_url = "static/images/default.jpeg"
+            fa.image_url = "static/images/noimage.png"
         else:
             fa.image_url = fa.image_url[0]
+
 
     # Aplicar los filtros y ordenamiento a ambos conjuntos
     form = ArticleFilterForm(request.GET or None)
@@ -269,9 +270,43 @@ def home(request):
         # Asignar el promedio de calificación como un atributo del artículo
         article.avg_rating = round(avg_rating, 1) if avg_rating is not None else None
 
+
+
+    
+    img_url_reg = r'!\[.*]\((.*\.(?:jpg|jpeg|png|gif|webp|bmp|svg|tiff|ico)).*\)'
+    for fa in normal_articles:
+        fa_content = ArticleContent.objects.filter(article=fa).last()
+        fa.image_url = re.findall(img_url_reg, str(fa_content.body))
+        if not fa.image_url:
+            fa.image_url = "static/images/noimage.png"
+        else:
+            fa.image_url = fa.image_url[0]
+
+    for fa in favorite_articles:
+        fa_content = ArticleContent.objects.filter(article=fa).last()
+        fa.image_url = re.findall(img_url_reg, str(fa_content.body))
+        if not fa.image_url:
+            fa.image_url = "static/images/noimage.png"
+        else:
+            fa.image_url = fa.image_url[0]
+
+    for fa in favorite_articles:
+        print(fa.image_url)
+
     # Crear una lista con todos los articulos
     all_articles = favorite_articles.union(normal_articles)
     #all_articles = all_articles.order_by(order_by)
+
+    for fa in all_articles:
+        fa_content = ArticleContent.objects.filter(article=fa).last()
+        fa.image_url = re.findall(img_url_reg, str(fa_content.body))
+        if not fa.image_url:
+            fa.image_url = "static/images/noimage.png"
+        else:
+            fa.image_url = fa.image_url[0]
+
+    for fa in all_articles:
+        print(fa.image_url)
 
     return render(
         request,
@@ -294,6 +329,8 @@ def home(request):
             "filter_active": filter_active,
         },
     )
+
+    
 
 
 def forbidden(request):
@@ -1963,3 +2000,4 @@ def article_stats(request):
         "categories": Category.objects.all(),
         "is_admin": is_admin,
     })
+
