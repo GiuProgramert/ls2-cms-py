@@ -178,11 +178,10 @@ def home(request):
         fa_content = ArticleContent.objects.filter(article=fa).last()
         fa.image_url = re.findall(img_url_reg, str(fa_content.body))
         if not fa.image_url:
-            fa.image_url = "static/images/default.jpeg"
+            fa.image_url = "static/images/noimage.png"
         else:
             fa.image_url = fa.image_url[0]
 
-        print(f"this my image baby {fa.image_url}")
 
     # Aplicar los filtros y ordenamiento a ambos conjuntos
     form = ArticleFilterForm(request.GET or None)
@@ -271,9 +270,43 @@ def home(request):
         # Asignar el promedio de calificación como un atributo del artículo
         article.avg_rating = round(avg_rating, 1) if avg_rating is not None else None
 
+
+
+    
+    img_url_reg = r'!\[.*]\((.*\.(?:jpg|jpeg|png|gif|webp|bmp|svg|tiff|ico)).*\)'
+    for fa in normal_articles:
+        fa_content = ArticleContent.objects.filter(article=fa).last()
+        fa.image_url = re.findall(img_url_reg, str(fa_content.body))
+        if not fa.image_url:
+            fa.image_url = "static/images/noimage.png"
+        else:
+            fa.image_url = fa.image_url[0]
+
+    for fa in favorite_articles:
+        fa_content = ArticleContent.objects.filter(article=fa).last()
+        fa.image_url = re.findall(img_url_reg, str(fa_content.body))
+        if not fa.image_url:
+            fa.image_url = "static/images/noimage.png"
+        else:
+            fa.image_url = fa.image_url[0]
+
+    for fa in favorite_articles:
+        print(fa.image_url)
+
     # Crear una lista con todos los articulos
     all_articles = favorite_articles.union(normal_articles)
-    all_articles = all_articles.order_by(order_by)
+    #all_articles = all_articles.order_by(order_by)
+
+    for fa in all_articles:
+        fa_content = ArticleContent.objects.filter(article=fa).last()
+        fa.image_url = re.findall(img_url_reg, str(fa_content.body))
+        if not fa.image_url:
+            fa.image_url = "static/images/noimage.png"
+        else:
+            fa.image_url = fa.image_url[0]
+
+    for fa in all_articles:
+        print(fa.image_url)
 
     return render(
         request,
@@ -296,6 +329,8 @@ def home(request):
             "filter_active": filter_active,
         },
     )
+
+    
 
 
 def forbidden(request):
@@ -985,6 +1020,32 @@ def category_list(request):
         user=request.user
     ).values_list("category_id", flat=True)
 
+    user_payments = Payment.objects.filter(user=request.user)
+
+    payment_status_by_category = defaultdict(lambda: None)
+    for payment in user_payments:
+        payment_status_by_category[payment.category_id] = payment.status
+
+
+    permited_categories = [
+        category
+        for category in categories
+        if category.type
+        in (CategoryType.FREE.value, CategoryType.SUSCRIPTION.value)
+        or Payment.objects.filter(
+            category=category, user=request.user, status="completed"
+        ).exists()
+    ]
+
+    not_permited_categories = [
+            category
+            for category in categories
+            if category.type == CategoryType.PAY.value
+            and not Payment.objects.filter(
+                category=category, user=request.user, status="completed"
+            ).exists()
+        ]
+
     if form.is_valid():
         search_term = form.cleaned_data.get("search_term")
         order_by = form.cleaned_data.get("order_by", "name")
@@ -1009,6 +1070,8 @@ def category_list(request):
             "categories": categories,
             "favorite_categories": favorite_categories,
             "can_create_categories": can_create_categories,
+            "permited_categories": permited_categories,
+            "not_permited_categories": not_permited_categories,
         },
     )
 
@@ -1937,3 +2000,4 @@ def article_stats(request):
         "categories": Category.objects.all(),
         "is_admin": is_admin,
     })
+

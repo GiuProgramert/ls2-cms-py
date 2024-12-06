@@ -391,19 +391,21 @@ sdffsdddddddddddddddddddddddddddddddddddddddd
 /* Slideshow container */
 .slideshow-container {
   max-width: 1000px;
-  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   margin: auto;
 }
 
 /* Hide the images by default */
 .mySlides {
   display: none;
+  width: 100%;
 }
 
 /* Next & previous buttons */
 .prev, .next {
   cursor: pointer;
-  position: absolute;
   top: 50%;
   width: auto;
   margin-top: -22px;
@@ -473,10 +475,23 @@ sdffsdddddddddddddddddddddddddddddddddddddddd
 /* Fading animation */
 .fade {
   animation-name: fade;
-  animation-duration: 1.5s;
+  animation-duration: .5s;
 }
 
 @keyframes fade {
-  from {opacity: .4}
-  to {opacity: 1}
+  from {opacity: .4; z-index:-1;}
+  to {opacity: 1; z-index:-1;}
+}
+
+a {
+  display: inline-block; /* Mostrar como bloque en línea */
+  text-decoration: none; /* Quitar subrayado */
+  color: #e53e3e; /* Color del texto rojo (similar a Tailwind's red-600) */
+  font-weight: 600; /* Texto en negrita */
+  text-align: center; /* Centrar el texto */
+  transition: color 0.3s; /* Transición suave para el color */
+}
+
+a:hover {
+  color: #c53030; /* Cambiar color del texto al pasar el mouse (similar a Tailwind's red-700) */
 }
